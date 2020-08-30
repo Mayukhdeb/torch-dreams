@@ -14,10 +14,6 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm 
 import cv2 
 
-
-
-
-
 def preprocess_func_vgg(image_np):
 
     """

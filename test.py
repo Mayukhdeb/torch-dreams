@@ -10,12 +10,12 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm 
 import cv2 
 
-import utils
+from torch_dreams import  utils
 from torch_dreams import dreamer
 
 mode = "vgg"
 
-image_main = cv2.imread("sample_images/cloudy-mountains.jpg")
+image_main = cv2.imread("torch_dreams/sample_images/cloudy-mountains.jpg")
 image_sample = cv2.cvtColor(image_main, cv2.COLOR_BGR2RGB)
 image_sample = cv2.resize(image_sample, (1024,1024))
 
@@ -50,7 +50,7 @@ dreamed = dreamer.deep_dream(
                         layer = layer, 
                         octave_scale = 1.5, 
                         num_octaves = 7, 
-                        iterations = 2, 
+                        iterations = 15, 
                         lr = 0.09,
                         )
 
