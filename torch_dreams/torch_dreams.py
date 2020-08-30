@@ -17,18 +17,6 @@ import cv2
 from utils import *
 
 
-image_main = cv2.imread("sample_images/cloudy-mountains.jpg")
-image_sample = cv2.cvtColor(image_main, cv2.COLOR_BGR2RGB)
-image_sample = cv2.resize(image_sample, (1024,1024))
-
-plt.imshow(image_sample)
-plt.show()
-
-model = models.resnet18(pretrained=True)
-layers = list(model.children())
-model.eval()
-
-
 def dream(image_np, net, layer, iterations, lr, preprocess_func, deprocess_func = None,  out_channels = None):
 
     image_tensor = preprocess_func(image_np)   ## removes .cuda()
@@ -68,26 +56,6 @@ def deep_dream(image_np, model, layer, octave_scale, num_octaves, iterations, lr
 
         image_np = dream(image_np, model, layer, iterations = iterations, lr = lr, out_channels = None, preprocess_func = preprocess_func, deprocess_func = deprocess_func)
 
-    return image_np
+        image_np_normalised = cv2.normalize(image_np, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F).astype(np.uint8)
 
-layer = layers[8]
-
-dreamed = deep_dream(
-                    image_sample, 
-                    model,
-                    layer = layer, 
-                    octave_scale = 1.5, 
-                    num_octaves = 7, 
-                    iterations = 5, 
-                    lr = 0.09,
-                    preprocess_func = preprocess_func,
-                    deprocess_func = None
-                    )
-
-plt.imshow(dreamed)
-plt.show()
-
-norm_dream = cv2.normalize(dreamed, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
-
-
-cv2.imwrite('dream.jpg', norm_dream.astype(np.uint8))
+    return image_np_normalised
