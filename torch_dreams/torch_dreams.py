@@ -39,8 +39,8 @@ def dream(image_np, net, layer, iterations, lr, preprocess_func, deprocess_func 
         roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
         image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
         gradients_tensor = get_gradients(image_tensor_rolled, net, layer, out_channels).detach()
-        gradients_tensor = roll_torch_tensor(gradients_tensor, -roll_x, -roll_y)  ## on the GPU
-        image_tensor.data = image_tensor.data + lr * gradients_tensor.data ## can confirm this is still on the GPU
+        gradients_tensor = roll_torch_tensor(gradients_tensor, -roll_x, -roll_y)  
+        image_tensor.data = image_tensor.data + lr * gradients_tensor.data ## can confirm this is still on the GPU if you have one
 
     img_out = image_tensor.detach().cpu()
 
@@ -86,4 +86,8 @@ dreamed = deep_dream(
 
 plt.imshow(dreamed)
 plt.show()
-cv2.imwrite('dream.jpg', dreamed)
+
+norm_dream = cv2.normalize(dreamed, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+
+
+cv2.imwrite('dream.jpg', norm_dream.astype(np.uint8))

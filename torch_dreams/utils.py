@@ -81,7 +81,7 @@ def deprocess_func(image_tensor):
 def find_random_roll_values_for_tensor(image_tensor):
 
     """
-    image_tensor.size() should be (width, height, color_channels)
+    image_tensor.size() should be (C, H, W)
     """
 
     roll_x = image_tensor.size()[-1]
