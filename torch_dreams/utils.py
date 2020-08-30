@@ -15,17 +15,7 @@ from tqdm import tqdm
 import cv2 
 
 
-class Hook():
-    def __init__(self, module, backward=False):
-        if backward==False:
-            self.hook = module.register_forward_hook(self.hook_fn)
-        else:
-            self.hook = module.register_backward_hook(self.hook_fn)
-    def hook_fn(self, module, input, output):
-        self.input = input
-        self.output = output
-    def close(self):
-        self.hook.remove()
+
 
 
 def preprocess_func_vgg(image_np):
@@ -99,17 +89,3 @@ def roll_torch_tensor(image_tensor, roll_x, roll_y):
     rolled_tensor = torch.roll(torch.roll(image_tensor, shifts = roll_x, dims = -1), shifts = roll_y, dims = -2)
 
     return rolled_tensor
-
-
-def get_gradients(net_in, net, layer, out_channels = None):     
-    net_in = net_in.unsqueeze(0)
-    net_in.requires_grad = True
-    net.zero_grad()
-    hook = Hook(layer)
-    net_out = net(net_in)
-    if out_channels == None:
-        loss = hook.output[0].norm()
-    else:
-        loss = hook.output[0][out_channels].norm()
-    loss.backward()
-    return net_in.grad.data.squeeze()

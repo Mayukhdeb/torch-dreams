@@ -3,16 +3,17 @@ import torch.nn as nn
 from torchvision import models
 import numpy as np
 import matplotlib.pyplot as plt
-]import os
+import os
 import tqdm
 from torchvision import transforms
 import matplotlib.pyplot as plt
 from tqdm import tqdm 
 import cv2 
 
-import torch_dreams
+import utils
+from torch_dreams import dreamer
 
-mode = "resnet"
+mode = "vgg"
 
 image_main = cv2.imread("sample_images/cloudy-mountains.jpg")
 image_sample = cv2.cvtColor(image_main, cv2.COLOR_BGR2RGB)
@@ -26,30 +27,31 @@ if mode == "vgg":
     layers = list(model.features.children())
     model.eval()
 
-    preprocess = torch_dreams.preprocess_func_vgg
-    deprocess = torch_dreams.deprocess_func_vgg
+    preprocess = utils.preprocess_func_vgg
+    deprocess = utils.deprocess_func_vgg
+    layer = layers[34]
+
 
 else:
     model = models.resnet18(pretrained=True)
     layers = list(model.children())
     model.eval()
 
-    preprocess = torch_dreams.preprocess_func
+    preprocess = utils.preprocess_func
     deprocess = None
 
+    layer = layers[8]
 
-layer = layers[8]
+dreamer = dreamer(model, preprocess, deprocess)
 
-dreamed = torch_dreams.deep_dream(
+
+dreamed = dreamer.deep_dream(
                         image_np =image_sample, 
-                        model = model,
                         layer = layer, 
                         octave_scale = 1.5, 
                         num_octaves = 7, 
-                        iterations = 5, 
+                        iterations = 2, 
                         lr = 0.09,
-                        preprocess_func = preprocess,
-                        deprocess_func = deprocess
                         )
 
 plt.imshow(dreamed)
