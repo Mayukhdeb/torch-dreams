@@ -15,6 +15,7 @@ from torch_dreams import dreamer
 from torch_dreams.simple import vgg19_dreamer
 
 
+
 mode = "vgg"
 
 image_main = cv2.imread("torch_dreams/sample_images/cloudy-mountains.jpg")
