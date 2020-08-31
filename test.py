@@ -12,6 +12,8 @@ import cv2
 
 from torch_dreams import  utils
 from torch_dreams import dreamer
+from torch_dreams.simple import vgg19_dreamer
+
 
 mode = "vgg"
 
@@ -49,8 +51,8 @@ dreamed = dreamer.deep_dream(
                         image_np =image_sample, 
                         layer = layer, 
                         octave_scale = 1.5, 
-                        num_octaves = 7, 
-                        iterations = 15, 
+                        num_octaves = 2, 
+                        iterations = 2, 
                         lr = 0.09,
                         )
 
@@ -58,3 +60,19 @@ plt.imshow(dreamed)
 plt.show()
 
 cv2.imwrite('dream.jpg', dreamed)
+
+
+"""
+Simple dreamer
+"""
+simple_dreamer = vgg19_dreamer()
+
+dreamed_image = simple_dreamer.dream(
+    image_np = image_sample,
+    layer_index= 27,
+    iterations= 3
+)
+
+plt.imshow(dreamed_image)
+plt.show()
+

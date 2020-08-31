@@ -35,7 +35,6 @@ class dreamer(object):
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-
     
     def get_gradients(self, net_in, net, layer, out_channels = None):     
         net_in = net_in.unsqueeze(0)
