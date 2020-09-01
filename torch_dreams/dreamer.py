@@ -32,7 +32,6 @@ class dreamer(object):
         self.model = model
         self.preprocess_func = preprocess_func
         self.deprocess_func = deprocess_func
-
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     
@@ -54,7 +53,7 @@ class dreamer(object):
 
         image_tensor = self.preprocess_func(image_tensor).to(self.device)
 
-        for i in tqdm(range(iterations)):
+        for i in range(iterations):
 
             roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
             image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
@@ -68,7 +67,6 @@ class dreamer(object):
             img_out = deprocess_func(img_out)
 
         img_out_np = img_out.numpy()
-
         img_out_np = img_out_np.transpose(1,2,0)
         
         return img_out_np
@@ -77,7 +75,7 @@ class dreamer(object):
     def deep_dream(self, image_np, layer, octave_scale, num_octaves, iterations, lr):
         original_size = image_np.shape[:2]
 
-        for n in range(-num_octaves, 1):
+        for n in tqdm(range(-num_octaves, 1)):
             
             octave_size = tuple( np.array(original_size) * octave_scale**n)
             new_size = (int(octave_size[1]), int(octave_size[0]))
@@ -87,3 +85,25 @@ class dreamer(object):
         image_np_normalised = cv2.normalize(image_np, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F).astype(np.uint8)
 
         return image_np_normalised
+
+    def deep_dream_on_video(self, video_path, save_name , layer, octave_scale, num_octaves, iterations, lr, size = None,  framerate = 30 ):
+
+        all_frames = video_to_np_arrays(video_path, skip_value = 1, size = None)[:4] ## [:5] is for debugging
+        all_dreams = []
+
+        for i in range(len(all_frames)):
+            dreamed = self.deep_dream(
+                                    image_np = all_frames[i],
+                                    layer = layer,
+                                    octave_scale = octave_scale,
+                                    num_octaves = num_octaves,
+                                    iterations = iterations,
+                                    lr = lr
+                                )
+            all_dreams.append(dreamed)
+
+        
+        all_dreams = np.array(all_dreams)
+        if size is None:
+            size = (all_dreams[0].shape[-2], all_dreams[0].shape[-3]) ## (width, height)
+        write_video_from_image_list(save_name = save_name, all_images_np=  all_dreams,framerate = framerate, size = size)

@@ -85,3 +85,41 @@ def roll_torch_tensor(image_tensor, roll_x, roll_y):
     rolled_tensor = torch.roll(torch.roll(image_tensor, shifts = roll_x, dims = -1), shifts = roll_y, dims = -2)
 
     return rolled_tensor
+
+def video_to_np_arrays(video_path, skip_value = 1, size = None):
+
+    vidObj = cv2.VideoCapture(video_path)   
+    success = 1
+    images = []
+    count = 0
+
+    while success: 
+        count +=1 
+        success, image = vidObj.read() 
+
+        if count % skip_value != 0:
+            continue
+        else:
+            try:
+                if size is not None:
+                    image = cv2.resize(image, size)
+
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                images.append(image)
+                    
+            except:
+                pass
+    
+    return np.array(images)
+
+def write_video_from_image_list(save_name, all_images_np, framerate, size):
+    fourcc = cv2.VideoWriter_fourcc("m", "p", "4", "v")
+    out = cv2.VideoWriter(save_name ,fourcc, framerate, size)
+
+    for i in range(all_images_np.shape[0]):
+        
+        frame = all_images_np[i]
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        out.write(frame)
+    out.release()

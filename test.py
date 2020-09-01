@@ -20,7 +20,7 @@ mode = "vgg"
 
 image_main = cv2.imread("torch_dreams/sample_images/cloudy-mountains.jpg")
 image_sample = cv2.cvtColor(image_main, cv2.COLOR_BGR2RGB)
-image_sample = cv2.resize(image_sample, (1024,1024))
+image_sample = cv2.resize(image_sample, (512,512))
 
 plt.imshow(image_sample)
 plt.show()
@@ -59,8 +59,7 @@ dreamed = dreamer.deep_dream(
 
 plt.imshow(dreamed)
 plt.show()
-
-cv2.imwrite('dream.jpg', dreamed)
+cv2.imwrite("dream_1.jpg", cv2.cvtColor(dreamed, cv2.COLOR_BGR2RGB))
 
 
 """
@@ -71,9 +70,22 @@ simple_dreamer = vgg19_dreamer()
 dreamed_image = simple_dreamer.dream(
     image_np = image_sample,
     layer_index= 27,
-    iterations= 3
+    iterations= 2
 )
 
 plt.imshow(dreamed_image)
 plt.show()
+cv2.imwrite("dream_2.jpg", cv2.cvtColor(dreamed_image, cv2.COLOR_BGR2RGB))
 
+
+simple_dreamer.deep_dream_on_video(
+    video_path = "sample_videos/tiger_mini.mp4",
+    save_name = "dream.mp4",
+    layer = simple_dreamer.layers[13],
+    octave_scale= 1.3,
+    num_octaves = 2,
+    iterations= 2,
+    lr = 0.09,
+    size = None, 
+    framerate= 30.0
+)

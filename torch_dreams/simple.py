@@ -26,7 +26,7 @@ class vgg19_dreamer(dreamer):
     def show_layers(self):
         print(self.model )
 
-    def dream(self, image_np, layer_index = 27, octave_scale = 1.4, num_octaves = 7, iterations = 30, lr= 0.09):
+    def dream(self, image_np, layer_index = 27, octave_scale = 1.4, num_octaves = 2, iterations = 30, lr= 0.09):
 
         dream_normalised = self.deep_dream(
                                         image_np = image_np,
