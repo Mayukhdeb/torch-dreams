@@ -14,8 +14,8 @@ import cv2 ## for saving images
 simple_dreamer = vgg19_dreamer()
 
 dreamed_image = simple_dreamer.dream(
-    image_path = "your_image.png",
-    layer_index= 27,
+    image_path = "your_image.jpg",
+    layer_index= 17,
     iterations= 2,
     size = (256,256)
 )
@@ -29,9 +29,8 @@ cv2.imwrite("dream.jpg", dreamed_image)
 from torch_dreams.simple import vgg19_dreamer
 simple_dreamer = vgg19_dreamer()
 
-
 simple_dreamer.deep_dream_on_video(
-    video_path = "sample_videos/tiger_mini.mp4",
+    video_path = "your_video.mp4",
     save_name = "dream.mp4",
     layer = simple_dreamer.layers[13],
     octave_scale= 1.3,
@@ -39,7 +38,8 @@ simple_dreamer.deep_dream_on_video(
     iterations= 2,
     lr = 0.09,
     size = None, 
-    framerate= 30.0
+    framerate= 30.0,
+    skip_value =  1
 )
 
 ```
@@ -63,11 +63,11 @@ layers = list(model.features.children())
 layer = layers[13]
 ```
 
-* Defining the torch transforms to be applied before the forward pass  (could be any set of torch transforms). Or if you're using the VGG19 like me, you could use `utils.preprocess_func_vgg` and `utils.deprocess_func_vgg`
+* Defining the torch transforms to be applied before the forward pass  (could be any set of torch transforms). Or if you're using the VGG19 like me, you could use `utils.preprocess_func` 
 
 ```python
-preprocess = utils.preprocess_func_vgg
-deprocess = utils.deprocess_func_vgg
+preprocess = utils.preprocess_func
+deprocess = None
 ```
 * Calling an instance of the `dreamer` class and generating a deep-dream
 
@@ -78,8 +78,8 @@ dreamed = dreamer.deep_dream(
                         image_np =image_sample, 
                         layer = layer, 
                         octave_scale = 1.5, 
-                        num_octaves = 2, 
-                        iterations = 2, 
+                        num_octaves = 5, 
+                        iterations = 7, 
                         lr = 0.09,
                         )
 plt.imshow(dreamed)
