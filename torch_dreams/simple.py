@@ -43,7 +43,5 @@ class vgg19_dreamer(dreamer):
                                         lr = lr
                
                         )
-
-        plt.imshow(dream_normalised) 
-        plt.show()    
+   
         return dream_normalised

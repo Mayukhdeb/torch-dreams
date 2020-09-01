@@ -85,9 +85,7 @@ class dreamer(object):
             image_np = cv2.resize(image_np, new_size)
             image_np = self.dream_on_octave(image_np, layer =  layer, iterations = iterations, lr = lr, out_channels = None)
             
-            
-        # image_np = cv2.normalize(image_np, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F).astype(np.uint8) ## this causes problems in simple
-        
+                    
         image_np = cv2.convertScaleAbs(image_np, alpha = 255)
 
         
