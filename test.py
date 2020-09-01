@@ -67,14 +67,15 @@ Simple dreamer
 simple_dreamer = vgg19_dreamer()
 
 dreamed_image = simple_dreamer.dream(
-    image_np = image_sample,
+    image_path = "torch_dreams/sample_images/cloudy-mountains.png",
     layer_index= 27,
-    iterations= 2
+    iterations= 2,
+    size = (256,256)
 )
 
 plt.imshow(dreamed_image)
 plt.show()
-cv2.imwrite("dream_2.jpg", dreamed_image)
+cv2.imwrite("dream_2_from_png.jpg", dreamed_image)
 
 
 simple_dreamer.deep_dream_on_video(
