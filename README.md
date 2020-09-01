@@ -5,6 +5,23 @@ deep dreams in PyTorch
 <code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_20.gif?raw=true"></code>
 <code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_27.gif?raw=true"></code>
 
+## Less lines of code, more deep-dreams
+
+```python
+from torch_dreams.simple import vgg19_dreamer
+simple_dreamer = vgg19_dreamer()
+
+dreamed_image = simple_dreamer.dream(
+    image_np = image_sample,
+    layer_index= 27,
+    iterations= 2
+)
+
+plt.imshow(dreamed_image)
+plt.show()
+```
+
+
 ## Generating deep dreams with your own PyTorch model
 
 * importing `torch_dreams`
