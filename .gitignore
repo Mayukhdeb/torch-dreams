@@ -1,2 +1,5 @@
 __pycache__/
 sample_videos/
+build/
+dist/
+torch_dreams.egg-info
