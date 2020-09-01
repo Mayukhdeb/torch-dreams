@@ -11,6 +11,8 @@ deep dreams in PyTorch
 from torch_dreams.simple import vgg19_dreamer
 simple_dreamer = vgg19_dreamer()
 
+image_sample = cv2.cvtColor(cv2.imread("your_image.jpg"), cv2.COLOR_BGR2RGB)
+
 dreamed_image = simple_dreamer.dream(
     image_np = image_sample,
     layer_index= 27,
