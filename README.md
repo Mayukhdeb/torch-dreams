@@ -9,18 +9,18 @@ deep dreams in PyTorch
 
 ```python
 from torch_dreams.simple import vgg19_dreamer
+import cv2 ## for saving images
+
 simple_dreamer = vgg19_dreamer()
 
-image_sample = cv2.cvtColor(cv2.imread("your_image.jpg"), cv2.COLOR_BGR2RGB)
-
 dreamed_image = simple_dreamer.dream(
-    image_np = image_sample,
+    image_path = "your_image.png",
     layer_index= 27,
-    iterations= 2
+    iterations= 2,
+    size = (256,256)
 )
 
-plt.imshow(dreamed_image)
-plt.show()
+cv2.imwrite("dream.jpg", dreamed_image)
 ```
 
 ## deep-dreams on a video
