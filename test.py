@@ -18,20 +18,21 @@ from torch_dreams.simple import vgg19_dreamer
 
 mode = "vgg"
 
-image_main = cv2.imread("torch_dreams/sample_images/cloudy-mountains.jpg")
-image_sample = cv2.resize(image_main, (512,512))
+image_main = cv2.imread("torch_dreams/sample_images/camo.jpg")
+image_sample = cv2.resize(image_main, (256,256))
 
 plt.imshow(image_sample)
 plt.show()
+
 
 if mode == "vgg":
     model= models.vgg19(pretrained=True)
     layers = list(model.features.children())
     model.eval()
 
-    preprocess = utils.preprocess_func_vgg
-    deprocess = utils.deprocess_func_vgg
-    layer = layers[34]
+    preprocess = utils.preprocess_func ## for some reason this works
+    deprocess = None
+    layer = layers[17]
 
 
 else:
@@ -50,15 +51,16 @@ dreamer = dreamer(model, preprocess, deprocess)
 dreamed = dreamer.deep_dream(
                         image_np =image_sample, 
                         layer = layer, 
-                        octave_scale = 1.5, 
-                        num_octaves = 2, 
-                        iterations = 2, 
-                        lr = 0.09,
+                        octave_scale = 1.3, 
+                        num_octaves = 5, 
+                        iterations = 7, 
+                        lr = 0.003,
                         )
 
 plt.imshow(dreamed)
 plt.show()
 cv2.imwrite("dream_1.jpg", dreamed)
+
 
 
 """
@@ -67,11 +69,15 @@ Simple dreamer
 simple_dreamer = vgg19_dreamer()
 
 dreamed_image = simple_dreamer.dream(
-    image_path = "torch_dreams/sample_images/cloudy-mountains.png",
-    layer_index= 27,
-    iterations= 2,
-    size = (256,256)
+    image_path = "torch_dreams/sample_images/camo.jpg",
+    layer_index= 17,
+    iterations= 7,
+    size = (256,256),
+    lr = 0.03, 
+    num_octaves= 5,
+    octave_scale= 1.3
 )
+
 
 plt.imshow(dreamed_image)
 plt.show()
@@ -87,5 +93,6 @@ simple_dreamer.deep_dream_on_video(
     iterations= 2,
     lr = 0.09,
     size = None, 
-    framerate= 30.0
+    framerate= 30.0,
+    skip_value =  1
 )

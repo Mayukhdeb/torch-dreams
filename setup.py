@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="torch-dreams",
-    version="0.0.2",
+    version="0.0.3",
     author="Mayukh Deb", 
     author_email="mayukhmainak2000@gmail.com", 
     description="Generate deep-dreams in PyTorch",
