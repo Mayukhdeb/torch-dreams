@@ -19,8 +19,7 @@ from torch_dreams.simple import vgg19_dreamer
 mode = "vgg"
 
 image_main = cv2.imread("torch_dreams/sample_images/cloudy-mountains.jpg")
-image_sample = cv2.cvtColor(image_main, cv2.COLOR_BGR2RGB)
-image_sample = cv2.resize(image_sample, (512,512))
+image_sample = cv2.resize(image_main, (512,512))
 
 plt.imshow(image_sample)
 plt.show()
@@ -59,7 +58,7 @@ dreamed = dreamer.deep_dream(
 
 plt.imshow(dreamed)
 plt.show()
-cv2.imwrite("dream_1.jpg", cv2.cvtColor(dreamed, cv2.COLOR_BGR2RGB))
+cv2.imwrite("dream_1.jpg", dreamed)
 
 
 """
@@ -75,7 +74,7 @@ dreamed_image = simple_dreamer.dream(
 
 plt.imshow(dreamed_image)
 plt.show()
-cv2.imwrite("dream_2.jpg", cv2.cvtColor(dreamed_image, cv2.COLOR_BGR2RGB))
+cv2.imwrite("dream_2.jpg", dreamed_image)
 
 
 simple_dreamer.deep_dream_on_video(

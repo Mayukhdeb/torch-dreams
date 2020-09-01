@@ -30,6 +30,7 @@ class dreamer(object):
 
     def __init__(self, model, preprocess_func, deprocess_func = None):
         self.model = model
+        self.model = self.model.eval()
         self.preprocess_func = preprocess_func
         self.deprocess_func = deprocess_func
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
