@@ -21,7 +21,26 @@ plt.imshow(dreamed_image)
 plt.show()
 ```
 
+## deep-dreams on a video
 
+```python
+from torch_dreams.simple import vgg19_dreamer
+simple_dreamer = vgg19_dreamer()
+
+
+simple_dreamer.deep_dream_on_video(
+    video_path = "sample_videos/tiger_mini.mp4",
+    save_name = "dream.mp4",
+    layer = simple_dreamer.layers[13],
+    octave_scale= 1.3,
+    num_octaves = 2,
+    iterations= 2,
+    lr = 0.09,
+    size = None, 
+    framerate= 30.0
+)
+
+```
 ## Generating deep dreams with your own PyTorch model
 
 * importing `torch_dreams`
