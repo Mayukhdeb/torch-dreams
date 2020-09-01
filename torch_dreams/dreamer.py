@@ -34,6 +34,7 @@ class dreamer(object):
         self.preprocess_func = preprocess_func
         self.deprocess_func = deprocess_func
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = self.model.to(self.device) ## model moves to GPU if available
 
     
     def get_gradients(self, net_in, net, layer, out_channels = None):     
@@ -52,7 +53,7 @@ class dreamer(object):
 
     def dream_on_octave(self, image_tensor, layer, iterations, lr, out_channels = None):
 
-        image_tensor = self.preprocess_func(image_tensor).to(self.device)
+        image_tensor = self.preprocess_func(image_tensor).to(self.device) # image tensor moves to GPU if available
 
         for i in range(iterations):
 
