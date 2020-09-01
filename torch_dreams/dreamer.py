@@ -81,16 +81,21 @@ class dreamer(object):
             
             octave_size = tuple( np.array(original_size) * octave_scale**n)
             new_size = (int(octave_size[1]), int(octave_size[0]))
+
             image_np = cv2.resize(image_np, new_size)
             image_np = self.dream_on_octave(image_np, layer =  layer, iterations = iterations, lr = lr, out_channels = None)
+            
+            
+        # image_np = cv2.normalize(image_np, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F).astype(np.uint8) ## this causes problems in simple
+        
+        image_np = cv2.convertScaleAbs(image_np, alpha = 255)
 
-        image_np_normalised = cv2.normalize(image_np, None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F).astype(np.uint8)
+        
+        return image_np
 
-        return image_np_normalised
+    def deep_dream_on_video(self, video_path, save_name , layer, octave_scale, num_octaves, iterations, lr, size = None,  framerate = 30, skip_value = 1 ):
 
-    def deep_dream_on_video(self, video_path, save_name , layer, octave_scale, num_octaves, iterations, lr, size = None,  framerate = 30 ):
-
-        all_frames = video_to_np_arrays(video_path, skip_value = 1, size = None)[:4] ## [:5] is for debugging
+        all_frames = video_to_np_arrays(video_path, skip_value = skip_value, size = None)  ## [:5] is for debugging
         all_dreams = []
 
         for i in range(len(all_frames)):

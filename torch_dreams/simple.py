@@ -18,8 +18,8 @@ class vgg19_dreamer(dreamer):
     def __init__(self):
         super().__init__(
             model = models.vgg19(pretrained=True), 
-            preprocess_func =  preprocess_func_vgg, 
-            deprocess_func = deprocess_func_vgg
+            preprocess_func =  preprocess_func,   ## for some odd reason, preprocess_func works and preprocess_func_vgg does not
+            deprocess_func = None
             )
         self.layers = list(self.model.features.children())
         
@@ -41,5 +41,9 @@ class vgg19_dreamer(dreamer):
                                         num_octaves = num_octaves,
                                         iterations = iterations,
                                         lr = lr
-                                    )
+               
+                        )
+
+        plt.imshow(dream_normalised) 
+        plt.show()    
         return dream_normalised

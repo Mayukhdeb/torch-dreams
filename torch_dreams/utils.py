@@ -123,3 +123,4 @@ def write_video_from_image_list(save_name, all_images_np, framerate, size):
 
         out.write(frame)
     out.release()
+    
