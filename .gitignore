@@ -3,3 +3,4 @@ sample_videos/
 build/
 dist/
 torch_dreams.egg-info
+.ipynb_checkpoints/
