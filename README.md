@@ -1,9 +1,9 @@
 # torch-dreams
 deep dreams in PyTorch
 
-<code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_15.gif?raw=true"></code>
-<code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_20.gif?raw=true"></code>
-<code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_27.gif?raw=true"></code>
+<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/island_deep_dream.gif" width = "80%">
+
+
 
 ## Less lines of code, more deep-dreams
 
@@ -22,6 +22,10 @@ dreamed_image = simple_dreamer.dream(
 
 cv2.imwrite("dream.jpg", dreamed_image)
 ```
+## Try changing the `layer_index` to get different types of dreams 
+<code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_15.gif?raw=true"></code>
+<code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_20.gif?raw=true"></code>
+<code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_27.gif?raw=true"></code>
 
 ## deep-dreams on a video
 
