@@ -1,8 +1,8 @@
 # torch-dreams
 deep dreams in PyTorch
 
-<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/island_deep_dream.gif" width = "80%">
-
+<code><img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/island_deep_dream.gif" width = "45%"></code>
+<code><img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/tiger_cover.gif" width = "45%"></code>
 
 
 ## Less lines of code, more deep-dreams
