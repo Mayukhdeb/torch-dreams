@@ -32,7 +32,7 @@ if mode == "vgg":
 
     preprocess = utils.preprocess_func ## for some reason this works
     deprocess = None
-    layer = layers[17]
+    layer = layers[13]
 
 
 else:
@@ -61,6 +61,21 @@ plt.imshow(dreamed)
 plt.show()
 cv2.imwrite("dream_1.jpg", dreamed)
 
+dreamer.progressive_deep_dream(
+    image_np = image_sample,
+    save_name = "progressive_dream.mp4",
+    layer = layer,
+    octave_scale = 1.3,
+    num_octaves = 1,
+    iterations = 2,
+    lower_lr = 0.0,
+    upper_lr = 0.09,
+    num_steps = 10,
+    framerate = 5,
+    size = (256,256)
+)
+
+
 
 
 """
@@ -82,6 +97,21 @@ dreamed_image = simple_dreamer.dream(
 plt.imshow(dreamed_image)
 plt.show()
 cv2.imwrite("dream_2_from_png.jpg", dreamed_image)
+
+simple_dreamer.progressive_dream(
+    image_path = "torch_dreams/sample_images/camo.jpg",
+    save_name = "progressive_dream_simple.mp4",
+    layer_index = 13,
+    octave_scale = 1.3,
+    num_octaves = 1,
+    iterations = 2,
+    lower_lr = 0.0,
+    upper_lr = 0.09,
+    num_steps = 10,
+    framerate = 5,
+    size = (256,256)
+)
+
 
 
 simple_dreamer.deep_dream_on_video(

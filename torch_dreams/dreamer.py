@@ -112,3 +112,30 @@ class dreamer(object):
         if size is None:
             size = (all_dreams[0].shape[-2], all_dreams[0].shape[-3]) ## (width, height)
         write_video_from_image_list(save_name = save_name, all_images_np=  all_dreams,framerate = framerate, size = size)
+
+
+
+
+    def progressive_deep_dream(self, image_np, save_name , layer, octave_scale, num_octaves, iterations, lower_lr, upper_lr, num_steps, framerate = 15, size = None):
+        lrs = np.linspace(lower_lr, upper_lr, num_steps)
+        dreams = []
+
+        if size is not None:
+            image_np = cv2.resize(image_np, size)
+
+        for lr in lrs:
+            dreamed_image = self.deep_dream(
+                image_np = image_np,
+                layer = layer,
+                octave_scale = octave_scale,
+                num_octaves = num_octaves,
+                iterations = iterations,
+                lr = lr
+            )
+            dreams.append(dreamed_image)
+        
+        dreams = np.array(dreams)
+
+        if size is None:
+            size = (dreams[0].shape[-2], dreams[0].shape[-3]) ## (width, height)
+        write_video_from_image_list(save_name = save_name, all_images_np=  dreams,framerate = framerate, size = size)
