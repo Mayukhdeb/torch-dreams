@@ -48,10 +48,9 @@ class vgg19_dreamer(dreamer):
 
     def progressive_dream(self, image_path, save_name, layer_index = 13, octave_scale = 1.4, num_octaves = 2, iterations = 30, lower_lr = 0.0, upper_lr = 0.09, num_steps = 15, framerate = 15, size = None):
 
-        image_np = cv2.imread(image_path)
 
         self.progressive_deep_dream(
-            image_np = image_np,
+            image_path = image_path,
             save_name = save_name,
             layer = self.layers[layer_index],
             octave_scale = octave_scale,

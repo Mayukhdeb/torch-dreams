@@ -77,7 +77,7 @@ class dreamer(object):
     def deep_dream(self, image_np, layer, octave_scale, num_octaves, iterations, lr):
         original_size = image_np.shape[:2]
 
-        for n in tqdm(range(-num_octaves, 1)):
+        for n in range(-num_octaves, 1):
             
             octave_size = tuple( np.array(original_size) * octave_scale**n)
             new_size = (int(octave_size[1]), int(octave_size[0]))
@@ -96,7 +96,7 @@ class dreamer(object):
         all_frames = video_to_np_arrays(video_path, skip_value = skip_value, size = None)  ## [:5] is for debugging
         all_dreams = []
 
-        for i in range(len(all_frames)):
+        for i in tqdm(range(len(all_frames)), desc = "Running deep-dreams on each frame: "):
             dreamed = self.deep_dream(
                                     image_np = all_frames[i],
                                     layer = layer,
@@ -116,14 +116,16 @@ class dreamer(object):
 
 
 
-    def progressive_deep_dream(self, image_np, save_name , layer, octave_scale, num_octaves, iterations, lower_lr, upper_lr, num_steps, framerate = 15, size = None):
+    def progressive_deep_dream(self, image_path, save_name , layer, octave_scale, num_octaves, iterations, lower_lr, upper_lr, num_steps, framerate = 15, size = None):
         lrs = np.linspace(lower_lr, upper_lr, num_steps)
         dreams = []
+
+        image_np = cv2.imread(image_path)
 
         if size is not None:
             image_np = cv2.resize(image_np, size)
 
-        for lr in lrs:
+        for lr in tqdm(lrs, desc = "Running progressive deep-dream on image: "):
             dreamed_image = self.deep_dream(
                 image_np = image_np,
                 layer = layer,

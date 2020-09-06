@@ -62,7 +62,7 @@ plt.show()
 cv2.imwrite("dream_1.jpg", dreamed)
 
 dreamer.progressive_deep_dream(
-    image_np = image_sample,
+    image_path = "torch_dreams/sample_images/camo.jpg",
     save_name = "progressive_dream.mp4",
     layer = layer,
     octave_scale = 1.3,
@@ -124,5 +124,5 @@ simple_dreamer.deep_dream_on_video(
     lr = 0.09,
     size = None, 
     framerate= 30.0,
-    skip_value =  1
+    skip_value =  10
 )
