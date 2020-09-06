@@ -96,3 +96,8 @@ dreamed = dreamer.deep_dream(
 plt.imshow(dreamed)
 plt.show()                        
 ```
+## Features:
+* Easy to use with `torch_dreams.simple`
+* Works on the GPU
+* No need to spend hours writing/debugging boilerplate code while slowly forgetting what social life is.
+
