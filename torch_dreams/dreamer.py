@@ -96,7 +96,7 @@ class dreamer(object):
         all_frames = video_to_np_arrays(video_path, skip_value = skip_value, size = None)  ## [:5] is for debugging
         all_dreams = []
 
-        for i in tqdm(range(len(all_frames)), desc = "Running deep-dreams on each frame: "):
+        for i in tqdm(range(len(all_frames)), desc = "Running deep-dreams video frames: "):
             dreamed = self.deep_dream(
                                     image_np = all_frames[i],
                                     layer = layer,

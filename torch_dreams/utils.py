@@ -1,16 +1,10 @@
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
-from torchvision import models
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-import argparse
 import os
 import tqdm
-import scipy.ndimage as nd
 from torchvision import transforms
-import matplotlib.pyplot as plt
 from tqdm import tqdm 
 import cv2 
 
@@ -74,6 +68,7 @@ def find_random_roll_values_for_tensor(image_tensor):
     roll_y = image_tensor.size()[-2]
 
     return roll_x, roll_y
+from torchvision import models
 
 
 def roll_torch_tensor(image_tensor, roll_x, roll_y):
