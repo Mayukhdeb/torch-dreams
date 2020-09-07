@@ -1,12 +1,9 @@
 import torch
-import torch.nn as nn
 from torchvision import models
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 import tqdm
 from torchvision import transforms
-import matplotlib.pyplot as plt
 from tqdm import tqdm 
 import cv2 
 
@@ -28,6 +25,15 @@ class Hook():
 
 class dreamer(object):
 
+    """
+    Main class definition for torch-dreams:
+
+    model = Any PyTorch deep-learning model
+    preprocess_func = Set of torch transforms required for the model wrapped into a function. See torch_dreams.utils for examples
+    deprocess_func <optional> = set of reverse transforms, to be applied before converting the image back to numpy
+    device = checks for a GPU, uses the GPU for tensor operations if available
+    """
+
     def __init__(self, model, preprocess_func, deprocess_func = None):
         self.model = model
         self.model = self.model.eval()
@@ -37,7 +43,21 @@ class dreamer(object):
         self.model = self.model.to(self.device) ## model moves to GPU if available
 
     
-    def get_gradients(self, net_in, net, layer, out_channels = None):     
+    def get_gradients(self, net_in, net, layer, out_channels = None):   
+        """
+        Executes the forward pass through the model and returns the gradients from the selected layer. 
+
+        input args{
+            net_in = the 3D tensor which is to be used in the forward pass <size = (C, H, W)>
+            net = pytorch model which is being used for the  deep-dream
+            layer = layer instance of net whose activations are to be maximized
+            out_channels <optional> = manual selection of output channel from the layer that has been chosen
+        }
+
+        returns{
+            gradient of model weights 
+        }
+        """  
         net_in = net_in.unsqueeze(0)
         net_in.requires_grad = True
         net.zero_grad()
@@ -51,9 +71,24 @@ class dreamer(object):
         return net_in.grad.data.squeeze()
 
 
-    def dream_on_octave(self, image_tensor, layer, iterations, lr, out_channels = None):
+    def dream_on_octave(self, image_np, layer, iterations, lr, out_channels = None):
 
-        image_tensor = self.preprocess_func(image_tensor).to(self.device) # image tensor moves to GPU if available
+        """
+        Deep-dream core function, runs n iterations on a single octave(image)
+
+        input args{
+            image_np = 3D numpy array of the image <size = (W, H, C)>
+            layer = specifies the layer whose activations are to be maximized
+            iterations = number of time the original image is added by the gradients multiplied by a constant factor lr
+            out_channels <optinal> = manual selection of output channel from the layer that has been chosen
+        }
+
+        returns{
+            3D np.array which is basicallly the resulting image after running through one single octave
+        }
+        """
+
+        image_tensor = self.preprocess_func(image_np).to(self.device) # image tensor moves to GPU if available
 
         for i in range(iterations):
 
@@ -75,6 +110,20 @@ class dreamer(object):
 
 
     def deep_dream(self, image_np, layer, octave_scale, num_octaves, iterations, lr):
+
+        """
+        High level function used to call the core deep-dream functions on a single image for n octaves.
+
+        input args{
+            image_np = 3D numpy array which is basically the input image 
+            layer = specifies the layer whose activations are to be maximized
+            octave_scale <ideal range = [1.1, 1.5]> = factor by which the size of an octave image is increased after each octave 
+            num_octaves <ideal range = [3, 8]> = number of times the original zero octave image has to expand in order to reack back to it's original size 
+            iterations = number of time the original image is added by the gradients multiplied by a constant factor lr
+            lr = equivalent to learning rate
+        } 
+        """
+
         original_size = image_np.shape[:2]
 
         for n in range(-num_octaves, 1):
@@ -92,6 +141,27 @@ class dreamer(object):
         return image_np
 
     def deep_dream_on_video(self, video_path, save_name , layer, octave_scale, num_octaves, iterations, lr, size = None,  framerate = 30, skip_value = 1 ):
+
+        """
+        Runs deep-dreams on each frame of a video and returns another video made of the dee-dream frames
+
+        input args{
+            video_path = "path/to/video.mp4"
+            save_name = filename of the deep-dream video file that would be saved 
+            layer = specifies the layer whose activations are to be maximized
+            octave_scale <ideal range = [1.1, 1.5]> = factor by which the size of an octave image is increased after each octave 
+            num_octaves <ideal range = [3, 8]> = number of times the original zero octave image has to expand in order to reack back to it's original size 
+            iterations = number of time the original image is added by the gradients multiplied by a constant factor lr
+            lr = equivalent to learning rate
+            size = specifies the size of each frame for the output video. resizing is done before running the deep-dreams, smaller size is  faster 
+            framerate = FPS of the video to be saved 
+            skip_value <optional> = set this to n if you want to skip n frames after each frame from the original video, equivalent to skip value in for loops 
+        }
+
+        returns{
+            Saves a video with filename save_name
+        }
+        """
 
         all_frames = video_to_np_arrays(video_path, skip_value = skip_value, size = None)  ## [:5] is for debugging
         all_dreams = []
@@ -117,6 +187,28 @@ class dreamer(object):
 
 
     def progressive_deep_dream(self, image_path, save_name , layer, octave_scale, num_octaves, iterations, lower_lr, upper_lr, num_steps, framerate = 15, size = None):
+
+        """
+        Runs deep-dreams on a single image with gradually increasing lr, returns a video of the progressive frames
+
+        input args{
+            image_path = "path/to/image.jpg"
+            save_name = filename of the video to be saved 
+            octave_scale <ideal range = [1.1, 1.5]> = factor by which the size of an octave image is increased after each octave 
+            num_octaves <ideal range = [3, 8]> = number of times the original zero octave image has to expand in order to reack back to it's original size 
+            iterations = number of time the original image is added by the gradients multiplied by a constant factor lr
+            lower_lr = lower limit of learning rate
+            upper_lr = upper limit of learning rate
+            num_steps = number of steps to be taken between lower and upper lr
+            framerate = FPS of the video to be saved 
+            size <optional> = (width, height) can be used to resize the original image to a smaller size 
+        }
+
+        returns{
+            Saves a video with filename save_name
+        }
+        """
+
         lrs = np.linspace(lower_lr, upper_lr, num_steps)
         dreams = []
 
