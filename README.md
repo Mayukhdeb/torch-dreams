@@ -22,8 +22,8 @@ simple_dreamer = vgg19_dreamer()
 
 dreamed_image = simple_dreamer.dream(
     image_path = "your_image.jpg",
-    layer_index= 17,
-    iterations= 2,
+    layer_index= 13,
+    iterations= 5,
     size = (256,256)
 )
 
@@ -45,8 +45,8 @@ simple_dreamer.deep_dream_on_video(
     save_name = "dream.mp4",
     layer = simple_dreamer.layers[13],
     octave_scale= 1.3,
-    num_octaves = 2,
-    iterations= 2,
+    num_octaves = 5,
+    iterations= 7,
     lr = 0.09,
     size = None, 
     framerate= 30.0,
@@ -88,7 +88,7 @@ dreamer = dreamer(model, preprocess, deprocess)
 dreamed = dreamer.deep_dream(
                         image_np =image_sample, 
                         layer = layer, 
-                        octave_scale = 1.5, 
+                        octave_scale = 1.3, 
                         num_octaves = 5, 
                         iterations = 7, 
                         lr = 0.09,
@@ -99,5 +99,5 @@ plt.show()
 ## Features:
 * Easy to use with `torch_dreams.simple`
 * Works on the GPU
-* No need to spend hours writing/debugging boilerplate code while slowly forgetting what social life is.
+* No need to spend hours writing/debugging boilerplate code while slowly forgetting what social a life is.
 
