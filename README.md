@@ -101,3 +101,6 @@ plt.show()
 * Works on the GPU
 * No need to spend hours writing/debugging boilerplate code while slowly forgetting what social a life is.
 
+## Stuff to be added:
+* progressive deep-dreams
+* optionally trimming video at certain time values for shorter deep-dream videos
