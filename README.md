@@ -8,9 +8,11 @@ Generate deep-dreams with images and videos, best served with CUDA
 pip install torch-dreams --upgrade
 ```
 
+<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/tiger_dream.png">
+<!--
 <code><img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/island_deep_dream.gif" width = "45%"></code>
 <code><img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/tiger_cover.gif" width = "45%"></code>
-
+-->
 
 ## Less lines of code, more deep-dreams
 
