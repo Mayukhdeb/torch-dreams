@@ -31,6 +31,48 @@ dreamed_image = simple_dreamer.dream(
 
 cv2.imwrite("dream.jpg", dreamed_image)
 ```
+
+## Generating deep-dreams with inceptionV3
+<img src = "images/inception_dream.jpg" width = "50%">
+
+```python
+import torchvision.models as models
+
+from torch_dreams import  utils
+from torch_dreams import dreamer
+
+import cv2 
+import matplotlib.pyplot as plt
+
+
+model = models.inception_v3(pretrained = True)
+model.eval()
+
+layers = list(model.children())
+
+preprocess = utils.preprocess_func
+deprocess = None
+
+dreamer = dreamer(model, preprocess, deprocess)
+image_sample = cv2.resize(cv2.imread("sample.jpg"), (1920,1080))
+
+layer_index = 9  ## try changing this!
+
+layer = layers[layer_index]
+
+dreamed = dreamer.deep_dream(
+                        image_np =image_sample, 
+                        layer = layer, 
+                        octave_scale = 1.1, 
+                        num_octaves = 10, 
+                        iterations = 10, 
+                        lr = 0.69,
+                        )
+
+cv2.imwrite("dream3.jpg", dreamed)
+plt.imshow(cv2.cvtColor(cv2.imread("dream3.jpg"), cv2.COLOR_BGR2RGB))
+```
+
 ## Try changing the `layer_index` to get different types of dreams 
 <code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_15.gif?raw=true"></code>
 <code><img width="31%" src="https://github.com/Mayukhdeb/torch-dreams/blob/master/images/torch_dream_tiger_layer_20.gif?raw=true"></code>
