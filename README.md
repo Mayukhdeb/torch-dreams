@@ -14,6 +14,10 @@ pip install torch-dreams --upgrade
 <code><img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/tiger_cover.gif" width = "45%"></code>
 -->
 
+## Changes under way:
+1. Remove `preprocess` and make `torch_dreams.dreamer` directly compatible with `torch.tensor`
+2. Expand to `torch_dreams.lucid` to facilitate research in neural network interpretability.
+
 ## Less lines of code, more deep-dreams
 
 ```python
