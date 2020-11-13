@@ -7,6 +7,8 @@ from torchvision import transforms
 from tqdm import tqdm 
 import cv2 
 
+import torch.nn.functional as F
+
 from  .utils import *
 
 
@@ -34,13 +36,13 @@ class dreamer(object):
     device = checks for a GPU, uses the GPU for tensor operations if available
     """
 
-    def __init__(self, model, preprocess_func, deprocess_func = None):
+    def __init__(self, model):
         self.model = model
         self.model = self.model.eval()
-        self.preprocess_func = preprocess_func
-        self.deprocess_func = deprocess_func
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = self.model.to(self.device) ## model moves to GPU if available
+
+        print("initialized dreamer on: ", self.device)
 
     
     def get_gradients(self, net_in, net, layer, out_channels = None):   
@@ -58,7 +60,6 @@ class dreamer(object):
             gradient of model weights 
         }
         """  
-        net_in = net_in.unsqueeze(0)
         net_in.requires_grad = True
         net.zero_grad()
         hook = Hook(layer)
@@ -71,7 +72,7 @@ class dreamer(object):
         return net_in.grad.data.squeeze()
 
 
-    def dream_on_octave(self, image_np, layer, iterations, lr, out_channels = None):
+    def dream_on_octave(self, image_tensor, layer, iterations, lr, out_channels = None):
 
         """
         Deep-dream core function, runs n iterations on a single octave(image)
@@ -88,7 +89,7 @@ class dreamer(object):
         }
         """
 
-        image_tensor = self.preprocess_func(image_np).to(self.device) # image tensor moves to GPU if available
+        image_tensor = image_tensor.unsqueeze(0) # image tensor moves to GPU if available
 
         for i in range(iterations):
 
@@ -98,18 +99,12 @@ class dreamer(object):
             gradients_tensor = roll_torch_tensor(gradients_tensor, -roll_x, -roll_y)  
             image_tensor.data = image_tensor.data + lr * gradients_tensor.data ## can confirm this is still on the GPU if you have one
 
-        img_out = image_tensor.detach().cpu()
+        img_out = image_tensor.detach()
 
-        if self.deprocess_func is not None:
-            img_out = deprocess_func(img_out)
-
-        img_out_np = img_out.numpy()
-        img_out_np = img_out_np.transpose(1,2,0)
-        
-        return img_out_np
+        return img_out.cpu()
 
 
-    def deep_dream(self, image_np, layer, octave_scale, num_octaves, iterations, lr):
+    def deep_dream(self, image_tensor, layer, octave_scale, num_octaves, iterations, lr):
 
         """
         High level function used to call the core deep-dream functions on a single image for n octaves.
@@ -124,21 +119,17 @@ class dreamer(object):
         } 
         """
 
-        original_size = image_np.shape[:2]
+        original_size = torch.tensor(image_tensor.size()[2:])
 
         for n in range(-num_octaves, 1):
             
-            octave_size = tuple( np.array(original_size) * octave_scale**n)
+            octave_size = original_size * torch.tensor([octave_scale**n])
             new_size = (int(octave_size[1]), int(octave_size[0]))
-
-            image_np = cv2.resize(image_np, new_size)
-            image_np = self.dream_on_octave(image_np, layer =  layer, iterations = iterations, lr = lr, out_channels = None)
-            
-                    
-        image_np = cv2.convertScaleAbs(image_np, alpha = 255)
-
+            compose = transforms.Compose([transforms.ToPILImage(),transforms.Resize(new_size), transforms.ToTensor()])
+            image_tensor = compose(image_tensor.squeeze(0)).to(self.device)
+            image_tensor = self.dream_on_octave(image_tensor = image_tensor, layer =  layer, iterations = iterations, lr = lr, out_channels = None)
         
-        return image_np
+        return image_tensor.squeeze(0)
 
     def deep_dream_on_video(self, video_path, save_name , layer, octave_scale, num_octaves, iterations, lr, size = None,  framerate = 30, skip_value = 1 ):
 
