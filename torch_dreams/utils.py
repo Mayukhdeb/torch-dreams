@@ -119,7 +119,3 @@ def write_video_from_image_list(save_name, all_images_np, framerate, size):
         out.write(frame)
     out.release()
     
-def tensor_to_image(tensor):
-    img = tensor.numpy().transpose(1,2,0)
-    img = cv2.convertScaleAbs(img, alpha = 255)
-    return img
