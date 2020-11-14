@@ -1,6 +1,7 @@
 # torch-dreams
 Generate deep-dreams with images and videos, best served with CUDA
 
+**warning**: This project is undergoing a major overhaul right now. So most of the backend would be broken.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayukhdeb/torch-dreams/blob/master/notebooks/torch_dreams_examples.ipynb)
 [![](https://img.shields.io/github/last-commit/mayukhdeb/torch-dreams)](https://github.com/mayukhdeb/torch-dreams/commits/master)
