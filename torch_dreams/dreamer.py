@@ -49,7 +49,7 @@ class dreamer(object):
         self.model = self.model.to(self.device) ## model moves to GPU if available
 
         print("dreamer init on: ", self.device)
-    def get_gradients(self, net_in, net, layer):   
+    def get_gradients(self, net_in, net, layers):   
         """
         Executes the forward pass through the model and returns the gradients from the selected layer. 
 
@@ -67,16 +67,30 @@ class dreamer(object):
         net_in = net_in.unsqueeze(0)
         net_in.requires_grad = True
         net.zero_grad()
-        hook = Hook(layer)
+
+        hooks = []
+        for layer in layers:
+
+            hook = Hook(layer)
+            hooks.append(hook)
+
         net_out = net(net_in)
-        
-        loss = hook.output[0].norm()
+
+        losses = []
+
+        for hook in hooks:
+
+            loss = hook.output[0].norm()
+            losses.append(loss)
+
+        loss = torch.mean(torch.stack(losses))
+
 
         loss.backward()
         return net_in.grad.data.squeeze()
 
 
-    def dream_on_octave(self, image_np, layer, iterations, lr):
+    def dream_on_octave(self, image_np, layers, iterations, lr):
 
         """
         Deep-dream core function, runs n iterations on a single octave(image)
@@ -100,7 +114,7 @@ class dreamer(object):
             roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
             print(roll_x, roll_y)
             image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
-            gradients_tensor = self.get_gradients(image_tensor_rolled, self.model, layer).detach()
+            gradients_tensor = self.get_gradients(image_tensor_rolled, self.model, layers).detach()
             gradients_tensor = roll_torch_tensor(gradients_tensor, -roll_x, -roll_y)  
             image_tensor.data = image_tensor.data + lr * gradients_tensor.data ## can confirm this is still on the GPU if you have one
 
@@ -112,7 +126,7 @@ class dreamer(object):
         return img_out_np
 
 
-    def deep_dream(self, image_path, layer, octave_scale, num_octaves, iterations, lr, size = None):
+    def deep_dream(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None):
 
         """
         High level function used to call the core deep-dream functions on a single image for n octaves.
@@ -140,7 +154,7 @@ class dreamer(object):
 
             image_np = cv2.resize(image_np, new_size)
 
-            image_np = self.dream_on_octave(image_np  = image_np, layer = layer, iterations = iterations, lr = lr)
+            image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr)
 
         image_np = post_process_numpy_image(image_np)
         return image_np
