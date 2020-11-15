@@ -49,7 +49,7 @@ class dreamer(object):
         self.model = self.model.to(self.device) ## model moves to GPU if available
 
         print("dreamer init on: ", self.device)
-    def get_gradients(self, net_in, net, layer, out_channels = None):   
+    def get_gradients(self, net_in, net, layer):   
         """
         Executes the forward pass through the model and returns the gradients from the selected layer. 
 
@@ -69,15 +69,14 @@ class dreamer(object):
         net.zero_grad()
         hook = Hook(layer)
         net_out = net(net_in)
-        if out_channels == None:
-            loss = hook.output[0].norm()
-        else:
-            loss = hook.output[0][out_channels].norm()
+        
+        loss = hook.output[0].norm()
+
         loss.backward()
         return net_in.grad.data.squeeze()
 
 
-    def dream_on_octave(self, image_np, layer, iterations, lr, out_channels = None):
+    def dream_on_octave(self, image_np, layer, iterations, lr):
 
         """
         Deep-dream core function, runs n iterations on a single octave(image)
@@ -101,7 +100,7 @@ class dreamer(object):
             roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
             print(roll_x, roll_y)
             image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
-            gradients_tensor = self.get_gradients(image_tensor_rolled, self.model, layer, out_channels).detach()
+            gradients_tensor = self.get_gradients(image_tensor_rolled, self.model, layer).detach()
             gradients_tensor = roll_torch_tensor(gradients_tensor, -roll_x, -roll_y)  
             image_tensor.data = image_tensor.data + lr * gradients_tensor.data ## can confirm this is still on the GPU if you have one
 
@@ -130,9 +129,7 @@ class dreamer(object):
 
 
         original_image = load_image(image_path)
-
         original_size = original_image.shape[:-1]
-
         image_np = preprocess_numpy_img(original_image)
 
         
