@@ -8,6 +8,8 @@ from torchvision import transforms
 from tqdm import tqdm 
 import cv2 
 
+import random
+
 from .constants import IMAGENET_MEAN_1
 from .constants import IMAGENET_STD_1
 
@@ -70,11 +72,13 @@ def find_random_roll_values_for_tensor(image_tensor):
     image_tensor.size() should be (C, H, W)
     """
 
-    roll_x = image_tensor.size()[-1]
-    roll_y = image_tensor.size()[-2]
+    max_roll_x = image_tensor.size()[-1]
+    max_roll_y = image_tensor.size()[-2]
+
+    roll_x = random.randint(-max_roll_x, max_roll_x)
+    roll_y = random.randint(-max_roll_y, max_roll_y)
 
     return roll_x, roll_y
-from torchvision import models
 
 
 def roll_torch_tensor(image_tensor, roll_x, roll_y):

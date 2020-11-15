@@ -91,13 +91,15 @@ class dreamer(object):
 
         returns{
             3D np.array which is basicallly the resulting image after running through one single octave
-        }
+        }            print(roll_x, roll_y)
+
         """
 
         image_tensor = pytorch_input_adapter(image_np, device = self.device)
         for i in range(iterations):
 
             roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
+            print(roll_x, roll_y)
             image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
             gradients_tensor = self.get_gradients(image_tensor_rolled, self.model, layer, out_channels).detach()
             gradients_tensor = roll_torch_tensor(gradients_tensor, -roll_x, -roll_y)  
