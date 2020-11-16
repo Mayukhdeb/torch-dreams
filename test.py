@@ -1,13 +1,5 @@
-import torch
 from torchvision import models
-import numpy as np
 import matplotlib.pyplot as plt
-import os
-import tqdm
-from torchvision import transforms
-import matplotlib.pyplot as plt
-from tqdm import tqdm 
-import cv2 
 
 from torch_dreams import  utils
 from torch_dreams import dreamer
@@ -15,7 +7,7 @@ from torch_dreams import dreamer
 model= models.vgg19(pretrained=True)
 layers = list(model.features.children())
 
-layers_to_use= layers[20:24]
+layers_to_use= layers[25:28]
 
 dreamy_boi = dreamer(model = model)
 
