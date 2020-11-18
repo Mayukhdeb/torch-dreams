@@ -6,3 +6,5 @@ torch_dreams.egg-info
 .ipynb_checkpoints/
 sample.jpg
 output/
+.vscode/
+*.ipynb
