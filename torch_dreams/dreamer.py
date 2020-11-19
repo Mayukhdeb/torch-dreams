@@ -11,7 +11,7 @@ from  .utils import load_image
 from .utils import pytorch_input_adapter
 from .utils import preprocess_numpy_img
 from .utils import pytorch_output_adapter
-from .utils import transform_to_tensor
+from .image_transforms import transform_to_tensor
 from .utils import find_random_roll_values_for_tensor
 from .utils import roll_torch_tensor
 from .utils import post_process_numpy_image

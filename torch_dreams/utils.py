@@ -13,10 +13,8 @@ import random
 from .constants import IMAGENET_MEAN_1
 from .constants import IMAGENET_STD_1
 
-transform_to_tensor = transforms.Compose([
-                transforms.ToTensor()
-            ])
-
+from .image_transforms import transform_to_tensor
+from .image_transforms import rot_img
 
 def load_image(img_path, target_shape=None):
     if not os.path.exists(img_path):
@@ -38,9 +36,12 @@ def load_image(img_path, target_shape=None):
     return img
 
 def pytorch_input_adapter(img, device):
-    tensor = transforms.ToTensor()(img).to(device)
+    tensor = transform_to_tensor(img).to(device)
     return tensor
 
+def rotate_image_tensor(image_tensor, theta):
+    image_rotated = rot_img(x = image_tensor.unsqueeze(0), theta = theta)
+    return image_rotated
 
 def pytorch_output_adapter(img):
     return np.moveaxis(img.to('cpu').detach().numpy()[0], 0, 2)
