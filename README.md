@@ -8,12 +8,10 @@ Generate deep-dreams with images and videos, best served with CUDA
 ```
 pip install torch-dreams --upgrade
 ```
+## Feature visualization through combined optimization of channels 
 
-<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/tiger_dream.png">
-<!--
-<code><img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/island_deep_dream.gif" width = "45%"></code>
-<code><img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/tiger_cover.gif" width = "45%"></code>
--->
+<code><img src = "https://github.com/Mayukhdeb/torch-dreams/blob/master/images/visualizations/channel_blending_googlenet_2.jpg?raw=true" width = "45%"></code>
+<code><img src = "https://github.com/Mayukhdeb/torch-dreams/blob/master/images/visualizations/channel_blending_googlenet.jpg?raw=true" width = "45%"></code>
 
 ## Changes under way:
 1. Remove `preprocess` and make `torch_dreams.dreamer` directly compatible with `torch.tensor`
