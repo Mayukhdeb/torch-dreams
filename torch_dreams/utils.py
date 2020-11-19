@@ -39,9 +39,14 @@ def pytorch_input_adapter(img, device):
     tensor = transform_to_tensor(img).to(device)
     return tensor
 
-def rotate_image_tensor(image_tensor, theta):
-    image_rotated = rot_img(x = image_tensor.unsqueeze(0), theta = theta)
-    return image_rotated
+def get_random_rotation_angle(theta_max = 0.15):
+    theta = (random.random() - 0.5) * theta_max
+    # print(theta)
+    return theta
+
+def rotate_image_tensor(image_tensor, theta, device ):
+    image_rotated = rot_img(x = image_tensor.unsqueeze(0), theta = theta, device = device)
+    return image_rotated.squeeze(0)
 
 def pytorch_output_adapter(img):
     return np.moveaxis(img.to('cpu').detach().numpy()[0], 0, 2)

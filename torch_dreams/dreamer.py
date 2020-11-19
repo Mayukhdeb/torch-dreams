@@ -16,6 +16,8 @@ from .utils import find_random_roll_values_for_tensor
 from .utils import roll_torch_tensor
 from .utils import post_process_numpy_image
 
+from .utils import get_random_rotation_angle
+from .utils import rotate_image_tensor
 
 
 class Hook():
@@ -100,7 +102,7 @@ class dreamer(object):
         return net_in.grad.data.squeeze()
 
 
-    def dream_on_octave(self, image_np, layers, iterations, lr, custom_func = None):
+    def dream_on_octave(self, image_np, layers, iterations, lr, custom_func = None, max_rotation = 0.2):
 
         """
         Deep-dream core function, runs n iterations on a single octave(image)
@@ -120,11 +122,33 @@ class dreamer(object):
 
         image_tensor = pytorch_input_adapter(image_np, device = self.device)
         for i in range(iterations):
-
+            
+            """
+            rolling 
+            """
             roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
             image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
-            gradients_tensor = self.get_gradients(net_in = image_tensor_rolled, net = self.model, layers = layers, custom_func= custom_func).detach()
-            gradients_tensor = roll_torch_tensor(gradients_tensor, -roll_x, -roll_y)  
+            
+            """
+            rotating
+            """
+            theta = get_random_rotation_angle(theta_max= max_rotation)
+            image_tensor_rolled_rotated = rotate_image_tensor(image_tensor = image_tensor_rolled, theta = theta, device = self.device)
+
+            """
+            getting gradients
+            """
+            gradients_tensor = self.get_gradients(net_in = image_tensor_rolled_rotated, net = self.model, layers = layers, custom_func= custom_func).detach()
+
+            """
+            unrotate and unroll gradients of the image tensor
+            """
+            gradients_tensor_unrotated  = rotate_image_tensor(gradients_tensor, theta = -theta, device = self.device)
+            gradients_tensor = roll_torch_tensor(gradients_tensor_unrotated, -roll_x, -roll_y)  
+
+            """
+            image update
+            """
             image_tensor.data = image_tensor.data + lr * gradients_tensor.data ## can confirm this is still on the GPU if you have one
 
         img_out = image_tensor.detach().cpu()
@@ -135,7 +159,7 @@ class dreamer(object):
         return img_out_np
 
 
-    def deep_dream(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None, custom_func = None):
+    def deep_dream(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None, custom_func = None, max_rotation = 0.2):
 
         """
         High level function used to call the core deep-dream functions on a single image for n octaves.
@@ -163,7 +187,7 @@ class dreamer(object):
 
             image_np = cv2.resize(image_np, new_size)
 
-            image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_func = custom_func)
+            image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_func = custom_func, max_rotation= max_rotation)
 
         image_np = post_process_numpy_image(image_np)
         return image_np
