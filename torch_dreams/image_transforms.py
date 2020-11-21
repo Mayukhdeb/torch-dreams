@@ -21,5 +21,5 @@ def get_rot_mat(theta):
 def rot_img(x, theta, dtype = torch.float32, device = 'cpu'):
     rot_mat = get_rot_mat(theta)[None, ...].type(dtype).repeat(x.shape[0],1,1)
     grid = F.affine_grid(rot_mat, x.size()).type(dtype).to(device)
-    x = F.grid_sample(x, grid)
+    x = F.grid_sample(x, grid, align_corners= True)
     return x
