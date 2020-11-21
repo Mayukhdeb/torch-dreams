@@ -19,7 +19,7 @@ pip install torch-dreams --upgrade
     * [Google AI blog on DeepDreams](https://ai.googleblog.com/2015/06/inceptionism-going-deeper-into-neural.html)
   * **Notebooks**:
     * [optimizing random noise to activate channels within the inceptionv3](https://nbviewer.jupyter.org/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_showcase_inceptionv3.ipynb)
-    * [optimizing images to activate channels within googlenet](https://nbviewer.jupyter.org/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_showcase_googlenet.ipynb
+    * [optimizing images to activate channels within googlenet](https://nbviewer.jupyter.org/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_showcase_googlenet.ipynb)
   * **Images**:
     * [Full size images from notebooks](https://github.com/Mayukhdeb/torch-dreams-notebooks/tree/main/images/raw_output)
 
