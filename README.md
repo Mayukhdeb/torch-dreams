@@ -1,6 +1,5 @@
 # torch-dreams
 Making deep neural networks more interpretable, one octave at a time.
-
 :exclamation::exclamation: **warning**: This project is undergoing a major overhaul right now. So most of the backend would be broken. 
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayukhdeb/torch-dreams/blob/master/notebooks/torch_dreams_examples.ipynb)
@@ -8,6 +7,9 @@ Making deep neural networks more interpretable, one octave at a time.
 ```
 pip install torch-dreams --upgrade
 ```
+
+<img src = "https://github.com/Mayukhdeb/torch-dreams/blob/master/images/inceptionv3_cherrypicked_channels.jpg?raw=true">
+
 
 ## Contents:
 
