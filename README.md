@@ -1,5 +1,6 @@
 # torch-dreams
 Making deep neural networks more interpretable, one octave at a time.
+
 :exclamation::exclamation: **warning**: This project is undergoing a major overhaul right now. So most of the backend would be broken. 
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayukhdeb/torch-dreams/blob/master/notebooks/torch_dreams_examples.ipynb)
@@ -16,11 +17,9 @@ pip install torch-dreams --upgrade
   * **You might want to read**:
     * [Feature visualization by Olah, et al.](https://distill.pub/2017/feature-visualization/)
     * [Google AI blog on DeepDreams](https://ai.googleblog.com/2015/06/inceptionism-going-deeper-into-neural.html)
-    
   * **Notebooks**:
     * [optimizing random noise to activate channels within the inceptionv3](https://nbviewer.jupyter.org/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_showcase_inceptionv3.ipynb)
-    * [optimizing images to activate channels within googlenet](https://nbviewer.jupyter.org/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_showcase_googlenet.ipynb)
-    
+    * [optimizing images to activate channels within googlenet](https://nbviewer.jupyter.org/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_showcase_googlenet.ipynb
   * **Images**:
     * [Full size images from notebooks](https://github.com/Mayukhdeb/torch-dreams-notebooks/tree/main/images/raw_output)
 
