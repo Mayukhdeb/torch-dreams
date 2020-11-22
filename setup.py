@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.1.0",
     author="Mayukh Deb", 
     author_email="mayukhmainak2000@gmail.com", 
-    description="Generate deep-dreams in PyTorch",
+    description="Feature visualization to make deep neural networks more interpretable",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Mayukhdeb/torch-dreams",
