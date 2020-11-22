@@ -1,42 +1,34 @@
-from torchvision import models
-import matplotlib.pyplot as plt
 import cv2
-import torch
+import numpy as np
+import matplotlib.pyplot as plt
 
-from torch_dreams import  utils
-from torch_dreams import dreamer
+from torch_dreams.dreamer import dreamer
+import torchvision.models as models
 
-model= models.vgg19(pretrained=True)
-layers = list(model.features.children())
+model = models.inception_v3(pretrained=True)
+dreamy_boi = dreamer(model)
 
-layers_to_use= layers[25:28]
+layer = model.Mixed_6c.branch7x7_1.conv
+layer_2 = model.Mixed_6c.branch7x7dbl_3.conv
 
-dreamy_boi = dreamer(model = model)
+
+layers_to_use = [layer, layer_2]
 
 def my_custom_func(layer_outputs):
-    """
-    this custom func would get applied to the list of layer outputs
-
-    the layers whose outputs are given here are the ones you asked for in the layers arg
-    """
-    # print([l.size() for l in layer_outputs])
-    loss = layer_outputs[1][100].norm()
+    
+    loss = layer_outputs[0][70].norm()
     return loss
 
-out = dreamy_boi.deep_dream(
-    image_path = "sample_small.jpg",
+out_single_conv = dreamy_boi.deep_dream(
+    image_path = "images/sample_small.jpg",
     layers = layers_to_use,
-    octave_scale = 1.4,
-    num_octaves = 3,
-    iterations =10,
-    lr = 0.85,
-    custom_func = my_custom_func
+    octave_scale = 1.1,
+    num_octaves = 11,
+    iterations = 200,
+    lr = 4.9,
+    custom_func =  my_custom_func,
+    max_rotation =  0.3
 )
 
-plt.imshow(out)
+plt.imshow(out_single_conv)
 plt.show()
-
-out = cv2.cvtColor(out, cv2.COLOR_BGR2RGB)
-
-cv2.imwrite("dream.jpg", out*255)
-
