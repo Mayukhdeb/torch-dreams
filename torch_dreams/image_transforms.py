@@ -2,6 +2,10 @@ import torchvision.transforms as transforms
 import torch
 import torch.nn.functional as F
 
+
+import warnings
+warnings.filterwarnings("ignore")
+
 transform_to_tensor = transforms.Compose([
                 transforms.ToTensor()
             ])
