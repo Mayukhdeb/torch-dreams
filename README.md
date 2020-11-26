@@ -55,6 +55,9 @@ out_single_layer = dreamy_boi.deep_dream(
 plt.imshow(out_single_layer)
 plt.show()
 ```
+## Interpolating though different classes by weighted optimization of random noise 
+<img src = "https://github.com/Mayukhdeb/torch-dreams/blob/master/images/resnet18_goldfish_zebra_baloon_interp.jpg?raw=true">
+
 
 ## Optimizing noise to activate multiple channels simultaneously within the `inceptionv3`
 
