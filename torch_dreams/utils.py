@@ -7,16 +7,17 @@ import tqdm
 from torchvision import transforms
 from tqdm import tqdm 
 import cv2 
-
 import random
 
 from .constants import IMAGENET_MEAN_1
 from .constants import IMAGENET_STD_1
+from .constants import IMAGENET_MEAN_1_GRAY
+from .constants import IMAGENET_STD_1_GRAY
 
 from .image_transforms import transform_to_tensor
 from .image_transforms import rot_img
 
-def load_image(img_path, target_shape=None):
+def load_image(img_path, target_shape=None, grayscale = False):
     if not os.path.exists(img_path):
         raise Exception(f'Path does not exist: {img_path}')
     img = cv2.imread(img_path)[:, :, ::-1]  # [:, :, ::-1] converts BGR (opencv format...) into RGB
@@ -33,6 +34,10 @@ def load_image(img_path, target_shape=None):
     # this need to go after resizing - otherwise cv.resize will push values outside of [0,1] range
     img = img.astype(np.float32)  # convert from uint8 to float32
     img /= 255.0  # get to [0, 1] range
+
+    if grayscale is True:
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
     return img
 
 def pytorch_input_adapter(img, device):
@@ -45,6 +50,14 @@ def get_random_rotation_angle(theta_max = 0.15):
     return theta
 
 def rotate_image_tensor(image_tensor, theta, device ):
+    """
+    when trying to use grayscale, it throws a NotImplementedError
+    somehow, the single channel image is becoming 2D instead of 1D on 2nd iteration 
+
+    refer issue (Fixed){
+        https://github.com/Mayukhdeb/torch-dreams/issues/7
+    }
+    """
     image_rotated = rot_img(x = image_tensor.unsqueeze(0), theta = theta, device = device)
     return image_rotated.squeeze(0)
 
@@ -52,10 +65,14 @@ def pytorch_output_adapter(img):
     return np.moveaxis(img.to('cpu').detach().numpy()[0], 0, 2)
 
 
-def preprocess_numpy_img(img):
+def preprocess_numpy_img(img, grayscale = False):
     assert isinstance(img, np.ndarray), f'Expected numpy image got {type(img)}'
 
-    img = (img - IMAGENET_MEAN_1) / IMAGENET_STD_1  # normalize image
+    if grayscale is False:
+
+        img = (img - IMAGENET_MEAN_1) / IMAGENET_STD_1  # normalize image
+    else:
+        img = (img - IMAGENET_MEAN_1_GRAY) / IMAGENET_STD_1_GRAY  # normalize image
     return img
 
 def post_process_numpy_image(dump_img):

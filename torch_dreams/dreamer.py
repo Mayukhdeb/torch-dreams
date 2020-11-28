@@ -11,10 +11,10 @@ from  .utils import load_image
 from .utils import pytorch_input_adapter
 from .utils import preprocess_numpy_img
 from .utils import pytorch_output_adapter
-from .image_transforms import transform_to_tensor
 from .utils import find_random_roll_values_for_tensor
 from .utils import roll_torch_tensor
 from .utils import post_process_numpy_image
+from .image_transforms import transform_to_tensor
 
 from .utils import get_random_rotation_angle
 from .utils import rotate_image_tensor
@@ -99,7 +99,7 @@ class dreamer(object):
 
 
         loss.backward()
-        return net_in.grad.data.squeeze()
+        return net_in.grad.data.squeeze(0)
 
 
     def dream_on_octave(self, image_np, layers, iterations, lr, custom_func = None, max_rotation = 0.2):
@@ -126,6 +126,7 @@ class dreamer(object):
             """
             rolling 
             """
+
             roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
             image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
             
@@ -159,7 +160,7 @@ class dreamer(object):
         return img_out_np
 
 
-    def deep_dream(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None, custom_func = None, max_rotation = 0.2):
+    def deep_dream(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None, custom_func = None, max_rotation = 0.2, grayscale = False):
 
         """
         High level function used to call the core deep-dream functions on a single image for n octaves.
@@ -174,19 +175,21 @@ class dreamer(object):
         } 
         """
 
+        original_image = load_image(image_path, grayscale=grayscale)
+        image_np = preprocess_numpy_img(original_image, grayscale=grayscale)
+        if grayscale is True:
+            image_np = np.expand_dims(image_np, axis = -1)
 
-        original_image = load_image(image_path)
-        original_size = original_image.shape[:-1]
-        image_np = preprocess_numpy_img(original_image)
+        original_size = image_np.shape[:-1]
 
-        
         for n in tqdm(range(-num_octaves, 1)):
             
             octave_size = tuple( np.array(original_size) * octave_scale**n)
             new_size = (int(octave_size[1]), int(octave_size[0]))
 
             image_np = cv2.resize(image_np, new_size)
-
+            if grayscale is True:
+                image_np = np.expand_dims(image_np, axis = -1)
             image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_func = custom_func, max_rotation= max_rotation)
 
         image_np = post_process_numpy_image(image_np)
