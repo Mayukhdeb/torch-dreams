@@ -116,7 +116,75 @@ class dreamer(object):
         return net_in.grad.data.squeeze(0)
 
 
-    def dream_on_octave(self, image_np, layers, iterations, lr, custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None):
+    def dream_on_octave(self, image_np, layers, iterations, lr, custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None):
+
+        """
+        Deep-dream core function, runs n iterations on a single octave(image)
+        input args{
+            image_np = 3D numpy array of the image <size = (W, H, C)>
+            layer = specifies the layer whose activations are to be maximized
+            iterations = number of time the original image is added by the gradients multiplied by a constant factor lr
+            out_channels <optinal> = manual selection of output channel from the layer that has been chosen
+        }
+        returns{
+            3D np.array which is basicallly the resulting image after running through one single octave
+        }            print(roll_x, roll_y)
+        """
+
+        image_tensor = pytorch_input_adapter(image_np, device = self.device)
+        for i in range(iterations):
+            """
+            rolling 
+            """
+
+            roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
+            image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
+            
+            """
+            rotating
+            """
+            theta = get_random_rotation_angle(theta_max= max_rotation)
+            image_tensor_rolled_rotated = rotate_image_tensor(image_tensor = image_tensor_rolled, theta = theta, device = self.device)
+
+            """
+            getting gradients
+            """
+            gradients_tensor = self.get_gradients(net_in = image_tensor_rolled_rotated, net = self.model, layers = layers, custom_func= custom_func).detach()
+
+            """
+            unrotate and unroll gradients of the image tensor
+            """
+            gradients_tensor_unrotated  = rotate_image_tensor(gradients_tensor, theta = -theta, device = self.device)
+            gradients_tensor = roll_torch_tensor(gradients_tensor_unrotated, -roll_x, -roll_y)  
+
+            """
+            image update
+            """
+            # print(gradient_smoothing_sigma, gradient_smoothing_kernel_size)
+            
+            if gradient_smoothing_kernel_size is not None and gradient_smoothing_coeff is not None:
+                
+                sigma = ((i + 1) / iterations) * 2.0 + gradient_smoothing_coeff
+
+                smooth_gradients_tensor = CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = self.device)(gradients_tensor.unsqueeze(0)).squeeze(0)
+                g_norm = torch.std(smooth_gradients_tensor)
+
+                image_tensor.data = image_tensor.data + lr * (smooth_gradients_tensor.data / g_norm) ## can confirm this is still on the GPU if you have one
+            else:
+                g_norm = torch.std(gradients_tensor)
+                image_tensor.data = image_tensor.data + lr *(gradients_tensor.data /g_norm) ## can confirm this is still on the GPU if you have one
+
+            image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND).squeeze(0)
+
+        img_out = image_tensor.detach().cpu()
+
+        img_out_np = img_out.numpy()
+        img_out_np = img_out_np.transpose(1,2,0)
+        
+        return img_out_np
+
+
+    def dream_on_octave_with_masks(self, image_np, layers, iterations, lr, custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None):
 
         """
         Deep-dream core function, runs n iterations on a single octave(image)
@@ -200,8 +268,41 @@ class dreamer(object):
         
         return img_out_np
 
+    def deep_dream(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None, custom_func = None, max_rotation = 0.2, grayscale = False, gradient_smoothing_coeff = 0.5, gradient_smoothing_kernel_size = 5):
 
-    def deep_dream(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None, custom_funcs = None, max_rotation = 0.2, grayscale = False, gradient_smoothing_coeff = 0.5, gradient_smoothing_kernel_size = 5, grad_mask = None):
+        """
+        High level function used to call the core deep-dream functions on a single image for n octaves.
+        input args{
+            image_np = 3D numpy array which is basically the input image 
+            layer = specifies the layer whose activations are to be maximized
+            octave_scale <ideal range = [1.1, 1.5]> = factor by which the size of an octave image is increased after each octave 
+            num_octaves <ideal range = [3, 8]> = number of times the original zero octave image has to expand in order to reack back to it's original size 
+            iterations = number of time the original image is added by the gradients multiplied by a constant factor lr
+            lr = equivalent to learning rate
+        } 
+        """
+
+        original_image = load_image(image_path, grayscale=grayscale)
+        image_np = preprocess_numpy_img(original_image, grayscale=grayscale)
+        if grayscale is True:
+            image_np = np.expand_dims(image_np, axis = -1)
+
+        original_size = image_np.shape[:-1]
+
+        for n in tqdm(range(-num_octaves, 1)):
+            
+            octave_size = tuple( np.array(original_size) * octave_scale**n)
+            new_size = (int(octave_size[1]), int(octave_size[0]))
+
+            image_np = cv2.resize(image_np, new_size)
+            if grayscale is True:
+                image_np = np.expand_dims(image_np, axis = -1)
+            image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_func = custom_func, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size)
+
+        image_np = post_process_numpy_image(image_np)
+        return image_np
+
+    def deep_dream_with_masks(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None, custom_funcs = None, max_rotation = 0.2, grayscale = False, gradient_smoothing_coeff = 0.5, gradient_smoothing_kernel_size = 5, grad_mask = None):
 
         """
         High level function used to call the core deep-dream functions on a single image for n octaves.
@@ -234,7 +335,7 @@ class dreamer(object):
             
             if grad_mask is not None:
                 grad_mask = [cv2.resize(g, new_size) for g in grad_mask]
-            image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_funcs = custom_funcs, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grad_mask= grad_mask )
+            image_np = self.dream_on_octave_with_masks(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_funcs = custom_funcs, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grad_mask= grad_mask )
 
         image_np = post_process_numpy_image(image_np)
         return image_np
