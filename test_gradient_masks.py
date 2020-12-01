@@ -25,7 +25,7 @@ def custom_func(layer_outputs):
     loss = torch.mean(torch.stack(losses))
     return loss
 
-out_single_conv_a = dreamy_boi.deep_dream(
+out_single_conv_a = dreamy_boi.deep_dream_with_masks(
     image_path = "images/sample_small.jpg",
     layers = layers_to_use,
     octave_scale = 1.2,
@@ -40,7 +40,7 @@ out_single_conv_a = dreamy_boi.deep_dream(
     grad_mask = [grad_mask]
     
 )
-out_single_conv_b = dreamy_boi.deep_dream(
+out_single_conv_b = dreamy_boi.deep_dream_with_masks(
     image_path = "images/sample_small.jpg",
     layers = layers_to_use,
     octave_scale = 1.2,
@@ -56,7 +56,7 @@ out_single_conv_b = dreamy_boi.deep_dream(
     
 )
 
-out_single_conv = dreamy_boi.deep_dream(
+out_single_conv = dreamy_boi.deep_dream_with_masks(
     image_path = "images/sample_small.jpg",
     layers = layers_to_use,
     octave_scale = 1.2,
