@@ -24,6 +24,9 @@ from .utils import CascadeGaussianSmoothing
 from .constants import UPPER_IMAGE_BOUND
 from .constants import LOWER_IMAGE_BOUND
 
+from .constants import UPPER_IMAGE_BOUND_GRAY
+from .constants import LOWER_IMAGE_BOUND_GRAY
+
 class Hook():
     def __init__(self, module, backward=False):
         if backward==False:
@@ -116,7 +119,7 @@ class dreamer(object):
         return net_in.grad.data.squeeze(0)
 
 
-    def dream_on_octave(self, image_np, layers, iterations, lr, custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None):
+    def dream_on_octave(self, image_np, layers, iterations, lr, custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grayscale = False):
 
         """
         Deep-dream core function, runs n iterations on a single octave(image)
@@ -166,7 +169,7 @@ class dreamer(object):
                 
                 sigma = ((i + 1) / iterations) * 2.0 + gradient_smoothing_coeff
 
-                smooth_gradients_tensor = CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = self.device)(gradients_tensor.unsqueeze(0)).squeeze(0)
+                smooth_gradients_tensor = CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = self.device, grayscale= grayscale)(gradients_tensor.unsqueeze(0)).squeeze(0)
                 g_norm = torch.std(smooth_gradients_tensor)
 
                 image_tensor.data = image_tensor.data + lr * (smooth_gradients_tensor.data / g_norm) ## can confirm this is still on the GPU if you have one
@@ -174,7 +177,12 @@ class dreamer(object):
                 g_norm = torch.std(gradients_tensor)
                 image_tensor.data = image_tensor.data + lr *(gradients_tensor.data /g_norm) ## can confirm this is still on the GPU if you have one
 
-            image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND).squeeze(0)
+            if grayscale is False:
+
+                image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND).squeeze(0)
+            else:
+                image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND_GRAY), LOWER_IMAGE_BOUND_GRAY).squeeze(0)
+
 
         img_out = image_tensor.detach().cpu()
 
@@ -184,7 +192,7 @@ class dreamer(object):
         return img_out_np
 
 
-    def dream_on_octave_with_masks(self, image_np, layers, iterations, lr, custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None):
+    def dream_on_octave_with_masks(self, image_np, layers, iterations, lr, custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None, grayscale = False):
 
         """
         Deep-dream core function, runs n iterations on a single octave(image)
@@ -245,7 +253,7 @@ class dreamer(object):
                 
                 sigma = ((i + 1) / iterations) * 2.0 + gradient_smoothing_coeff
 
-                gradients_tensors = [CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = self.device)(gradients_tensor.unsqueeze(0)).squeeze(0) for gradients_tensor in gradients_tensors]
+                gradients_tensors = [CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = self.device, grayscale= grayscale)(gradients_tensor.unsqueeze(0)).squeeze(0) for gradients_tensor in gradients_tensors]
 
 
                 for m in range(len(gradients_tensors)):
@@ -297,7 +305,7 @@ class dreamer(object):
             image_np = cv2.resize(image_np, new_size)
             if grayscale is True:
                 image_np = np.expand_dims(image_np, axis = -1)
-            image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_func = custom_func, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size)
+            image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_func = custom_func, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grayscale=grayscale)
 
         image_np = post_process_numpy_image(image_np)
         return image_np
@@ -335,7 +343,7 @@ class dreamer(object):
             
             if grad_mask is not None:
                 grad_mask = [cv2.resize(g, new_size) for g in grad_mask]
-            image_np = self.dream_on_octave_with_masks(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_funcs = custom_funcs, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grad_mask= grad_mask )
+            image_np = self.dream_on_octave_with_masks(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_funcs = custom_funcs, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grad_mask= grad_mask, grayscale=grayscale )
 
         image_np = post_process_numpy_image(image_np)
         return image_np
