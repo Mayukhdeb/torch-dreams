@@ -25,12 +25,14 @@ def my_custom_func(layer_outputs):
 out_single_layer = dreamy_boi.deep_dream(
     image_path = "images/noise.jpg",
     layers = layers_to_use,
-    octave_scale = 1.2,
-    num_octaves = 14,
-    iterations = 200,
-    lr = 0.9,
+    octave_scale = 1.69,
+    num_octaves = 7,
+    iterations = 20,
+    lr = 0.09,
     custom_func = my_custom_func,
-    grayscale = True  ## make sure your model has single channel input
+    grayscale = True , ## make sure your model has single channel input,
+    gradient_smoothing_kernel_size= 9,
+    gradient_smoothing_coeff= 0.5
 )
 
 plt.imshow(out_single_layer)
