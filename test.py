@@ -24,8 +24,8 @@ out_single_conv = dreamy_boi.deep_dream(
     layers = layers_to_use,
     octave_scale = 1.1,
     num_octaves = 11,
-    iterations = 200,
-    lr = 4.9,
+    iterations = 20,
+    lr = 0.03,
     custom_func =  my_custom_func,
     max_rotation =  0.3
 )
