@@ -165,9 +165,10 @@ class CascadeGaussianSmoothing(nn.Module):
         kernel_size (int, sequence): Size of the gaussian kernel.
         sigma (float, sequence): Standard deviation of the gaussian kernel.
     """
-    def __init__(self, kernel_size, sigma, device):
+    def __init__(self, kernel_size, sigma, device, grayscale=True):
         super().__init__()
         self. device = device
+        self.grayscale = grayscale
         cascade_coefficients = [0.5, 1.0, 2.0]  # std multipliers
 
         sigmas = [[coeff * sigma, coeff * sigma] for coeff in cascade_coefficients]  # isotropic Gaussian
@@ -195,7 +196,11 @@ class CascadeGaussianSmoothing(nn.Module):
 
             # Reshape to depthwise convolutional weight
             kernel = kernel.view(1, 1, *kernel.shape)
-            kernel = kernel.repeat(3, *[1] * (kernel.dim() - 1))
+            if self.grayscale is False:
+                kernel = kernel.repeat(3, *[1] * (kernel.dim() - 1))
+            else:
+                kernel = kernel.repeat(1, *[1] * (kernel.dim() - 1))
+
             kernel = kernel.to(self.device)
             prepared_kernels.append(kernel)
 
@@ -209,8 +214,16 @@ class CascadeGaussianSmoothing(nn.Module):
         Apply gaussian filter to input.
         """
         input = F.pad(input, [self.pad, self.pad, self.pad, self.pad], mode='reflect')
-        grad1 = self.conv(input, weight=self.weight1, groups=3)
-        grad2 = self.conv(input, weight=self.weight2, groups=3)
-        grad3 = self.conv(input, weight=self.weight3, groups=3)
-        return grad1 + grad2 + grad3
+
+        if self.grayscale is False:
+            grad1 = self.conv(input, weight=self.weight1, groups=3)
+            grad2 = self.conv(input, weight=self.weight2, groups=3)
+            grad3 = self.conv(input, weight=self.weight3, groups=3)
+            return grad1 + grad2 + grad3
+        else:
+            grad1 = self.conv(input, weight=self.weight1, groups=1)
+            grad2 = self.conv(input, weight=self.weight2, groups=1)
+            grad3 = self.conv(input, weight=self.weight3, groups=1)
+            return grad1 + grad2 + grad3
+
     
