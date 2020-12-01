@@ -7,7 +7,7 @@ Making deep neural networks more interpretable, one octave at a time.
 pip install torch-dreams --upgrade
 ```
 
-<img src = "https://github.com/Mayukhdeb/torch-dreams/blob/master/images/inceptionv3_cherrypicked_channels.jpg?raw=true">
+<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/3_grad_masks.jpg">
 
 
 ## Contents:
