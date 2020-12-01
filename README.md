@@ -3,11 +3,13 @@ Making deep neural networks more interpretable, one octave at a time.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_starter.ipynb)
 [![](https://img.shields.io/github/last-commit/mayukhdeb/torch-dreams)](https://github.com/mayukhdeb/torch-dreams/commits/master)
+
+<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/3_grad_masks.jpg">
+
 ```
 pip install torch-dreams --upgrade
 ```
 
-<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/3_grad_masks.jpg">
 
 
 ## Contents:
