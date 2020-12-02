@@ -27,6 +27,8 @@ from .constants import LOWER_IMAGE_BOUND
 from .constants import UPPER_IMAGE_BOUND_GRAY
 from .constants import LOWER_IMAGE_BOUND_GRAY
 
+from .constants import default_config
+
 class Hook():
     def __init__(self, module, backward=False):
         if backward==False:
@@ -55,6 +57,7 @@ class dreamer(object):
         self.model = self.model.eval()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = self.model.to(self.device) ## model moves to GPU if available
+        self.config = default_config
 
         print("dreamer init on: ", self.device)
 
@@ -276,7 +279,25 @@ class dreamer(object):
         
         return img_out_np
 
-    def deep_dream(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None, custom_func = None, max_rotation = 0.2, grayscale = False, gradient_smoothing_coeff = 0.5, gradient_smoothing_kernel_size = 5):
+    def deep_dream(self, config):
+
+
+        for key in list(config.keys()):
+            self.config[key] = config[key]
+
+        image_path = self.config["image_path"]
+        layers =  self.config["layers"]
+        octave_scale = self.config["octave_scale"]
+        num_octaves = self.config["num_octaves"]
+        iterations = self.config["iterations"]
+        lr = self.config["lr"]
+        custom_func = self.config["custom_func"]
+        max_rotation = self.config["max_rotation"]
+        grayscale = self.config["grayscale"]
+        gradient_smoothing_coeff = self.config["gradient_smoothing_coeff"]
+        gradient_smoothing_kernel_size = self.config["gradient_smoothing_kernel_size"]
+
+
 
         """
         High level function used to call the core deep-dream functions on a single image for n octaves.
@@ -310,7 +331,24 @@ class dreamer(object):
         image_np = post_process_numpy_image(image_np)
         return image_np
 
-    def deep_dream_with_masks(self, image_path, layers, octave_scale, num_octaves, iterations, lr, size = None, custom_funcs = None, max_rotation = 0.2, grayscale = False, gradient_smoothing_coeff = 0.5, gradient_smoothing_kernel_size = 5, grad_mask = None):
+    def deep_dream_with_masks(self, config):
+
+
+        for key in list(config.keys()):
+                    self.config[key] = config[key]
+
+        image_path = self.config["image_path"]
+        layers =  self.config["layers"]
+        octave_scale = self.config["octave_scale"]
+        num_octaves = self.config["num_octaves"]
+        iterations = self.config["iterations"]
+        lr = self.config["lr"]
+        custom_funcs = self.config["custom_func"]
+        max_rotation = self.config["max_rotation"]
+        grayscale = self.config["grayscale"]
+        gradient_smoothing_coeff = self.config["gradient_smoothing_coeff"]
+        gradient_smoothing_kernel_size = self.config["gradient_smoothing_kernel_size"]
+        grad_mask = self.config["grad_mask"]
 
         """
         High level function used to call the core deep-dream functions on a single image for n octaves.
