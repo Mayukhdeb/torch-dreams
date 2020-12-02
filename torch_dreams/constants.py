@@ -31,5 +31,8 @@ default_config = {
     "grayscale": False,
     "gradient_smoothing_coeff": 0.5,
     "gradient_smoothing_kernel_size": 9,
-    "grad_mask": None
+    "grad_mask": None,
+    "rolls_x": None,
+    "rolls_y": None,
+    "rotations": None
 }
