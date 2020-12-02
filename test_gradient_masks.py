@@ -25,52 +25,34 @@ def custom_func(layer_outputs):
     loss = torch.mean(torch.stack(losses))
     return loss
 
-out_single_conv_a = dreamy_boi.deep_dream_with_masks(
-    image_path = "images/sample_small.jpg",
-    layers = layers_to_use,
-    octave_scale = 1.2,
-    num_octaves = 9,
-    iterations = 20,
-    lr = 0.03,
-    max_rotation =  0.3,
-    gradient_smoothing_coeff= 1.5,
-    gradient_smoothing_kernel_size= 9,
-    
-    custom_funcs =  [custom_func],
-    grad_mask = [grad_mask]
-    
-)
-out_single_conv_b = dreamy_boi.deep_dream_with_masks(
-    image_path = "images/sample_small.jpg",
-    layers = layers_to_use,
-    octave_scale = 1.2,
-    num_octaves = 9,
-    iterations = 20,
-    lr = 0.03,
-    max_rotation =  0.3,
-    gradient_smoothing_coeff= 1.5,
-    gradient_smoothing_kernel_size= 9,
-    
-    custom_funcs =  [None],
-    grad_mask = [grad_mask_2]
-    
-)
+config = {
+    "image_path": "images/sample_small.jpg",
+    "layers": layers_to_use,
+    "octave_scale": 1.1,
+    "num_octaves": 11,
+    "iterations": 20,
+    "lr": 0.03,
+    "custom_func": [custom_func],
+    "max_rotation": 0.2,
+    "grayscale": False,
+    "gradient_smoothing_coeff": 0.5,
+    "gradient_smoothing_kernel_size": 9,
+    "grad_mask": [grad_mask]
+}
 
-out_single_conv = dreamy_boi.deep_dream_with_masks(
-    image_path = "images/sample_small.jpg",
-    layers = layers_to_use,
-    octave_scale = 1.2,
-    num_octaves = 9,
-    iterations = 20,
-    lr = 0.03,
-    max_rotation =  0.3,
-    gradient_smoothing_coeff= 1.5,
-    gradient_smoothing_kernel_size= 9,
-    
-    custom_funcs =  [custom_func, None],
-    grad_mask = [grad_mask, grad_mask_2]
-    
-)
+config2, config3 = config, config
+config2["grad_mask"] = [grad_mask_2]
+config2["custom_func"] = [None]
+
+config3["custom_func"] = [custom_func, None]
+config3["grad_mask"] = [grad_mask, grad_mask_2]
+
+# print(config3)
+out_single_conv_a = dreamy_boi.deep_dream_with_masks(config)
+out_single_conv_b = dreamy_boi.deep_dream_with_masks(config2)
+out_single_conv = dreamy_boi.deep_dream_with_masks(config3)
+
+
 plt.imshow(out_single_conv)
 plt.show()
 

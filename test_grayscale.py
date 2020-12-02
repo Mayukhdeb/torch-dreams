@@ -22,18 +22,22 @@ def my_custom_func(layer_outputs):
 
     return loss
 
-out_single_layer = dreamy_boi.deep_dream(
-    image_path = "images/noise.jpg",
-    layers = layers_to_use,
-    octave_scale = 1.69,
-    num_octaves = 7,
-    iterations = 20,
-    lr = 0.09,
-    custom_func = my_custom_func,
-    grayscale = True , ## make sure your model has single channel input,
-    gradient_smoothing_kernel_size= 9,
-    gradient_smoothing_coeff= 0.5
-)
+
+config = {
+    "image_path": "images/sample_small.jpg",
+    "layers": layers_to_use,
+    "octave_scale": 1.69,
+    "num_octaves": 7,
+    "iterations": 20,
+    "lr": 0.09,
+    "custom_func": my_custom_func,
+    "max_rotation": 0.2,
+    "grayscale": True,
+    "gradient_smoothing_coeff": 0.5,
+    "gradient_smoothing_kernel_size": 9
+}
+
+out_single_layer = dreamy_boi.deep_dream(config)
 
 plt.imshow(out_single_layer)
 plt.show()
