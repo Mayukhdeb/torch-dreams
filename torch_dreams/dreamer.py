@@ -55,7 +55,7 @@ class dreamer(object):
 
         print("dreamer init on: ", self.device)
 
-    def dream_on_octave(self, image_np, layers, iterations, lr, custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grayscale = False):
+    def dream_on_octave(self, image_np, layers, iterations, lr, custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grayscale = False, octave_count = None):
 
         """
         Deep-dream core function, runs n iterations on a single octave(image)
@@ -76,13 +76,33 @@ class dreamer(object):
             rolling 
             """
 
-            roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
+            if self.config["rolls_x"] is not None and self.config["rolls_y"] is not None:
+                """
+                if rolls are defined in config, use those 
+                """
+                # print("use old roll")
+                roll_x, roll_y = self.config["rolls_x"][octave_count][i], self.config["rolls_y"][octave_count][i]
+            else:
+                """
+                if no rolls are given, make your own and save them 
+                """
+                roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
+                self.rolls_x[octave_count][i] = roll_x
+                self.rolls_y[octave_count][i] = roll_y
+
             image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
             
             """
             rotating
             """
-            theta = get_random_rotation_angle(theta_max= max_rotation)
+            if self.config["rotations"] is not None:
+                # print("use old rot---")
+                theta = self.config["rotations"][octave_count][i]
+            else:
+                theta = get_random_rotation_angle(theta_max= max_rotation)
+                self.rotations[octave_count][i] = theta
+
+
             image_tensor_rolled_rotated = rotate_image_tensor(image_tensor = image_tensor_rolled, theta = theta, device = self.device)
 
             """
@@ -128,7 +148,7 @@ class dreamer(object):
         return img_out_np
 
 
-    def dream_on_octave_with_masks(self, image_np, layers, iterations, lr, custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None, grayscale = False):
+    def dream_on_octave_with_masks(self, image_np, layers, iterations, lr, custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None, grayscale = False, octave_count = None):
 
         """
         Deep-dream core function, runs n iterations on a single octave(image)
@@ -156,13 +176,32 @@ class dreamer(object):
             rolling 
             """
 
-            roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
+            if self.config["rolls_x"] is not None and self.config["rolls_y"] is not None:
+                """
+                if rolls are defined in config, use those 
+                """
+                # print("use old roll")
+                roll_x, roll_y = self.config["rolls_x"][octave_count][i], self.config["rolls_y"][octave_count][i]
+            else:
+                """
+                if no rolls are given, make your own and save them 
+                """
+                roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
+                self.rolls_x[octave_count][i] = roll_x
+                self.rolls_y[octave_count][i] = roll_y
+
             image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
             
             """
             rotating
             """
-            theta = get_random_rotation_angle(theta_max= max_rotation)
+            if self.config["rotations"] is not None:
+                # print("use old rot---")
+                theta = self.config["rotations"][octave_count][i]
+            else:
+                theta = get_random_rotation_angle(theta_max= max_rotation)
+                self.rotations[octave_count][i] = theta
+
             image_tensor_rolled_rotated = rotate_image_tensor(image_tensor = image_tensor_rolled, theta = theta, device = self.device)
 
             """
@@ -230,7 +269,11 @@ class dreamer(object):
         gradient_smoothing_coeff = self.config["gradient_smoothing_coeff"]
         gradient_smoothing_kernel_size = self.config["gradient_smoothing_kernel_size"]
 
+        self.rolls_x = np.zeros((num_octaves+1, iterations))
+        self.rolls_y = np.zeros((num_octaves+1, iterations))
+        self.rotations = np.zeros((num_octaves+1, iterations))
 
+        octave_count = 0
 
         """
         High level function used to call the core deep-dream functions on a single image for n octaves.
@@ -259,8 +302,8 @@ class dreamer(object):
             image_np = cv2.resize(image_np, new_size)
             if grayscale is True:
                 image_np = np.expand_dims(image_np, axis = -1)
-            image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_func = custom_func, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grayscale=grayscale)
-
+            image_np = self.dream_on_octave(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_func = custom_func, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grayscale=grayscale, octave_count = octave_count)
+            octave_count += 1
         image_np = post_process_numpy_image(image_np)
         return image_np
 
@@ -283,6 +326,11 @@ class dreamer(object):
         gradient_smoothing_kernel_size = self.config["gradient_smoothing_kernel_size"]
         grad_mask = self.config["grad_mask"]
 
+        self.rolls_x = np.zeros((num_octaves+1, iterations))
+        self.rolls_y = np.zeros((num_octaves+1, iterations))
+        self.rotations = np.zeros((num_octaves+1, iterations))
+
+        octave_count = 0
         """
         High level function used to call the core deep-dream functions on a single image for n octaves.
 
@@ -314,7 +362,12 @@ class dreamer(object):
             
             if grad_mask is not None:
                 grad_mask = [cv2.resize(g, new_size) for g in grad_mask]
-            image_np = self.dream_on_octave_with_masks(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_funcs = custom_funcs, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grad_mask= grad_mask, grayscale=grayscale )
-
+            image_np = self.dream_on_octave_with_masks(image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_funcs = custom_funcs, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grad_mask= grad_mask, grayscale=grayscale, octave_count= octave_count )
+            octave_count +=1 
         image_np = post_process_numpy_image(image_np)
         return image_np
+
+    def freeze_random_values(self):
+        self.config["rolls_x"] = self.rolls_x.astype(np.int)
+        self.config["rolls_y"] = self.rolls_y.astype(np.int)
+        self.config["rotations"] = self.rotations
