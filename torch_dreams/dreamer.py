@@ -1,39 +1,35 @@
-import torch
-from torchvision import models
-import numpy as np
-import os
-import tqdm
-from torchvision import transforms
-from tqdm import tqdm 
 import cv2 
+import tqdm
+import torch
+import numpy as np
+from tqdm import tqdm 
 
-
-from  .utils import load_image
-from .utils import pytorch_input_adapter
-from .utils import preprocess_numpy_img
-from .utils import pytorch_output_adapter
-from .utils import find_random_roll_values_for_tensor
+from .utils import load_image
 from .utils import roll_torch_tensor
+from .utils import preprocess_numpy_img
+from .utils import pytorch_input_adapter
+from .utils import pytorch_output_adapter
 from .utils import post_process_numpy_image
-from .image_transforms import transform_to_tensor
+from .utils import find_random_roll_values_for_tensor
 
-from .utils import get_random_rotation_angle
 from .utils import rotate_image_tensor
 from .utils import CascadeGaussianSmoothing
+from .utils import get_random_rotation_angle
 
 from .constants import UPPER_IMAGE_BOUND
 from .constants import LOWER_IMAGE_BOUND
-
 from .constants import UPPER_IMAGE_BOUND_GRAY
 from .constants import LOWER_IMAGE_BOUND_GRAY
 
 from .constants import default_config
 
-from .dreamer_utils import default_func_norm
 from .dreamer_utils import get_gradients
+from .dreamer_utils import default_func_norm
+
+from .image_transforms import transform_to_tensor
 
 
-class dreamer(object):
+class dreamer():
 
     """
     Main class definition for torch-dreams:
@@ -49,7 +45,7 @@ class dreamer(object):
         self.model = self.model.eval()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = self.model.to(self.device) ## model moves to GPU if available
-        self.config = default_config
+        self.config = default_config.copy()  # possible fix to: https://github.com/Mayukhdeb/torch-dreams/issues/9
         self.default_func = default_func_norm
         self.get_gradients  = get_gradients
 
