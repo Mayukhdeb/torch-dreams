@@ -29,17 +29,9 @@ from .constants import LOWER_IMAGE_BOUND_GRAY
 
 from .constants import default_config
 
-class Hook():
-    def __init__(self, module, backward=False):
-        if backward==False:
-            self.hook = module.register_forward_hook(self.hook_fn)
-        else:
-            self.hook = module.register_backward_hook(self.hook_fn)
-    def hook_fn(self, module, input, output):
-        self.input = input
-        self.output = output
-    def close(self):
-        self.hook.remove()
+from .dreamer_utils import default_func_norm
+from .dreamer_utils import get_gradients
+
 
 class dreamer(object):
 
@@ -58,69 +50,10 @@ class dreamer(object):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = self.model.to(self.device) ## model moves to GPU if available
         self.config = default_config
+        self.default_func = default_func_norm
+        self.get_gradients  = get_gradients
 
         print("dreamer init on: ", self.device)
-
-    def default_func_MSE(self, layer_outputs):
-        losses = []
-        for output in layer_outputs:
-
-            loss_component = torch.nn.MSELoss(reduction='mean')(output, torch.zeros_like(output))
-            losses.append(loss_component)
-
-        loss = torch.mean(torch.stack(losses))
-        return loss
-        
-    def default_func_norm(self, layer_outputs):
-        losses = []
-        for output in layer_outputs:
-            losses.append(output.norm())
-        loss = torch.mean(torch.stack(losses))
-        return loss
-
-    def get_gradients(self, net_in, net, layers, custom_func = None):   
-        """
-        Executes the forward pass through the model and returns the gradients from the selected layer. 
-
-        input args{
-            net_in = the 3D tensor which is to be used in the forward pass <size = (C, H, W)>
-            net = pytorch model which is being used for the  deep-dream
-            layer = layer instance of net whose activations are to be maximized
-            out_channels <optional> = manual selection of output channel from the layer that has been chosen
-        }
-
-        returns{
-            gradient of model weights 
-        }
-        """  
-        net_in = net_in.unsqueeze(0)
-        net_in.requires_grad = True
-        net.zero_grad()
-
-        hooks = []
-        for layer in layers:
-
-            hook = Hook(layer)
-            hooks.append(hook)
-
-        net_out = net(net_in)
-
-        layer_outputs = []
-
-        for hook in hooks:
-
-            out = hook.output[0]
-            layer_outputs.append(out)
-
-        if custom_func is not None:
-            loss = custom_func(layer_outputs)
-        else:
-            loss = self.default_func_norm(layer_outputs)
-
-
-        loss.backward()
-        return net_in.grad.data.squeeze(0)
-
 
     def dream_on_octave(self, image_np, layers, iterations, lr, custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grayscale = False):
 
@@ -155,7 +88,7 @@ class dreamer(object):
             """
             getting gradients
             """
-            gradients_tensor = self.get_gradients(net_in = image_tensor_rolled_rotated, net = self.model, layers = layers, custom_func= custom_func).detach()
+            gradients_tensor = self.get_gradients(net_in = image_tensor_rolled_rotated, net = self.model, layers = layers, default_func = self.default_func ,custom_func= custom_func).detach()
 
             """
             unrotate and unroll gradients of the image tensor
@@ -239,7 +172,7 @@ class dreamer(object):
             gradients_tensors = []
             for c in range(len(custom_funcs)):
 
-                gradients_tensor = self.get_gradients(net_in = image_tensor_rolled_rotated, net = self.model, layers = layers, custom_func= custom_funcs[c]).detach()
+                gradients_tensor = self.get_gradients(net_in = image_tensor_rolled_rotated, net = self.model, layers = layers,default_func = self.default_func ,custom_func= custom_funcs[c]).detach()
                 gradients_tensors.append(gradients_tensor)
             """
             unrotate and unroll gradients of the image tensor
