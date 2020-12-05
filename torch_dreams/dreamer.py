@@ -25,6 +25,7 @@ from .constants import default_config
 
 from .dreamer_utils import get_gradients
 from .dreamer_utils import default_func_norm
+from .dreamer_utils import make_octave_sizes
 
 from .image_transforms import transform_to_tensor
 
@@ -290,10 +291,12 @@ class dreamer():
 
         original_size = image_np.shape[:-1]
 
-        for n in tqdm(range(-num_octaves, 1)):
+        octave_sizes = make_octave_sizes(original_size = original_size, num_octaves = num_octaves, octave_scale = octave_scale)
+
+        for new_size in tqdm(octave_sizes):
             
-            octave_size = tuple( np.array(original_size) * octave_scale**n)
-            new_size = (int(octave_size[1]), int(octave_size[0]))
+            # octave_size = tuple( np.array(original_size) * octave_scale**n)
+            # new_size = (int(octave_size[1]), int(octave_size[0]))
 
             image_np = cv2.resize(image_np, new_size)
             if grayscale is True:
@@ -342,15 +345,15 @@ class dreamer():
 
         original_image = load_image(image_path, grayscale=grayscale)
         image_np = preprocess_numpy_img(original_image, grayscale=grayscale)
+
         if grayscale is True:
             image_np = np.expand_dims(image_np, axis = -1)
 
         original_size = image_np.shape[:-1]
 
-        for n in tqdm(range(-num_octaves, 1)):
-            
-            octave_size = tuple( np.array(original_size) * octave_scale**n)
-            new_size = (int(octave_size[1]), int(octave_size[0]))
+        octave_sizes = make_octave_sizes(original_size = original_size, num_octaves = num_octaves, octave_scale = octave_scale)
+
+        for new_size in tqdm(octave_sizes):
 
             image_np = cv2.resize(image_np, new_size)
             if grayscale is True:

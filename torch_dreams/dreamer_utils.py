@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 def default_func_MSE(layer_outputs):
     losses = []
@@ -71,3 +72,15 @@ def get_gradients(net_in, net, layers, default_func, custom_func = None):
 
         loss.backward()
         return net_in.grad.data.squeeze(0)
+
+def make_octave_sizes(original_size, num_octaves, octave_scale):
+    
+    sizes = []
+
+    for n in range(-num_octaves, 1):
+        octave_size = tuple( np.array(original_size) * octave_scale**n)
+        new_size = (int(octave_size[1]), int(octave_size[0]))
+
+        sizes.append(new_size)
+
+    return sizes
