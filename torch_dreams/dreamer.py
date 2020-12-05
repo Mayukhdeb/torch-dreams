@@ -1,8 +1,8 @@
-import cv2 
+import cv2
 import tqdm
 import torch
 import numpy as np
-from tqdm import tqdm 
+from tqdm import tqdm
 
 from .utils import load_image
 from .utils import preprocess_numpy_img
@@ -35,97 +35,101 @@ class dreamer():
         self.model = model
         self.model = self.model.eval()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = self.model.to(self.device) ## model moves to GPU if available
-        self.config = default_config.copy()  # possible fix to: https://github.com/Mayukhdeb/torch-dreams/issues/9
+        # model moves to GPU if available
+        self.model = self.model.to(self.device)
+        self.config = default_config.copy()
 
         self.default_func = default_func_norm
         self.dream_on_octave = dream_on_octave
         self.dream_on_octave_with_masks = dream_on_octave_with_masks
 
-
         print("dreamer init on: ", self.device)
 
-
     def deep_dream(self, config):
-
 
         for key in list(config.keys()):
             self.config[key] = config[key]
 
         image_path = self.config["image_path"]
-        layers =  self.config["layers"]
-        octave_scale = self.config["octave_scale"]
-        num_octaves = self.config["num_octaves"]
-        iterations = self.config["iterations"]
-        lr = self.config["lr"]
-        custom_func = self.config["custom_func"]
-        max_rotation = self.config["max_rotation"]
         grayscale = self.config["grayscale"]
-        gradient_smoothing_coeff = self.config["gradient_smoothing_coeff"]
-        gradient_smoothing_kernel_size = self.config["gradient_smoothing_kernel_size"]
-
-        octave_count = 0
-
+        
         original_image = load_image(image_path, grayscale=grayscale)
         image_np = preprocess_numpy_img(original_image, grayscale=grayscale)
         if grayscale is True:
-            image_np = np.expand_dims(image_np, axis = -1)
+            image_np = np.expand_dims(image_np, axis=-1)
 
         original_size = image_np.shape[:-1]
 
-        octave_sizes = make_octave_sizes(original_size = original_size, num_octaves = num_octaves, octave_scale = octave_scale)
+        octave_sizes = make_octave_sizes(
+            original_size=original_size, num_octaves= self.config["num_octaves"], octave_scale=self.config["octave_scale"])
 
         for new_size in tqdm(octave_sizes):
 
             image_np = cv2.resize(image_np, new_size)
             if grayscale is True:
-                image_np = np.expand_dims(image_np, axis = -1)
+                image_np = np.expand_dims(image_np, axis=-1)
 
-            image_np = self.dream_on_octave(model = self.model, image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_func = custom_func, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grayscale=grayscale, default_func= self.default_func, device = self.device)
-            
-            octave_count += 1
+            image_np = self.dream_on_octave(
+                model=self.model,
+                image_np = image_np,
+                layers = self.config["layers"],
+                iterations = self.config["iterations"],
+                lr= self.config["lr"],
+                custom_func = self.config["custom_func"],
+                max_rotation = self.config["max_rotation"],
+                gradient_smoothing_coeff = self.config["gradient_smoothing_coeff"],
+                gradient_smoothing_kernel_size= self.config["gradient_smoothing_kernel_size"], 
+                grayscale=self.config["grayscale"], 
+                default_func=self.default_func, 
+                device=self.device
+            )
+
         image_np = post_process_numpy_image(image_np)
         return image_np
 
     def deep_dream_with_masks(self, config):
 
-
         for key in list(config.keys()):
-                    self.config[key] = config[key]
+            self.config[key] = config[key]
 
         image_path = self.config["image_path"]
-        layers =  self.config["layers"]
-        octave_scale = self.config["octave_scale"]
-        num_octaves = self.config["num_octaves"]
-        iterations = self.config["iterations"]
-        lr = self.config["lr"]
-        custom_funcs = self.config["custom_func"]
-        max_rotation = self.config["max_rotation"]
         grayscale = self.config["grayscale"]
-        gradient_smoothing_coeff = self.config["gradient_smoothing_coeff"]
-        gradient_smoothing_kernel_size = self.config["gradient_smoothing_kernel_size"]
-        grad_mask = self.config["grad_mask"]
 
-
-
-        original_image = load_image(image_path, grayscale=grayscale)
+        original_image = load_image(self.config["image_path"], grayscale=grayscale)
         image_np = preprocess_numpy_img(original_image, grayscale=grayscale)
 
         if grayscale is True:
-            image_np = np.expand_dims(image_np, axis = -1)
+            image_np = np.expand_dims(image_np, axis=-1)
 
         original_size = image_np.shape[:-1]
 
-        octave_sizes = make_octave_sizes(original_size = original_size, num_octaves = num_octaves, octave_scale = octave_scale)
+        octave_sizes = make_octave_sizes(
+            original_size=original_size, num_octaves=self.config["num_octaves"], octave_scale=self.config["octave_scale"])
 
         for new_size in tqdm(octave_sizes):
 
             image_np = cv2.resize(image_np, new_size)
             if grayscale is True:
-                image_np = np.expand_dims(image_np, axis = -1)
-            
-            if grad_mask is not None:
-                grad_mask = [cv2.resize(g, new_size) for g in grad_mask]
-            image_np = self.dream_on_octave_with_masks(model = self.model, image_np  = image_np, layers = layers, iterations = iterations, lr = lr, custom_funcs = custom_funcs, max_rotation= max_rotation, gradient_smoothing_coeff= gradient_smoothing_coeff, gradient_smoothing_kernel_size=gradient_smoothing_kernel_size, grad_mask= grad_mask, grayscale=grayscale, device = self.device, default_func= self.default_func )
+                image_np = np.expand_dims(image_np, axis=-1)
+
+            if self.config["grad_mask"] is not None:
+                grad_mask = [cv2.resize(g, new_size) for g in self.config["grad_mask"]]
+
+            image_np = self.dream_on_octave_with_masks(
+                model=self.model, 
+                image_np=image_np, 
+                layers= self.config["layers"], 
+                iterations= self.config["iterations"], 
+                lr= self.config["lr"], 
+                custom_funcs= self.config["custom_func"], 
+                max_rotation= self.config["max_rotation"],
+                gradient_smoothing_coeff= self.config["gradient_smoothing_coeff"], 
+                gradient_smoothing_kernel_size= self.config["gradient_smoothing_kernel_size"], 
+                grad_mask= grad_mask, 
+                grayscale=grayscale, 
+                device=self.device, 
+                default_func=self.default_func
+            )
+
         image_np = post_process_numpy_image(image_np)
         return image_np
