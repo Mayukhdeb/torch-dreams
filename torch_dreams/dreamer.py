@@ -17,13 +17,6 @@ from .dreamer_utils import make_octave_sizes
 from .octave_utils import dream_on_octave_with_masks
 from .octave_utils import dream_on_octave
 
-from .image_transforms import transform_to_tensor
-
-import matplotlib.pyplot as plt
-from.utils import CascadeGaussianSmoothing
-
-
-
 class dreamer():
 
     """
@@ -49,7 +42,7 @@ class dreamer():
 
         print("dreamer init on: ", self.device)
 
-    def deep_dream(self, config, laplacian):
+    def deep_dream(self, config):
 
         for key in list(config.keys()):
             self.config[key] = config[key]
@@ -67,56 +60,30 @@ class dreamer():
         octave_sizes = make_octave_sizes(
             original_size=original_size, num_octaves= self.config["num_octaves"], octave_scale=self.config["octave_scale"])
 
-
-
         """
-        Trying out laplacian pyramid thingy
-
         source: 
         https://github.com/ProGamerGov/Protobuf-Dreamer/blob/bb9943411129127220c131793264c8b24a71a6c0/pb_dreamer.py#L105
         """
-        # print("octave_sizes:", octave_sizes)
-
-        
+    
         img = original_image.copy()
         octaves = []  
 
-        if laplacian is True:
-            for size in octave_sizes[::-1]:
-                # print(size)
-                """
-                hw = original img size 
-                """
-                hw = img.shape[1], img.shape[0]
-
-                """
-                size is the scaled size as per the octave 
-                """
-
-                """
-                lo is the small image resized from original 
-                """
-                lo = cv2.resize(img, size)
-
-                """
-                hi = original image - resize_to_original_size(lo)
-                """
-                hi = img- cv2.resize(lo, hw)
-
-                """
-                the new original is lo 
-                """
-                img = lo
-                octaves.append(hi)
+        for size in octave_sizes[::-1]:
+            hw = img.shape[1], img.shape[0]
+            lo = cv2.resize(img, size)
+            hi = img- cv2.resize(lo, hw)
+            img = lo
+            octaves.append(hi)
 
         count = 0
         for new_size in tqdm(octave_sizes):
 
             image_np = cv2.resize(image_np, new_size)
+
             if grayscale is True:
                 image_np = np.expand_dims(image_np, axis=-1)
 
-            if laplacian  is True and count > 0:
+            if  count > 0:
                 hi = octaves[-count]
                 image_np += hi
 
@@ -134,26 +101,10 @@ class dreamer():
                 default_func=self.default_func, 
                 device=self.device
             )
-            """
-            laplacian pyramid experiment 
-            """
-            
-            
             count += 1
 
         image_np = post_process_numpy_image(image_np)
         return image_np
-
-
-
-
-
-
-
-
-
-
-
 
 
     def deep_dream_with_masks(self, config):
@@ -175,12 +126,28 @@ class dreamer():
         octave_sizes = make_octave_sizes(
             original_size=original_size, num_octaves=self.config["num_octaves"], octave_scale=self.config["octave_scale"])
 
-        count = 1
+        img = original_image.copy()
+        octaves = []  
+
+        for size in octave_sizes[::-1]:
+            hw = img.shape[1], img.shape[0]
+            lo = cv2.resize(img, size)
+            hi = img- cv2.resize(lo, hw)
+            img = lo
+            octaves.append(hi)
+
+        count = 0
+
         for new_size in tqdm(octave_sizes):
 
             image_np = cv2.resize(image_np, new_size)
+
             if grayscale is True:
                 image_np = np.expand_dims(image_np, axis=-1)
+
+            if  count > 0:
+                hi = octaves[-count]
+                image_np += hi
 
             if self.config["grad_mask"] is not None:
                 grad_mask = [cv2.resize(g, new_size) for g in self.config["grad_mask"]]
@@ -200,6 +167,7 @@ class dreamer():
                 device=self.device, 
                 default_func=self.default_func
             )
+            count += 1
 
         image_np = post_process_numpy_image(image_np)
         return image_np
