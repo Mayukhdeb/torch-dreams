@@ -47,9 +47,8 @@ config2["custom_func"] = [None]
 config3["custom_func"] = [custom_func, None]
 config3["grad_mask"] = [grad_mask, grad_mask_2]
 
-# print(config3)
-out_single_conv_a = dreamy_boi.deep_dream_with_masks(config)
-out_single_conv_b = dreamy_boi.deep_dream_with_masks(config2)
+# out_single_conv_a = dreamy_boi.deep_dream_with_masks(config)
+# out_single_conv_b = dreamy_boi.deep_dream_with_masks(config2)
 out_single_conv = dreamy_boi.deep_dream_with_masks(config3)
 
 
