@@ -15,7 +15,7 @@ from .constants import LOWER_IMAGE_BOUND_GRAY
 
 from .dreamer_utils import get_gradients
 
-def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None, grayscale = False, device = None, default_func = None):
+def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None, device = None, default_func = None):
         
     image_tensor = pytorch_input_adapter(image_np, device = device)
     if grad_mask is not None:
@@ -64,7 +64,7 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
             
             sigma = ((i + 1) / iterations) * 2.0 + gradient_smoothing_coeff
 
-            gradients_tensors = [CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = device, grayscale= grayscale)(gradients_tensor.unsqueeze(0)).squeeze(0) for gradients_tensor in gradients_tensors]
+            gradients_tensors = [CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = device)(gradients_tensor.unsqueeze(0)).squeeze(0) for gradients_tensor in gradients_tensors]
 
 
             for m in range(len(gradients_tensors)):
@@ -86,7 +86,7 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
     
     return img_out_np
 
-def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grayscale = False, device = None, default_func = None):
+def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, device = None, default_func = None):
 
     """
     Deep-dream core function, runs n iterations on a single octave(image)
@@ -139,7 +139,7 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
             
             sigma = ((i + 1) / iterations) * 2.0 + gradient_smoothing_coeff
 
-            smooth_gradients_tensor = CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = device, grayscale= grayscale)(gradients_tensor.unsqueeze(0)).squeeze(0)
+            smooth_gradients_tensor = CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = device)(gradients_tensor.unsqueeze(0)).squeeze(0)
             g_norm = torch.std(smooth_gradients_tensor)
 
             image_tensor.data = image_tensor.data + lr * (smooth_gradients_tensor.data / g_norm) ## can confirm this is still on the GPU if you have one
@@ -147,13 +147,8 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
             g_norm = torch.std(gradients_tensor)
             image_tensor.data = image_tensor.data + lr *(gradients_tensor.data /g_norm) ## can confirm this is still on the GPU if you have one
 
-        if grayscale is False:
-
-            image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND).squeeze(0)
-        else:
-            image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND_GRAY), LOWER_IMAGE_BOUND_GRAY).squeeze(0)
-
-
+        image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND).squeeze(0)
+       
     img_out = image_tensor.detach().cpu()
 
     img_out_np = img_out.numpy()

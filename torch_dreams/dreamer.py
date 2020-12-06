@@ -47,13 +47,9 @@ class dreamer():
         for key in list(config.keys()):
             self.config[key] = config[key]
 
-        image_path = self.config["image_path"]
-        grayscale = self.config["grayscale"]
-        
-        original_image = load_image(image_path, grayscale=grayscale)
-        image_np = preprocess_numpy_img(original_image, grayscale=grayscale)
-        if grayscale is True:
-            image_np = np.expand_dims(image_np, axis=-1)
+        image_path = self.config["image_path"]        
+        original_image = load_image(image_path, grayscale= False)
+        image_np = preprocess_numpy_img(original_image, grayscale= False)
 
         original_size = image_np.shape[:-1]
 
@@ -80,9 +76,6 @@ class dreamer():
 
             image_np = cv2.resize(image_np, new_size)
 
-            if grayscale is True:
-                image_np = np.expand_dims(image_np, axis=-1)
-
             if  count > 0:
                 hi = octaves[-count]
                 image_np += hi
@@ -97,7 +90,6 @@ class dreamer():
                 max_rotation = self.config["max_rotation"],
                 gradient_smoothing_coeff = self.config["gradient_smoothing_coeff"],
                 gradient_smoothing_kernel_size= self.config["gradient_smoothing_kernel_size"], 
-                grayscale=self.config["grayscale"], 
                 default_func=self.default_func, 
                 device=self.device
             )
@@ -115,11 +107,8 @@ class dreamer():
         image_path = self.config["image_path"]
         grayscale = self.config["grayscale"]
 
-        original_image = load_image(self.config["image_path"], grayscale=grayscale)
+        original_image = load_image(self.config["image_path"], grayscale= False)
         image_np = preprocess_numpy_img(original_image, grayscale=grayscale)
-
-        if grayscale is True:
-            image_np = np.expand_dims(image_np, axis=-1)
 
         original_size = image_np.shape[:-1]
 
@@ -142,9 +131,6 @@ class dreamer():
 
             image_np = cv2.resize(image_np, new_size)
 
-            if grayscale is True:
-                image_np = np.expand_dims(image_np, axis=-1)
-
             if  count > 0:
                 hi = octaves[-count]
                 image_np += hi
@@ -163,7 +149,6 @@ class dreamer():
                 gradient_smoothing_coeff= self.config["gradient_smoothing_coeff"], 
                 gradient_smoothing_kernel_size= self.config["gradient_smoothing_kernel_size"], 
                 grad_mask= grad_mask, 
-                grayscale=grayscale, 
                 device=self.device, 
                 default_func=self.default_func
             )

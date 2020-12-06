@@ -28,11 +28,7 @@ default_config = {
     "lr": None,
     "custom_func": None,
     "max_rotation": 0.2,
-    "grayscale": False,
-    "gradient_smoothing_coeff": 0.5,
-    "gradient_smoothing_kernel_size": 9,
+    "gradient_smoothing_coeff": None,
+    "gradient_smoothing_kernel_size": None,
     "grad_mask": None,
-    "rolls_x": None,
-    "rolls_y": None,
-    "rotations": None
 }

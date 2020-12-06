@@ -164,7 +164,7 @@ class CascadeGaussianSmoothing(nn.Module):
         kernel_size (int, sequence): Size of the gaussian kernel.
         sigma (float, sequence): Standard deviation of the gaussian kernel.
     """
-    def __init__(self, kernel_size, sigma, device, grayscale=True):
+    def __init__(self, kernel_size, sigma, device, grayscale=False):
         super().__init__()
         self. device = device
         self.grayscale = grayscale
