@@ -63,20 +63,22 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
         if gradient_smoothing_kernel_size is not None and gradient_smoothing_coeff is not None:
             
             sigma = ((i + 1) / iterations) * 2.0 + gradient_smoothing_coeff
-
             gradients_tensors = [CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = device)(gradients_tensor.unsqueeze(0)).squeeze(0) for gradients_tensor in gradients_tensors]
 
-
             for m in range(len(gradients_tensors)):
+
+                gradients_tensor = gradients_tensors[m]
+                g_norm = torch.std(gradients_tensor)
+                image_tensor.data = image_tensor.data + (lr *(gradients_tensor.data /g_norm) * grad_mask_tensors[m] )## can confirm this is still on the GPU if you have one
+        
+        else:
+           for m in range(len(gradients_tensors)):
 
                 gradients_tensor = gradients_tensors[m]
                 g_norm = torch.std(gradients_tensor)
                 
                 image_tensor.data = image_tensor.data + (lr *(gradients_tensor.data /g_norm) * grad_mask_tensors[m] )## can confirm this is still on the GPU if you have one
         
-        else:
-            image_tensor.data = image_tensor.data + lr *(gradients_tensor.data /g_norm) ## can confirm this is still on the GPU if you have one
-
         image_tensor.data = torch.max(torch.min(image_tensor.data.float(), UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND).squeeze(0)
 
     img_out = image_tensor.detach().cpu()
