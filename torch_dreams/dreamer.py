@@ -11,7 +11,7 @@ from .utils import pytorch_output_adapter
 from .utils import post_process_numpy_image
 
 from .constants import default_config
-from .dreamer_utils import default_func_norm
+from .dreamer_utils import default_func_mean
 from .dreamer_utils import make_octave_sizes
 
 from .octave_utils import dream_on_octave_with_masks
@@ -36,7 +36,7 @@ class dreamer():
         self.model = self.model.to(self.device)
         self.config = default_config.copy()
 
-        self.default_func = default_func_norm
+        self.default_func = default_func_mean
         self.dream_on_octave = dream_on_octave
         self.dream_on_octave_with_masks = dream_on_octave_with_masks
 

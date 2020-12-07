@@ -18,6 +18,12 @@ def default_func_norm(layer_outputs):
     loss = torch.mean(torch.stack(losses))
     return loss
 
+def default_func_mean(layer_outputs):
+    losses = []
+    for output in layer_outputs:
+        losses.append(output.mean())
+    loss = torch.mean(torch.stack(losses))
+    return loss
 
 class Hook():
     def __init__(self, module, backward=False):
