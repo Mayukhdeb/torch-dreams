@@ -27,7 +27,7 @@ default_config = {
     "iterations":None,
     "lr": None,
     "custom_func": None,
-    "max_rotation": 0.2,
+    "max_rotation": 0.5,
     "gradient_smoothing_coeff": None,
     "gradient_smoothing_kernel_size": None,
     "grad_mask": None,

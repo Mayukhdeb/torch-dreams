@@ -8,29 +8,25 @@ import torchvision.models as models
 model = models.inception_v3(pretrained=True)
 dreamy_boi = dreamer(model)
 
-layer = model.Mixed_6c.branch7x7_1.conv
-layer_2 = model.Mixed_6c.branch7x7dbl_3.conv
-
-
-layers_to_use = [layer, layer_2]
+layers_to_use = [model.Mixed_6c.branch1x1]
 
 def my_custom_func(layer_outputs):
     
-    loss = layer_outputs[0][70].norm()
+    loss = layer_outputs[0].mean()
     return loss
 
 config = {
     "image_path": "images/sample_small.jpg",
     "layers": layers_to_use,
-    "octave_scale": 1.1,
-    "num_octaves": 11,
+    "octave_scale": 1.2,
+    "num_octaves": 10,
     "iterations": 20,
     "lr": 0.03,
     "custom_func": my_custom_func,
-    "max_rotation": 0.2,
+    "max_rotation": 0.5,
     "grayscale": False,
-    "gradient_smoothing_coeff": 0.5,
-    "gradient_smoothing_kernel_size": 9
+    "gradient_smoothing_coeff": None,
+    "gradient_smoothing_kernel_size": None
 }
 
 out_single_conv = dreamy_boi.deep_dream(config)
@@ -47,7 +43,7 @@ grad_mask = np.repeat(np.linspace(0, 1, 512),512*3).reshape(512,512,3).astype(np
 grad_mask_2 = np.repeat(np.linspace(1, 0, 512),512*3).reshape(512,512,3).astype(np.float32) 
 
 def custom_func(layer_outputs):
-    loss = layer_outputs[0][30].norm()
+    loss = layer_outputs[0][30].mean()
     return loss
 
 config = {
@@ -58,7 +54,7 @@ config = {
     "iterations": 20,
     "lr": 0.03,
     "custom_func": [custom_func],
-    "max_rotation": 0.2,
+    "max_rotation": 0.5,
     "grayscale": False,
     "gradient_smoothing_coeff": 0.1,
     "gradient_smoothing_kernel_size": 3,
