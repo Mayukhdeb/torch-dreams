@@ -1,5 +1,5 @@
 # Torch-Dreams
-Making deep neural networks more interpretable, for research, art and sometimes both simultaneously. 
+Making deep neural networks more interpretable for research, and for art. 
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_starter.ipynb)
 [![](https://img.shields.io/github/last-commit/mayukhdeb/torch-dreams)](https://github.com/mayukhdeb/torch-dreams/commits/master)
