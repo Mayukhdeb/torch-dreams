@@ -105,10 +105,9 @@ class dreamer():
             self.config[key] = config[key]
 
         image_path = self.config["image_path"]
-        grayscale = self.config["grayscale"]
 
         original_image = load_image(self.config["image_path"], grayscale= False)
-        image_np = preprocess_numpy_img(original_image, grayscale=grayscale)
+        image_np = preprocess_numpy_img(original_image, grayscale= False)
 
         original_size = image_np.shape[:-1]
 
