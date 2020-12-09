@@ -1,10 +1,10 @@
 # Torch-Dreams
-Making deep neural networks more interpretable for research, and for art. 
+Making neural networks more interpretable, for research and art. 
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_starter.ipynb)
 [![](https://img.shields.io/github/last-commit/mayukhdeb/torch-dreams)](https://github.com/mayukhdeb/torch-dreams/commits/master)
 
-<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/inceptionv3_new_channels.jpeg">
+<img src = "images/banner_0.png">
 
 ```
 pip install torch-dreams --upgrade
@@ -34,7 +34,49 @@ out = dreamy_boi.deep_dream(config)
 plt.imshow(out)
 plt.show()
 ```
+---
 
+## Visualizing individual channels
+
+This section of torch_dreams was highly inspired by [Feature visualization by Olah, et al](https://distill.pub/2017/feature-visualization/). We basically optimize the input image to maximize activations of a certain channel of a layer in the neural network. 
+
+First, let's select the layer(s) we want to work on. Feel freee to play around with your own layers. 
+
+```python
+layers_to_use = [model.Mixed_6c.branch7x7_1.conv]
+```
+
+The next step now would be to define a `custom_func`  that would enable use to selectively optimize a single channel. 
+
+
+```python 
+def my_custom_func(layer_outputs):
+    loss = layer_outputs[0][7].mean()  ## 7th channel of first layer from layers_to_use
+    return loss
+```
+
+The rest is actually very similar to the quick start snippet:
+
+```python
+    "image_path": "noise.jpg",
+    "layers": layers_to_use,
+    "octave_scale": 1.1,  
+    "num_octaves": 20,  
+    "iterations": 100,  
+    "lr": 0.04,
+    "max_rotation": 0.7,
+    "custom_func":  my_custom_func,
+}
+
+out = dreamy_boi.deep_dream(config)
+plt.imshow(out)
+plt.show()
+```
+If things go as planned, you will end up with something like:
+
+<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams-notebooks/main/images/raw_output/inceptionv3_channels/inceptionv3.Mixed_6c.branch7x7_1.conv_channel_7.jpg" width = "30%">
+
+---
 ## A closer look
 
 The `config` is where we get to customize how exactly we want the optimization to happen. Here's an example without using gradient masks:
@@ -59,8 +101,8 @@ config = {
 * `layers`: List of layers whose outputs are to be "stored" for optimization later on. For example, if we want to use 2 layers:
     ```python
     config["layers"] = [
-    model.Mixed_6d.branch1x1,
-    model.Mixed_5c
+        model.Mixed_6d.branch1x1,
+        model.Mixed_5c
     ]
     ```
     
