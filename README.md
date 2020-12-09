@@ -9,7 +9,7 @@ Making neural networks more interpretable, for research and art.
 <img src = "images/banner_0.png">
 
 ```
-pip install torch-dreams --upgrade
+pip install torch-dreams 
 ```
 
 ## Quick start
@@ -42,13 +42,13 @@ plt.show()
 
 This section of torch_dreams was highly inspired by [Feature visualization by Olah, et al](https://distill.pub/2017/feature-visualization/). We basically optimize the input image to maximize activations of a certain channel of a layer in the neural network. 
 
-First, let's select the layer(s) we want to work on. Feel freee to play around with your own layers. 
+First, let's select the layer(s) we want to work on. Feel free to play around with other layers. 
 
 ```python
 layers_to_use = [model.Mixed_6c.branch7x7_1.conv]
 ```
 
-The next step now would be to define a `custom_func`  that would enable use to selectively optimize a single channel. 
+The next step now would be to define a `custom_func` that would enable use to selectively optimize a single channel. 
 
 
 ```python 
