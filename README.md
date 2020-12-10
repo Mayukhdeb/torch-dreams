@@ -60,6 +60,7 @@ def my_custom_func(layer_outputs):
 The rest is actually very similar to the quick start snippet:
 
 ```python
+config = {
     "image_path": "noise.jpg",
     "layers": layers_to_use,
     "octave_scale": 1.1,  
