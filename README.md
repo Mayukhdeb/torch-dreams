@@ -6,7 +6,7 @@ Making neural networks more interpretable, for research and art.
 [![](https://img.shields.io/github/last-commit/mayukhdeb/torch-dreams)](https://github.com/mayukhdeb/torch-dreams/commits/master)
 [![](https://img.shields.io/twitter/url?label=Docs&style=flat-square&url=https%3A%2F%2Fapp.gitbook.com%2F%40mayukh09%2Fs%2Ftorch-dreams%2F)](https://app.gitbook.com/@mayukh09/s/torch-dreams/)
 
-<img src = "images/banner_0.png">
+<img src = "https://github.com/Mayukhdeb/torch-dreams/blob/master/images/banner_1.png?raw=true">
 
 ```
 pip install torch-dreams 
