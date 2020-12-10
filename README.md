@@ -2,7 +2,7 @@
 Making neural networks more interpretable, for research and art. 
 
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/notebooks/torch_dreams_starter.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb)
 [![](https://img.shields.io/github/last-commit/mayukhdeb/torch-dreams)](https://github.com/mayukhdeb/torch-dreams/commits/master)
 [![](https://img.shields.io/twitter/url?label=Docs&style=flat-square&url=https%3A%2F%2Fapp.gitbook.com%2F%40mayukh09%2Fs%2Ftorch-dreams%2F)](https://app.gitbook.com/@mayukh09/s/torch-dreams/)
 
@@ -13,7 +13,7 @@ pip install torch-dreams
 ```
 
 ## Quick start
-> Make sure you also check out the [quick start colab notebook]() and the [docs](https://app.gitbook.com/@mayukh09/s/torch-dreams/) for more interesting examples. 
+> Make sure you also check out the [quick start colab notebook](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb) and the [docs](https://app.gitbook.com/@mayukh09/s/torch-dreams/) for more interesting examples. 
 ```python
 import matplotlib.pyplot as plt
 import torchvision.models as models
