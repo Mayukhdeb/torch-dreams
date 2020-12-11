@@ -24,10 +24,10 @@ dreamy_boi = dreamer(model)
 
 config = {
     "image_path": "your_image.jpg",
-    "layers": [model.Mixed_6c.branch1x1],
-    "octave_scale": 1.2,
-    "num_octaves": 10,
-    "iterations": 20,
+    "layers": [model.Mixed_5c.branch3x3dbl_3],
+    "octave_scale": 1.1,
+    "num_octaves": 14,
+    "iterations": 70,
     "lr": 0.03,
     "max_rotation": 0.5,
 }
