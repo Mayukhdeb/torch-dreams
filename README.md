@@ -12,6 +12,16 @@ Making neural networks more interpretable, for research and art.
 pip install torch-dreams 
 ```
 
+## Contents
+
+* Docs 
+    1. [Visualizing individual channels](https://app.gitbook.com/@mayukh09/s/torch-dreams/visualizing-individual-channels)
+    2. [Channel Algebra](https://app.gitbook.com/@mayukh09/s/torch-dreams/blending)
+    3. [Gradient Masks](https://app.gitbook.com/@mayukh09/s/torch-dreams/gradient-masks)
+* Notebooks
+    1. [Quick start on colab](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb)
+
+
 ## Quick start
 > Make sure you also check out the [quick start colab notebook](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb) and the [docs](https://app.gitbook.com/@mayukh09/s/torch-dreams/) for more interesting examples. 
 ```python
