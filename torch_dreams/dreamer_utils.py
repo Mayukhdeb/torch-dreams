@@ -42,9 +42,9 @@ def get_gradients(net_in, net, layers, default_func, custom_func = None):
         Executes the forward pass through the model and returns the gradients from the selected layer. 
 
         input args{
-            net_in = the 3D tensor which is to be used in the forward pass <size = (C, H, W)>
-            net = pytorch model which is being used for the  deep-dream
-            layer = layer instance of net whose activations are to be maximized
+            net_in:  the 3D tensor which is to be used in the forward pass <size = (C, H, W)>
+            net:  pytorch model which is being used for the  deep-dream
+            layer:  layer instance of net whose activations are to be maximized
         }
 
         returns{

@@ -16,6 +16,25 @@ from .constants import LOWER_IMAGE_BOUND_GRAY
 from .dreamer_utils import get_gradients
 
 def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None, device = None, default_func = None):
+
+    """
+    Core function for image optimization with gradient masks 
+
+    input args{
+        model: pytorch model 
+        image_np: 3 channel numpy image with shape (C,H,W)
+        layers: list of layers whose outputs are to be used [model.layer1, model.layer2]
+        lr: learning rate
+        custom_funcs: list of custom functions to be applied with the corrresponding gradient masks 
+        max_rotation: caps the max amount of rotation on the input tensor, helps reduce noise 
+        gradient_smoothing_coeff: helps reduce fig frequency noise in gradients before adding
+        gradient_smoothing_kernel_size: kernel size to be used while smoothing 
+        grad_mask: list of gradient masks to be applied , make sure that len(grad_mask) = len(custom_funcs)
+        device: cuda or CPU depending on the availability
+        default_func: default func to be used if no custom_func is not given
+
+    }
+    """
         
     image_tensor = pytorch_input_adapter(image_np, device = device)
     if grad_mask is not None:
@@ -24,10 +43,6 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
     for i in range(iterations):
         """
         rolling 
-        """
-
-        """
-        if no rolls are given, make your own and save them 
         """
         roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
 
@@ -91,16 +106,20 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
 def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, device = None, default_func = None):
 
     """
-    Deep-dream core function, runs n iterations on a single octave(image)
+    Core function for image optimization with gradient masks 
+
     input args{
-        image_np = 3D numpy array of the image <size = (W, H, C)>
-        layer = specifies the layer whose activations are to be maximized
-        iterations = number of time the original image is added by the gradients multiplied by a constant factor lr
-        out_channels <optinal> = manual selection of output channel from the layer that has been chosen
+        model: pytorch model 
+        image_np: 3 channel numpy image with shape (C,H,W)
+        layers: list of layers whose outputs are to be used [model.layer1, model.layer2]
+        lr: learning rate
+        custom_func: custom loss defined by the user 
+        max_rotation: caps the max amount of rotation on the input tensor, helps reduce noise 
+        gradient_smoothing_coeff: helps reduce fig frequency noise in gradients before adding
+        gradient_smoothing_kernel_size: kernel size to be used while smoothing 
+        device: cuda or CPU depending on the availability
+        default_func: default func to be used if no custom_func is not given
     }
-    returns{
-        3D np.array which is basicallly the resulting image after running through one single octave
-    }            print(roll_x, roll_y)
     """
 
     image_tensor = pytorch_input_adapter(image_np, device = device)

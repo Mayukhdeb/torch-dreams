@@ -5,28 +5,40 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="torch-dreams",
-    version="0.1.0",
+    version="1.0.0",
     author="Mayukh Deb", 
     author_email="mayukhmainak2000@gmail.com", 
-    description="Feature visualization to make deep neural networks more interpretable",
+    description= "Making neural networks more interpretable, for research and art",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Mayukhdeb/torch-dreams",
     packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
-
     install_requires=[
         "torch>=1.6.0",
         "torchvision",
         "opencv-python",
         "numpy",
-        "matplotlib",
         "tqdm"
       ],
     python_requires='>=3.6',   
-    include_package_data=True
+    include_package_data=True,
+    keywords=[
+        "PyTorch",
+        "machine learning",
+        "neural networks",
+        "convolutional neural networks",
+        "feature visualization",
+        "optimization",
+        ],
+    classifiers=[
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: Education",
+        "Natural Language :: English",
+        "Programming Language :: Python :: 3.6",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Scientific/Engineering :: Mathematics",
+        "Topic :: Scientific/Engineering :: Visualization",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
 )

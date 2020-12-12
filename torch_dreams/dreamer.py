@@ -23,9 +23,9 @@ class dreamer():
     Main class definition for torch-dreams:
 
     model = Any PyTorch deep-learning model
-    preprocess_func = Set of torch transforms required for the model wrapped into a function. See torch_dreams.utils for examples
-    deprocess_func <optional> = set of reverse transforms, to be applied before converting the image back to numpy
-    device = checks for a GPU, uses the GPU for tensor operations if available
+    device = "cuda" or "cpu" depending on GPU availability
+    self.config = dictionary containing everything required check the readme (https://github.com/Mayukhdeb/torch-dreams#a-closer-look) for a better explanantion. 
+    self.default_func = default loss to be used if no custom_func is defined 
     """
 
     def __init__(self, model):
@@ -57,7 +57,7 @@ class dreamer():
             original_size=original_size, num_octaves= self.config["num_octaves"], octave_scale=self.config["octave_scale"])
 
         """
-        source: 
+        partial source for the next few lines: 
         https://github.com/ProGamerGov/Protobuf-Dreamer/blob/bb9943411129127220c131793264c8b24a71a6c0/pb_dreamer.py#L105
         """
     
