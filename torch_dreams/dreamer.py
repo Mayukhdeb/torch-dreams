@@ -10,7 +10,6 @@ from .utils import pytorch_input_adapter
 from .utils import pytorch_output_adapter
 from .utils import post_process_numpy_image
 
-from .constants import __quiet__
 from .constants import default_config
 
 from .dreamer_utils import default_func_mean
