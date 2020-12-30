@@ -6,7 +6,7 @@ from torch_dreams.dreamer import dreamer
 import torchvision.models as models
 
 model = models.inception_v3(pretrained=True)
-dreamy_boi = dreamer(model)
+dreamy_boi = dreamer(model, quiet_mode= True)
 
 layers_to_use = [model.Mixed_6c.branch1x1]
 
