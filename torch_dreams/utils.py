@@ -22,6 +22,32 @@ from .constants import IMAGENET_STD_1_GRAY
 from .image_transforms import transform_to_tensor
 from .image_transforms import rot_img
 
+def load_image_from_config(config):
+    if config["image_path"] is not None and config["image"] is None:
+        """
+        image path given, and image is none
+        """
+        image_path = config["image_path"]        
+        original_image = load_image(image_path, grayscale= False)
+        image_np = preprocess_numpy_img(original_image, grayscale= False)
+
+    elif config["image_path"] is None and config["image"] is not None:
+        """
+        image path is NOT given, image is given 
+        """
+        image_np = config["image"]  ## must be of shape (h,w,c)
+
+    elif config["image_path"] is not None and config["image"] is not None:
+        """
+        If both image and image_path are given, use image_path only and ignore image
+        """
+        # print("Both image_path and image are given in config, using image_path:"+ config["image_path"])
+        image_path = config["image_path"]        
+        original_image = load_image(image_path, grayscale= False)
+        image_np = preprocess_numpy_img(original_image, grayscale= False)
+
+    return image_np
+
 def load_image(img_path, target_shape=None, grayscale = False):
     if not os.path.exists(img_path):
         raise Exception(f'Path does not exist: {img_path}')

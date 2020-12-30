@@ -21,8 +21,13 @@ Even though gray is not required for now, I plan to add a grayscale mode someday
 LOWER_IMAGE_BOUND_GRAY = torch.tensor((-IMAGENET_MEAN_1_GRAY / IMAGENET_STD_1_GRAY).reshape(1, -1, 1, 1)).to(device)
 UPPER_IMAGE_BOUND_GRAY = torch.tensor(((1 - IMAGENET_MEAN_1_GRAY) / IMAGENET_STD_1_GRAY).reshape(1, -1, 1, 1)).to(device)
 
+"""
+If both image_path and image are given,
+image_path is used and image is ignored
+"""
 default_config = {
-    "image_path": None,
+    "image_path": None, ## path/to/image.jpg
+    "image": None, ## must be a numpy array of shape (h,w,c)
     "layers": None,
     "octave_scale": None,
     "num_octaves": None,

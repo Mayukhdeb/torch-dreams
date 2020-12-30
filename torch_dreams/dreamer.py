@@ -1,16 +1,18 @@
 import cv2
 import tqdm
 import torch
+import warnings
 import numpy as np
 from tqdm import tqdm
 
-from .utils import load_image
-from .utils import preprocess_numpy_img
+from. utils import load_image_from_config
 from .utils import pytorch_input_adapter
 from .utils import pytorch_output_adapter
 from .utils import post_process_numpy_image
 
+from .constants import __quiet__
 from .constants import default_config
+
 from .dreamer_utils import default_func_mean
 from .dreamer_utils import make_octave_sizes
 
@@ -24,11 +26,11 @@ class dreamer():
 
     model = Any PyTorch deep-learning model
     device = "cuda" or "cpu" depending on GPU availability
-    self.config = dictionary containing everything required check the readme (https://github.com/Mayukhdeb/torch-dreams#a-closer-look) for a better explanantion. 
+    self.config = dictionary containing everything required thats needed for things to work, check the readme (https://github.com/Mayukhdeb/torch-dreams#a-closer-look)
     self.default_func = default loss to be used if no custom_func is defined 
     """
 
-    def __init__(self, model):
+    def __init__(self, model, quiet_mode = False):
         self.model = model
         self.model = self.model.eval()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -39,17 +41,17 @@ class dreamer():
         self.default_func = default_func_mean
         self.dream_on_octave = dream_on_octave
         self.dream_on_octave_with_masks = dream_on_octave_with_masks
+        self.quiet_mode= quiet_mode
 
-        print("dreamer init on: ", self.device)
+        if self.quiet_mode  is False:
+            print("dreamer init on: ", self.device)
 
     def deep_dream(self, config):
 
         for key in list(config.keys()):
             self.config[key] = config[key]
 
-        image_path = self.config["image_path"]        
-        original_image = load_image(image_path, grayscale= False)
-        image_np = preprocess_numpy_img(original_image, grayscale= False)
+        image_np = load_image_from_config(self.config)
 
         original_size = image_np.shape[:-1]
 
@@ -61,7 +63,7 @@ class dreamer():
         https://github.com/ProGamerGov/Protobuf-Dreamer/blob/bb9943411129127220c131793264c8b24a71a6c0/pb_dreamer.py#L105
         """
     
-        img = original_image.copy()
+        img = image_np.copy()
         octaves = []  
 
         for size in octave_sizes[::-1]:
@@ -72,7 +74,7 @@ class dreamer():
             octaves.append(hi)
 
         count = 0
-        for new_size in tqdm(octave_sizes):
+        for new_size in tqdm(octave_sizes, disable = self.quiet_mode):
 
             image_np = cv2.resize(image_np, new_size)
 
@@ -104,17 +106,14 @@ class dreamer():
         for key in list(config.keys()):
             self.config[key] = config[key]
 
-        image_path = self.config["image_path"]
-
-        original_image = load_image(self.config["image_path"], grayscale= False)
-        image_np = preprocess_numpy_img(original_image, grayscale= False)
+        image_np = load_image_from_config(self.config)
 
         original_size = image_np.shape[:-1]
 
         octave_sizes = make_octave_sizes(
             original_size=original_size, num_octaves=self.config["num_octaves"], octave_scale=self.config["octave_scale"])
 
-        img = original_image.copy()
+        img = image_np.copy()
         octaves = []  
 
         for size in octave_sizes[::-1]:
@@ -126,7 +125,7 @@ class dreamer():
 
         count = 0
 
-        for new_size in tqdm(octave_sizes):
+        for new_size in tqdm(octave_sizes, disable = self.quiet_mode):
 
             image_np = cv2.resize(image_np, new_size)
 
