@@ -33,8 +33,8 @@ model = models.inception_v3(pretrained=True)
 dreamy_boi = dreamer(model)
 
 config = {
-    "image_path": "your_image.jpg",
-    "layers": [model.Mixed_5c.branch3x3dbl_3],
+    "image_path": "noise.jpg",   ## or any image you want
+    "layers": [model.Mixed_5d],
     "octave_scale": 1.1,
     "num_octaves": 14,
     "iterations": 70,
