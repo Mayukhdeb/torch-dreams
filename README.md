@@ -143,4 +143,8 @@ config = {
 * [Feature visualization by Olah, et al.](https://distill.pub/2017/feature-visualization/)
 * [Google AI blog on DeepDreams](https://ai.googleblog.com/2015/06/inceptionism-going-deeper-into-neural.html)
 
+## Acknowledgements
+
+* [amFOSS](https://amfoss.in/)
+* [Gene Kogan](https://github.com/genekogan) 
 
