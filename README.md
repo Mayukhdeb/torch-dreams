@@ -33,16 +33,19 @@ model = models.inception_v3(pretrained=True)
 dreamy_boi = dreamer(model)
 
 config = {
-    "image_path": "noise.jpg",   ## or any image you want
-    "layers": [model.Mixed_5d],
-    "octave_scale": 1.1,
-    "num_octaves": 14,
-    "iterations": 70,
-    "lr": 0.03,
-    "max_rotation": 0.5,
+    "image_path": "noise.jpg",
+    "layers": [model.Mixed_6a],
+    "octave_scale": 1.1,  
+    "num_octaves": 14,  
+    "iterations": 20,  
+    "lr": 0.05,
+    "max_rotation": 0.9,                  ## optional
+    "custom_func":  None,                 ## optional
+    "gradient_smoothing_kernel_size": 9,  ## optional
+    "gradient_smoothing_coeff": 1.5       ## optional
 }
 
-out = dreamy_boi.deep_dream(config)
+out = dreamy_boi.deep_dream(config)  
 plt.imshow(out)
 plt.show()
 ```
