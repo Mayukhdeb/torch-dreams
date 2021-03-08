@@ -89,6 +89,8 @@ class dreamer():
                 lr= self.config["lr"],
                 custom_func = self.config["custom_func"],
                 max_rotation = self.config["max_rotation"],
+                max_roll_x= self.config["max_roll_x"],
+                max_roll_y= self.config["max_roll_y"],
                 gradient_smoothing_coeff = self.config["gradient_smoothing_coeff"],
                 gradient_smoothing_kernel_size= self.config["gradient_smoothing_kernel_size"], 
                 default_func=self.default_func, 

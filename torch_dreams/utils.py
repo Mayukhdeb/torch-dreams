@@ -120,14 +120,17 @@ def post_process_numpy_image(dump_img):
     return dump_img
 
     
-def find_random_roll_values_for_tensor(image_tensor):
+def find_random_roll_values_for_tensor(image_tensor, max_roll_x = None, max_roll_y = None):
 
     """
     image_tensor.size() should be (C, H, W)
     """
 
-    max_roll_x = image_tensor.size()[-1]
-    max_roll_y = image_tensor.size()[-2]
+    if max_roll_x is None:
+        max_roll_x = image_tensor.size()[-1]
+    
+    if max_roll_y is None:
+        max_roll_y = image_tensor.size()[-2]
 
     roll_x = random.randint(-max_roll_x, max_roll_x)
     roll_y = random.randint(-max_roll_y, max_roll_y)

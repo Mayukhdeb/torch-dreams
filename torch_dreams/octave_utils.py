@@ -103,7 +103,7 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
     
     return img_out_np
 
-def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, device = None, default_func = None):
+def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, device = None, default_func = None, max_roll_x = None, max_roll_y = None):
 
     """
     Core function for image optimization with gradient masks 
@@ -128,7 +128,7 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
         rolling 
         """
 
-        roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
+        roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor, max_roll_x= max_roll_x, max_roll_y = max_roll_y)
 
         image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
         
