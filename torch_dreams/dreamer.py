@@ -65,21 +65,24 @@ class dreamer():
         img = image_np.copy()
         octaves = []  
 
-        for size in octave_sizes[::-1]:
-            hw = img.shape[1], img.shape[0]
-            lo = cv2.resize(img, size)
-            hi = img- cv2.resize(lo, hw)
-            img = lo
-            octaves.append(hi)
+        if self.config['add_laplacian'] == True:
+
+            for size in octave_sizes[::-1]:
+                hw = img.shape[1], img.shape[0]
+                lo = cv2.resize(img, size)
+                hi = img- cv2.resize(lo, hw)
+                img = lo
+                octaves.append(hi)
 
         count = 0
         for new_size in tqdm(octave_sizes, disable = self.quiet_mode):
 
             image_np = cv2.resize(image_np, new_size)
 
-            if  count > 0:
-                hi = octaves[-count]
-                image_np += hi
+            if self.config['add_laplacian']:
+                if  count > 0:
+                    hi = octaves[-count]
+                    image_np += hi
 
             image_np = self.dream_on_octave(
                 model=self.model,
