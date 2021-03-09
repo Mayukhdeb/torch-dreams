@@ -39,5 +39,6 @@ default_config = {
     "gradient_smoothing_kernel_size": None,
     "grad_mask": None,
     "max_roll_x": None,
-    "max_roll_y": None
+    "max_roll_y": None,
+    "add_laplacian": False  ## True: preserve high frequency components 
 }
