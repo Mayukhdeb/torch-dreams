@@ -72,12 +72,16 @@ config = {
     "iterations": 20,
     "lr": 0.07,
     "custom_func": [custom_func],
-    "max_rotation": 0.5,
+    "max_rotation": 0.1,
     "grayscale": False,
     "gradient_smoothing_coeff": 0.1,
     "gradient_smoothing_kernel_size": 3,
-    "grad_mask": [grad_mask]
+    "grad_mask": [grad_mask],
+    "max_roll_x": 10,
+    "max_roll_y": 10,
+    "add_laplacian": False
 }
+
 
 config2, config3 = config.copy(), config.copy()
 config2["grad_mask"] = [grad_mask_2]
