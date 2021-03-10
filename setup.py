@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="torch-dreams",
-    version="1.1.0",
+    version="1.1.1",
     author="Mayukh Deb", 
     author_email="mayukhmainak2000@gmail.com", 
     description= "Making neural networks more interpretable, for research and art",
