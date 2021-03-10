@@ -40,8 +40,8 @@ config = {
     "iterations": 20,  
     "lr": 0.05,
     "max_rotation": 0.9,                  ## optional
-    "max_roll_x": 10,                     ## optional
-    "max_roll_y": 10,                     ## optional
+    "max_roll_x": 100,                     ## optional
+    "max_roll_y": 100,                     ## optional
     "custom_func":  None,                 ## optional
     "add_laplacian": True,                ## optional
     "gradient_smoothing_coeff": 0.1,      ## optional
@@ -155,7 +155,7 @@ config = {
 * `max_roll_x` (optional): sets the maximum amount of random roll the image can undergo at each iteration. 
     * By default, it's set to `None`, which means that the roll values would be a random value between 0 and the width of the image. 
     * Set it to 0 if you want to disable any random roll in this direction. 
-* `max_roll_y` (optional): same as `max_roll_x` but in Y direction
+* `max_roll_y` (optional): Same as `max_roll_x` but in Y direction
 
 ## Relevant Reading:
 
