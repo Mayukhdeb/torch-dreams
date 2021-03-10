@@ -9,3 +9,4 @@ output/
 .vscode/
 *.ipynb
 models/
+test_snippet.py
