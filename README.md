@@ -33,18 +33,18 @@ model = models.inception_v3(pretrained=True)
 dreamy_boi = dreamer(model)
 
 config = {
-    "image_path": "noise.jpg",
+    "image_path": "seed.jpg",
     "layers": [model.Mixed_6a],
     "octave_scale": 1.1,  
-    "num_octaves": 14,  
+    "num_octaves": 16,  
     "iterations": 20,  
     "lr": 0.05,
     "max_rotation": 0.9,                  ## optional
     "max_roll_x": 10,                     ## optional
     "max_roll_y": 10,                     ## optional
     "custom_func":  None,                 ## optional
-    "add_laplacian": False,               ## optional
-    "gradient_smoothing_coeff": 0.5       ## optional
+    "add_laplacian": True,                ## optional
+    "gradient_smoothing_coeff": 0.1,      ## optional
     "gradient_smoothing_kernel_size": 9   ## optional
 }
 
@@ -85,6 +85,10 @@ config = {
     "lr": 0.04,
     "max_rotation": 0.7,
     "custom_func":  my_custom_func,
+    "gradient_smoothing_kernel_size": None,  ##optional
+    "gradient_smoothing_coeff": None,        ##optional
+    'max_roll_x':None,                       ##optional
+    'max_roll_y':None                        ##optional
 }
 
 out = dreamy_boi.deep_dream(config)
@@ -111,7 +115,9 @@ config = {
     "custom_func": None,
     "max_rotation": 0.5,
     "gradient_smoothing_coeff": 0.1,
-    "gradient_smoothing_kernel_size": 3
+    "gradient_smoothing_kernel_size": 3,
+    'max_roll_x':None,                       ##optional
+    'max_roll_y':None                        ##optional
 }
 ```
 
