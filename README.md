@@ -40,8 +40,8 @@ config = {
     "iterations": 20,  
     "lr": 0.05,
     "max_rotation": 0.9,                  ## optional
-    "max_roll_x": 100,                     ## optional
-    "max_roll_y": 100,                     ## optional
+    "max_roll_x": 100,                    ## optional
+    "max_roll_y": 100,                    ## optional
     "custom_func":  None,                 ## optional
     "add_laplacian": True,                ## optional
     "gradient_smoothing_coeff": 0.1,      ## optional
