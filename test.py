@@ -17,7 +17,7 @@ layers_to_use = [model.Mixed_6c.branch1x1]
 
 def my_custom_func(layer_outputs):
     
-    loss = layer_outputs[0].mean()
+    loss = -layer_outputs[0].mean()
     return loss
 
 config = {
