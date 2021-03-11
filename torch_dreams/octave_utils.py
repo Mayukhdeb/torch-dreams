@@ -123,6 +123,9 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
     """
 
     image_tensor = pytorch_input_adapter(image_np, device = device)
+    image_tensor.requires_grad = True
+    # print(image_tensor.grad.data, "fofofofofo")
+    optimizer = torch.optim.SGD([image_tensor], lr = lr, weight_decay= 1e-3)
     for i in range(iterations):
         """
         rolling 
@@ -144,7 +147,7 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
         """
         getting gradients
         """
-        gradients_tensor = get_gradients(net_in = image_tensor_rolled_rotated, net = model, layers = layers, default_func = default_func ,custom_func= custom_func).detach()
+        gradients_tensor = get_gradients(net_in = image_tensor_rolled_rotated.detach(), net = model, layers = layers, default_func = default_func ,custom_func= custom_func).detach()
 
         """
         unrotate and unroll gradients of the image tensor
@@ -154,8 +157,13 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
 
         """
         image update
+
+        to do:
+            do an optimizer.step() below and get same test results 
+            make sure grads are normalized
         """
-        
+        optimizer.zero_grad()
+        # image_tensor.grad = None
         if gradient_smoothing_kernel_size is not None and gradient_smoothing_coeff is not None:
             
             sigma = ((i + 1) / iterations) * 2.0 + gradient_smoothing_coeff
@@ -163,10 +171,17 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
             smooth_gradients_tensor = CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = device)(gradients_tensor.unsqueeze(0)).squeeze(0)
             g_norm = torch.std(smooth_gradients_tensor)
 
-            image_tensor.data = image_tensor.data + lr * (smooth_gradients_tensor.data / g_norm) ## can confirm this is still on the GPU if you have one
+            image_tensor.grad = smooth_gradients_tensor.data / (g_norm + 1e-8)
+
+            # image_tensor.data = image_tensor.data + lr * (smooth_gradients_tensor.data / g_norm) ## can confirm this is still on the GPU if you have one
         else:
             g_norm = torch.std(gradients_tensor)
-            image_tensor.data = image_tensor.data + lr *(gradients_tensor.data /g_norm) ## can confirm this is still on the GPU if you have one
+            image_tensor.grad = gradients_tensor.data / (g_norm + 1e-8)
+
+            # image_tensor.data = image_tensor.data + lr *(gradients_tensor.data /g_norm) ## can confirm this is still on the GPU if you have one
+
+        optimizer.step()
+
 
         image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND).squeeze(0)
        

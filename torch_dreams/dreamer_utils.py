@@ -9,21 +9,21 @@ def default_func_MSE(layer_outputs):
         losses.append(loss_component)
 
     loss = torch.mean(torch.stack(losses))
-    return loss
+    return -loss
 
 def default_func_norm(layer_outputs):
     losses = []
     for output in layer_outputs:
         losses.append(output.norm())
     loss = torch.mean(torch.stack(losses))
-    return loss
+    return -loss
 
 def default_func_mean(layer_outputs):
     losses = []
     for output in layer_outputs:
         losses.append(output.mean())
     loss = torch.mean(torch.stack(losses))
-    return loss
+    return -loss
 
 class Hook():
     def __init__(self, module, backward=False):
