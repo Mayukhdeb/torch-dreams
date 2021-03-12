@@ -26,7 +26,7 @@ class image_param():
         self.tensor.grad = gradients_tensor
     
     def clip_to_bounds(self, upper, lower):
-        self.tensor = torch.max(torch.min(self.tensor.data.float(), upper), lower)
+        self.tensor = torch.max(torch.min(self.tensor, upper), lower)
 
     def roll(self, roll_x, roll_y):
         return roll_torch_tensor(self.tensor.clone(), roll_x= roll_x, roll_y = roll_y)
