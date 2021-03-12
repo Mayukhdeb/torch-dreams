@@ -51,7 +51,6 @@ def get_gradients(net_in, net, layers, default_func, custom_func = None):
             gradient of model weights 
         }
         """  
-        net_in = net_in.unsqueeze(0)
         net_in.requires_grad = True
         net.zero_grad()
 
@@ -77,7 +76,7 @@ def get_gradients(net_in, net, layers, default_func, custom_func = None):
 
 
         loss.backward()
-        return net_in.grad.data.squeeze(0)
+        return net_in.grad.data
 
 def make_octave_sizes(original_size, num_octaves, octave_scale):
     

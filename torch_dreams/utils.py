@@ -89,8 +89,8 @@ def rotate_image_tensor(image_tensor, theta, device ):
         https://github.com/Mayukhdeb/torch-dreams/issues/7
     }
     """
-    image_rotated = rot_img(x = image_tensor.unsqueeze(0), theta = theta, device = device)
-    return image_rotated.squeeze(0)
+    image_rotated = rot_img(x = image_tensor, theta = theta, device = device)
+    return image_rotated
 
 def pytorch_output_adapter(img):
     return np.moveaxis(img.to('cpu').detach().numpy()[0], 0, 2)
