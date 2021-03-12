@@ -122,9 +122,8 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
     }
     """
 
-    image_tensor = pytorch_input_adapter(image_np, device = device)
+    image_tensor = pytorch_input_adapter(image_np, device = device).unsqueeze(0)
     image_tensor.requires_grad = True
-    # print(image_tensor.grad.data, "fofofofofo")
     optimizer = torch.optim.SGD([image_tensor], lr = lr, weight_decay= 1e-3)
     for i in range(iterations):
         """
@@ -140,7 +139,6 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
         """
         
         theta = get_random_rotation_angle(theta_max= max_rotation)
-
 
         image_tensor_rolled_rotated = rotate_image_tensor(image_tensor = image_tensor_rolled, theta = theta, device = device)
 
@@ -173,19 +171,17 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
 
             image_tensor.grad = smooth_gradients_tensor.data / (g_norm + 1e-8)
 
-            # image_tensor.data = image_tensor.data + lr * (smooth_gradients_tensor.data / g_norm) ## can confirm this is still on the GPU if you have one
         else:
             g_norm = torch.std(gradients_tensor)
             image_tensor.grad = gradients_tensor.data / (g_norm + 1e-8)
 
-            # image_tensor.data = image_tensor.data + lr *(gradients_tensor.data /g_norm) ## can confirm this is still on the GPU if you have one
 
         optimizer.step()
 
 
-        image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND).squeeze(0)
+        image_tensor.data = torch.max(torch.min(image_tensor.data, UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND)
        
-    img_out = image_tensor.detach().cpu()
+    img_out = image_tensor.squeeze(0).detach().cpu()
 
     img_out_np = img_out.numpy()
     img_out_np = img_out_np.transpose(1,2,0)
