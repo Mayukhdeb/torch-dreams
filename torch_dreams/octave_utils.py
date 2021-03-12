@@ -48,9 +48,9 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
         """
         rolling 
         """
-        roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor)
+        roll_x, roll_y = find_random_roll_values_for_tensor(image_parameter.tensor)
 
-        image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
+        image_tensor_rolled = roll_torch_tensor(image_parameter.tensor, roll_x, roll_y) 
         
         """
         rotating
@@ -86,21 +86,16 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
             for m in range(len(gradients_tensors)):
                 gradients_tensor = gradients_tensors[m]
                 g_norm = torch.std(gradients_tensor)
-                # image_tensor.data = image_tensor.data + (lr *(gradients_tensor.data /g_norm) * grad_mask_tensors[m] )## can confirm this is still on the GPU if you have one
-                image_tensor.grad = (gradients_tensor.data /g_norm) * grad_mask_tensors[m]
-                image_parameter.tensor = image_tensor
+
+                image_parameter.set_gradients((gradients_tensor.data /g_norm) * grad_mask_tensors[m])
                 image_parameter.optimizer.step()
         
         else:
            for m in range(len(gradients_tensors)):
                 gradients_tensor = gradients_tensors[m]
-
                 g_norm = torch.std(gradients_tensor)
-                # print(((gradients_tensor.data /g_norm) * grad_mask_tensors[m]).dtype, image_tensor.dtype)
-                image_tensor.grad = ((gradients_tensor.data /g_norm) * grad_mask_tensors[m]).to(dtype = torch.float32)
 
-                # image_tensor.data = image_tensor.data + (lr *(gradients_tensor.data /g_norm) * grad_mask_tensors[m] )## can confirm this is still on the GPU if you have one
-                image_parameter.tensor = image_tensor
+                image_parameter.set_gradients(((gradients_tensor.data /g_norm) * grad_mask_tensors[m]).to(dtype = torch.float32))
                 image_parameter.optimizer.step()
 
         image_tensor.data = torch.max(torch.min(image_tensor.data.float(), UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND)
