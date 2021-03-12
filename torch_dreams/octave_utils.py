@@ -134,14 +134,15 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
     image_tensor = pytorch_input_adapter(image_np, device = device).unsqueeze(0)
     image_parameter  = image_param(image_tensor)
     image_parameter.get_optimizer(lr = lr)
+
     for i in range(iterations):
         """
         rolling 
         """
 
-        roll_x, roll_y = find_random_roll_values_for_tensor(image_tensor, max_roll_x= max_roll_x, max_roll_y = max_roll_y)
+        roll_x, roll_y = find_random_roll_values_for_tensor(image_parameter.tensor, max_roll_x= max_roll_x, max_roll_y = max_roll_y)
 
-        image_tensor_rolled = roll_torch_tensor(image_tensor, roll_x, roll_y) 
+        image_tensor_rolled = roll_torch_tensor(image_parameter.tensor, roll_x, roll_y) 
         
         """
         rotating
@@ -155,7 +156,7 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
         getting gradients
         """
         gradients_tensor = get_gradients(net_in = image_tensor_rolled_rotated.detach(), net = model, layers = layers, default_func = default_func ,custom_func= custom_func).detach()
-
+        # print(gradients_tensor.mean(), "  grad mean")
         """
         unrotate and unroll gradients of the image tensor
         """
@@ -177,18 +178,15 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
             smooth_gradients_tensor = CascadeGaussianSmoothing(kernel_size = gradient_smoothing_kernel_size, sigma = sigma, device = device)(gradients_tensor.unsqueeze(0)).squeeze(0)
             g_norm = torch.std(smooth_gradients_tensor)
 
-            image_tensor.grad = smooth_gradients_tensor.data / (g_norm + 1e-8)
+            image_parameter.set_gradients(smooth_gradients_tensor.data / (g_norm + 1e-8))
 
         else:
             g_norm = torch.std(gradients_tensor)
-            image_tensor.grad = gradients_tensor.data / (g_norm + 1e-8)
+            image_parameter.set_gradients(gradients_tensor.data / (g_norm + 1e-8))
 
-
-        image_parameter.tensor = image_tensor
-        image_parameter.clip_to_bounds(UPPER_IMAGE_BOUND, LOWER_IMAGE_BOUND)
         image_parameter.optimizer.step()
 
-       
+    image_parameter.clip_to_bounds(UPPER_IMAGE_BOUND, LOWER_IMAGE_BOUND)
     img_out = image_parameter.tensor.squeeze(0).detach().cpu()
 
     img_out_np = img_out.numpy()
