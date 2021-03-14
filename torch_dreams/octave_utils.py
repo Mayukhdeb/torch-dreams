@@ -17,14 +17,14 @@ from .dreamer_utils import get_gradients
 
 from .image_param import image_param
 
-def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None, device = None, default_func = None):
+def dream_on_octave_with_masks(model, image_parameter, layers, iterations, lr,  custom_funcs = [None], max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, grad_mask =None, device = None, default_func = None):
 
     """
     Core function for image optimization with gradient masks 
 
     input args{
         model: pytorch model 
-        image_np: 3 channel numpy image with shape (C,H,W)
+        image_parameter: instance of image_param.image_param class
         layers: list of layers whose outputs are to be used [model.layer1, model.layer2]
         lr: learning rate
         custom_funcs: list of custom functions to be applied with the corrresponding gradient masks 
@@ -38,9 +38,6 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
     }
     """
         
-    image_tensor = pytorch_input_adapter(image_np, device = device).unsqueeze(0)
-    image_parameter  = image_param(image_tensor)
-    image_parameter.get_optimizer(lr = lr)
     if grad_mask is not None:
         grad_mask_tensors = [pytorch_input_adapter(g_mask, device = device).double() for g_mask in grad_mask]
 
@@ -98,16 +95,13 @@ def dream_on_octave_with_masks(model, image_np, layers, iterations, lr,  custom_
                 image_parameter.set_gradients(((gradients_tensor.data /g_norm) * grad_mask_tensors[m]).to(dtype = torch.float32))
                 image_parameter.optimizer.step()
 
-        image_tensor.data = torch.max(torch.min(image_tensor.data.float(), UPPER_IMAGE_BOUND), LOWER_IMAGE_BOUND)
+        image_parameter.optimizer.step()
 
-    img_out = image_parameter.tensor.squeeze(0).detach().cpu()
-
-    img_out_np = img_out.numpy()
-    img_out_np = img_out_np.transpose(1,2,0)
+    image_parameter.clip_to_bounds(UPPER_IMAGE_BOUND, LOWER_IMAGE_BOUND)
     
-    return img_out_np
+    return image_parameter
 
-def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, device = None, default_func = None, max_roll_x = None, max_roll_y = None):
+def dream_on_octave(model, image_parameter, layers, iterations, lr,  custom_func = None, max_rotation = 0.2, gradient_smoothing_coeff = None, gradient_smoothing_kernel_size = None, device = None, default_func = None, max_roll_x = None, max_roll_y = None):
 
     """
     Core function for image optimization with gradient masks 
@@ -125,11 +119,6 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
         default_func: default func to be used if no custom_func is not given
     }
     """
-
-    image_tensor = pytorch_input_adapter(image_np, device = device).unsqueeze(0)
-    image_parameter  = image_param(image_tensor)
-    image_parameter.get_optimizer(lr = lr)
-
     for i in range(iterations):
         """
         rolling 
@@ -182,9 +171,5 @@ def dream_on_octave(model, image_np, layers, iterations, lr,  custom_func = None
         image_parameter.optimizer.step()
 
     image_parameter.clip_to_bounds(UPPER_IMAGE_BOUND, LOWER_IMAGE_BOUND)
-    img_out = image_parameter.tensor.squeeze(0).detach().cpu()
-
-    img_out_np = img_out.numpy()
-    img_out_np = img_out_np.transpose(1,2,0)
     
-    return img_out_np
+    return image_parameter

@@ -18,6 +18,8 @@ from .dreamer_utils import make_octave_sizes
 from .octave_utils import dream_on_octave_with_masks
 from .octave_utils import dream_on_octave
 
+from .image_param import image_param
+
 class dreamer():
 
     """
@@ -56,37 +58,42 @@ class dreamer():
 
         octave_sizes = make_octave_sizes(
             original_size=original_size, num_octaves= self.config["num_octaves"], octave_scale=self.config["octave_scale"])
-
-        """
-        partial source for the next few lines: 
-        https://github.com/ProGamerGov/Protobuf-Dreamer/blob/bb9943411129127220c131793264c8b24a71a6c0/pb_dreamer.py#L105
-        """
     
-        img = image_np.copy()
-        octaves = []  
+
+        image_parameter  = image_param(pytorch_input_adapter(image_np, device = self.device).unsqueeze(0))
 
         if self.config['add_laplacian'] == True:
 
+            octaves = []
+            img = image_param(pytorch_input_adapter(image_np, device = self.device).unsqueeze(0))
+
             for size in octave_sizes[::-1]:
-                hw = img.shape[1], img.shape[0]
-                lo = cv2.resize(img, size)
-                hi = img- cv2.resize(lo, hw)
-                img = lo
+                old = img.tensor.copy()
+                hw = img.tensor.shape[-2], img.tensor.shape[-1]
+                img.resize_by_size(height = size[0], width = size[1])
+                low = img.tensor.copy()
+                img.resize_by_size(height = hw[0], width = hw[1])
+                hi = old - img.tensor
+                img = low
                 octaves.append(hi)
 
-        count = 0
-        for new_size in tqdm(octave_sizes, disable = self.quiet_mode):
+        count = 0        
 
-            image_np = cv2.resize(image_np, new_size)
+        for s in tqdm(range(self.config['num_octaves']), disable = self.quiet_mode):
+            size = octave_sizes[s]
+
+            image_parameter.resize_by_size(height = size[0], width = size[1])
+            image_parameter.tensor.grad = None
+            image_parameter.get_optimizer(lr = self.config['lr'])
 
             if self.config['add_laplacian']:
                 if  count > 0:
                     hi = octaves[-count]
                     image_np += hi
 
-            image_np = self.dream_on_octave(
+            image_parameter = self.dream_on_octave(
                 model=self.model,
-                image_np = image_np,
+                image_parameter = image_parameter,
                 layers = self.config["layers"],
                 iterations = self.config["iterations"],
                 lr= self.config["lr"],
@@ -101,7 +108,12 @@ class dreamer():
             )
             count += 1
 
-        image_np = post_process_numpy_image(image_np)
+        img_out = image_parameter.tensor.squeeze(0).detach().cpu()
+
+        img_out_np = img_out.numpy()
+        img_out_np = img_out_np.transpose(1,2,0)
+        image_np = post_process_numpy_image(img_out_np)
+
         return image_np
 
 
@@ -117,32 +129,45 @@ class dreamer():
         octave_sizes = make_octave_sizes(
             original_size=original_size, num_octaves=self.config["num_octaves"], octave_scale=self.config["octave_scale"])
 
-        img = image_np.copy()
-        octaves = []  
+        image_parameter  = image_param(pytorch_input_adapter(image_np, device = self.device).unsqueeze(0))
 
-        for size in octave_sizes[::-1]:
-            hw = img.shape[1], img.shape[0]
-            lo = cv2.resize(img, size)
-            hi = img- cv2.resize(lo, hw)
-            img = lo
-            octaves.append(hi)
+        if self.config['add_laplacian'] == True:
+
+            octaves = []
+            img = image_param(pytorch_input_adapter(image_np, device = self.device).unsqueeze(0))
+
+            for size in octave_sizes[::-1]:
+                old = img.tensor.copy()
+                hw = img.tensor.shape[-2], img.tensor.shape[-1]
+                img.resize_by_size(height = size[0], width = size[1])
+                low = img.tensor.copy()
+                img.resize_by_size(height = hw[0], width = hw[1])
+                hi = old - img.tensor
+                img = low
+                octaves.append(hi)
 
         count = 0
 
-        for new_size in tqdm(octave_sizes, disable = self.quiet_mode):
+        for s in tqdm(range(self.config['num_octaves']), disable = self.quiet_mode):
 
-            image_np = cv2.resize(image_np, new_size)
+            size = octave_sizes[s]
 
-            if  count > 0:
-                hi = octaves[-count]
-                image_np += hi
+            image_parameter.resize_by_size(height = size[0], width = size[1])
+            image_parameter.tensor.grad = None
+            # print(image_parameter.tensor.grad)
+            image_parameter.get_optimizer(lr = self.config['lr'])
+
+            if self.config['add_laplacian']:
+                if  count > 0:
+                    hi = octaves[-count]
+                    image_np += hi
 
             if self.config["grad_mask"] is not None:
-                grad_mask = [cv2.resize(g, new_size) for g in self.config["grad_mask"]]
+                grad_mask = [cv2.resize(g, size) for g in self.config["grad_mask"]]
 
             image_np = self.dream_on_octave_with_masks(
                 model=self.model, 
-                image_np=image_np, 
+                image_parameter=image_parameter, 
                 layers= self.config["layers"], 
                 iterations= self.config["iterations"], 
                 lr= self.config["lr"], 
@@ -156,5 +181,10 @@ class dreamer():
             )
             count += 1
 
-        image_np = post_process_numpy_image(image_np)
+        img_out = image_parameter.tensor.squeeze(0).detach().cpu()
+
+        img_out_np = img_out.numpy()
+        img_out_np = img_out_np.transpose(1,2,0)
+        image_np = post_process_numpy_image(img_out_np)
+
         return image_np

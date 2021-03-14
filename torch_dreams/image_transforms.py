@@ -27,3 +27,12 @@ def rot_img(x, theta, dtype = torch.float32, device = 'cpu'):
     grid = F.affine_grid(rot_mat, x.size()).type(dtype).to(device)
     x = F.grid_sample(x, grid, align_corners= True)
     return x
+
+def resize_4d_tensor_by_factor(x, height_factor, width_factor):
+    res = F.interpolate(x, scale_factor= (height_factor, width_factor))
+    return res
+
+def resize_4d_tensor_by_size(x, height, width):
+    with torch.no_grad():
+        res = F.interpolate(x, size =  (height, width), mode = 'bilinear')
+        return res

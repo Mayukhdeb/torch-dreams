@@ -4,6 +4,7 @@ import torch.optim as optim
 import torch
 from .utils import rotate_image_tensor
 from .utils import roll_torch_tensor
+from .image_transforms import resize_4d_tensor_by_factor, resize_4d_tensor_by_size
 
 class image_param():
     def __init__(self, image_tensor):
@@ -30,4 +31,11 @@ class image_param():
 
     def roll(self, roll_x, roll_y):
         return roll_torch_tensor(self.tensor.clone(), roll_x= roll_x, roll_y = roll_y)
+    
+    def resize_by_factor(self, height_factor, width_factor):
+        self.tensor = resize_4d_tensor_by_factor(self.tensor, height_factor, width_factor)
+    
+    def resize_by_size(self, height, width):
+        self.tensor = resize_4d_tensor_by_size(self.tensor, height, width)
+        self.tensor.grad = None
     
