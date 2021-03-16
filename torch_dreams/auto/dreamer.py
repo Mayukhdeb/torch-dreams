@@ -1,6 +1,7 @@
 import torch 
 import torch.nn as nn
 from tqdm import tqdm
+import torchvision.transforms as transforms
 from ..dreamer_utils import Hook, default_func_mean
 
 from .utils import (
@@ -32,8 +33,13 @@ class dreamer():
             optimizer = torch.optim.AdamW(params_list, lr=lr, weight_decay=weight_decay)
         return optimizer
 
+    def get_transforms(self, jitter, rotate, scale):
+        t = transforms.Compose([
+            transforms.RandomRotation(degrees = rotate),
+        ])
+        return t
 
-    def render(self, width, height, iters, layers, lr,  jitter, rotate, scale, custom_func = None, weight_decay = 0., grad_clip = 1.):
+    def render(self, width, height, iters, layers, lr,  jitter, rotate_degrees, scale, custom_func = None, weight_decay = 0., grad_clip = 1.):
 
 
         image_parameter = self.get_image_param(height = height, width = width, sd = 0.01, device = self.device)
@@ -45,6 +51,7 @@ class dreamer():
             weight_decay= weight_decay
         )
 
+        self.transforms =  self.get_transforms(jitter = jitter, rotate = rotate_degrees, scale = scale)
         
 
         # hooks = [l.register_forward_hook(callback) for l in layers ]
@@ -61,9 +68,9 @@ class dreamer():
             img = lucid_colorspace_to_rgb(img)
             img = torch.sigmoid(img)
             img = normalize(img)
+            img = self.transforms(img)
 
             model_out = self.model(img)
-
 
             layer_outputs = []
 
