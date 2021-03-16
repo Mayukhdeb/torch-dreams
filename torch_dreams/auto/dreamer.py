@@ -14,6 +14,8 @@ from .utils import (
     show_rgb
 )
 
+from .transforms import random_resize
+
 class dreamer():
     def __init__(self, model, progress = True, device = 'cuda'):
         self.model = model 
@@ -21,6 +23,7 @@ class dreamer():
         self.device = device
         self.model.to(self.device)
         self.default_func = default_func_mean
+        self.transforms = None
 
     def get_image_param(self, height, width, sd, device):
         image_parameter = init_image_param(height = height, width = width, sd = 0.01, device = device)
@@ -33,14 +36,16 @@ class dreamer():
             optimizer = torch.optim.AdamW(params_list, lr=lr, weight_decay=weight_decay)
         return optimizer
 
-    def get_transforms(self, jitter, rotate, scale):
-        t = transforms.Compose([
-            transforms.RandomRotation(degrees = rotate),
+    def get_default_transforms(self, rotate, scale_max, scale_min):
+        self.transforms= transforms.Compose([
+            random_resize(max_size_factor = scale_max, min_size_factor = scale_min),
+            transforms.RandomAffine(degrees = rotate)
         ])
-        return t
 
-    def render(self, width, height, iters, layers, lr,  jitter, rotate_degrees, scale, custom_func = None, weight_decay = 0., grad_clip = 1.):
+    def set_custom_transforms(self, transforms):
+        self.transforms = transforms
 
+    def render(self, width, height, iters, layers, lr, rotate_degrees, scale_max = 1.1,  scale_min = 0.5, custom_func = None, weight_decay = 0., grad_clip = 1.):
 
         image_parameter = self.get_image_param(height = height, width = width, sd = 0.01, device = self.device)
         image_parameter.requires_grad_()
@@ -51,10 +56,11 @@ class dreamer():
             weight_decay= weight_decay
         )
 
-        self.transforms =  self.get_transforms(jitter = jitter, rotate = rotate_degrees, scale = scale)
-        
+        if self.transforms is None:
+            self.get_default_transforms(rotate = rotate_degrees, scale_max = scale_max, scale_min= scale_min)
+        else:
+            print("using your custom transforms")
 
-        # hooks = [l.register_forward_hook(callback) for l in layers ]
 
         hooks = []
         for layer in layers:
@@ -70,7 +76,15 @@ class dreamer():
             img = normalize(img)
             img = self.transforms(img)
 
+            if i % 100 ==0:
+                import matplotlib.pyplot as plt
+
+                foo = img.detach()[0].cpu().permute(1,2,0)
+                plt.imshow(foo)
+                plt.show()
+
             model_out = self.model(img)
+
 
             layer_outputs = []
 
