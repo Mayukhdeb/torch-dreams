@@ -105,40 +105,6 @@ def gpu_affine_grid(size):
     grid[:, :, :, 1] = torch.ger(linear_points, torch.ones(W)).expand_as(grid[:, :, :, 1])
     return vision.FlowField(size[2:], grid)
 
-# def lucid_transforms(img, jitter=None, scale=.5, degrees=45, **kwargs):
-#     h,w = img.shape[-2], img.shape[-1]
-#     if jitter is None:
-#         jitter = min(h,w)//2
-#     fastai_image = vision.Image(img.squeeze())
-
-#     # pad
-#     fastai_image._flow = gpu_affine_grid(fastai_image.shape)
-#     vision.transform.pad()(fastai_image, jitter)
-
-#     # jitter
-#     first_jitter = int((jitter*(2/3)))
-#     vision.transform.crop_pad()(fastai_image,
-#                                 (h+first_jitter,w+first_jitter), 
-#                                 row_pct=np.random.rand(), col_pct=np.random.rand())
-
-#     # scale
-#     percent = scale * 100 # scale up to integer to avoid float repr errors
-#     scale_factors = [(100 - percent + percent/5. * i)/100 for i in range(11)]            
-#     rand_scale = scale_factors[int(np.random.rand()*len(scale_factors))]
-#     fastai_image._flow = gpu_affine_grid(fastai_image.shape)
-#     vision.transform.zoom()(fastai_image, rand_scale)
-
-#     # rotate
-#     rotate_factors = list(range(-degrees, degrees+1)) + degrees//2 * [0]
-#     rand_rotate = rotate_factors[int(np.random.rand()*len(rotate_factors))]
-#     fastai_image._flow = gpu_affine_grid(fastai_image.shape)
-#     vision.transform.rotate()(fastai_image, rand_rotate)
-
-#     # jitter
-#     vision.transform.crop_pad()(fastai_image, (h,w), row_pct=np.random.rand(), col_pct=np.random.rand())
-
-    # return fastai_image.data[None,:]
-
 def tensor_stats(t, label=""):
     if len(label) > 0: label += " "
     return("%smean:%.2f std:%.2f max:%.2f min:%.2f" % (label, t.mean().item(),t.std().item(),t.max().item(),t.min().item()))
