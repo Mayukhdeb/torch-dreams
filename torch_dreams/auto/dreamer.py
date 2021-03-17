@@ -75,10 +75,10 @@ class dreamer():
         for i in tqdm(range(iters), disable= self.quiet):
             image_parameter.optimizer.zero_grad()
 
-            img = fft_to_rgb(height, width, image_parameter.param)
-            img = lucid_colorspace_to_rgb(img)
+            img = fft_to_rgb(height, width, image_parameter.param, device= self.device)
+            img = lucid_colorspace_to_rgb(img,device= self.device)
             img = torch.sigmoid(img)
-            img = normalize(img)
+            img = normalize(img, device= self.device)
             img = self.transforms(img)
 
             # if i % 100 ==0:
