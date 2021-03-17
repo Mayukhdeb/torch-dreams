@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="torch-dreams",
-    version="1.1.1",
+    version="1.1.1-test",
     author="Mayukh Deb", 
     author_email="mayukhmainak2000@gmail.com", 
     description= "Making neural networks more interpretable, for research and art",
@@ -14,8 +14,8 @@ setuptools.setup(
     url="https://github.com/Mayukhdeb/torch-dreams",
     packages=setuptools.find_packages(),
     install_requires=[
-        "torch==1.7.0",
-        "torchvision==0.8.1",
+        "torch>=1.7.0",
+        "torchvision>=0.8.1",
         "opencv-python",
         "numpy",
         "tqdm"
