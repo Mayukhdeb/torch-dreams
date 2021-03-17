@@ -35,9 +35,13 @@ def get_fft_scale(h, w, decay_power=.75, device = 'cuda'):
 def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
     """convert image param to NCHW 
 
-    WARNING: torch v1.7.0 works differently from torch v1.8.0 on fft
+    WARNING: torch v1.7.0 works differently from torch v1.8.0 on fft. 
+    Hence you might find some weird workarounds in this function.
 
     Latest docs: https://pytorch.org/docs/stable/fft.html
+
+    Also refer:
+        https://github.com/pytorch/pytorch/issues/49637
 
     Args:
         height (int): height of image
@@ -48,22 +52,29 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
         torch.tensor: NCHW tensor
 
     size log:
+        before: 
+            torch.Size([1, 3, height, width//2, 2]) 
+            OR 
+            torch.Size([1, 3, height, width+1//2, 2])
 
-    for torch 1.7.0:
-        before: torch.Size([1, 3, 256, 129, 2]) 
-        after: torch.Size([1, 3, 256, 256])
+        after: 
+            torch.Size([1, 3, height, width])
 
-    
     """
     scale = get_fft_scale(height, width, device = device)
 
     t = scale * image_parameter.to(device)
-    #print(t.shape, 'before')
-    if torch.__version__ == "1.7.0":
+
+    if torch.__version__[:3] == "1.7":
         t = torch.irfft(t, 2, normalized=True, signal_sizes=(height,width))
-    elif torch.__version__ == '1.8.0':
-        t = torch.fft.irfft2(t, s = (width, height, 1), dim = (2,3,4)).squeeze(-1)
-    #print(t.shape, 'after')
+    elif  torch.__version__[:3] == '1.8':
+        """
+        hacky workaround to fix issues for the new torch.fft on torch 1.8.0
+
+        """
+        t = torch.complex(t[..., 0], t[..., 1])
+        t = torch.fft.irfftn(t, s = (3, height, width), dim = (1,2,3), norm = 'ortho')
+
     return t
 
 def color_correlation_normalized():
@@ -75,8 +86,8 @@ def color_correlation_normalized():
     return color_correlation_normalized
 
 def lucid_colorspace_to_rgb(t,device = 'cuda'):
+
     t_flat = t.permute(0,2,3,1)
-    #print("lcid color", t_flat.size(),  t.dtype)
     # t_flat = torch.matmul(t_flat, color_correlation_normalized().T)
     t_flat = torch.matmul(t_flat , color_correlation_normalized().T.to(device))
     t = t_flat.permute(0,3,1,2)
