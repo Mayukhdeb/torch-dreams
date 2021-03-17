@@ -14,8 +14,8 @@ setuptools.setup(
     url="https://github.com/Mayukhdeb/torch-dreams",
     packages=setuptools.find_packages(),
     install_requires=[
-        "torch>=1.6.0",
-        "torchvision",
+        "torch==1.7.0",
+        "torchvision==0.8.1",
         "opencv-python",
         "numpy",
         "tqdm"
