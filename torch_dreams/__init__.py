@@ -1,9 +1,9 @@
 from .dreamer import *
 from .utils import *
 from .models import *
-from .auto import *
+from .model_bunch import *
 
-__version__ = "1.1.1-test"
+__version__ = "1.2.0-test"
 
 __all__ = [
     "dreamer",

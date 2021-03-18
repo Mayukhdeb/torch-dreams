@@ -1,190 +1,118 @@
-import cv2
-import tqdm
-import torch
-import warnings
-import numpy as np
+import torch 
 from tqdm import tqdm
+import torchvision.transforms as transforms
+from .dreamer_utils import Hook, default_func_mean
 
-from. utils import load_image_from_config
-from .utils import pytorch_input_adapter
-from .utils import pytorch_output_adapter
-from .utils import post_process_numpy_image
+from .utils import (
+    fft_to_rgb, 
+    lucid_colorspace_to_rgb, 
+    normalize, 
+    show_rgb
+)
 
-from .constants import default_config
-
-from .dreamer_utils import default_func_mean
-from .dreamer_utils import make_octave_sizes
-
-from .octave_utils import dream_on_octave_with_masks
-from .octave_utils import dream_on_octave
-
-from .image_param import image_param
+from .transforms import random_resize
+from .auto_image_param import auto_image_param
 
 class dreamer():
+    """wrapper over a pytorch model for visualization
 
+        Args:
+            model (torch.nn.Module): pytorch model 
+            quiet (bool, optional): enable or disable progress bar. Defaults to True.
+            device (str, optional): 'cpu' or 'cuda'. Defaults to 'cuda'.
     """
-    Main class definition for torch-dreams:
-
-    model = Any PyTorch deep-learning model
-    device = "cuda" or "cpu" depending on GPU availability
-    self.config = dictionary containing everything required thats needed for things to work, check the readme (https://github.com/Mayukhdeb/torch-dreams#a-closer-look)
-    self.default_func = default loss to be used if no custom_func is defined 
-    """
-
-    def __init__(self, model, quiet_mode = False):
-        self.model = model
-        self.model = self.model.eval()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        # model moves to GPU if available
-        self.model = self.model.to(self.device)
-        self.config = default_config.copy()
-
+    def __init__(self, model, quiet = True, device = 'cuda'):
+        
+        self.model = model 
+        self.model.eval()
+        self.device = device
+        self.model.to(self.device)
         self.default_func = default_func_mean
-        self.dream_on_octave = dream_on_octave
-        self.dream_on_octave_with_masks = dream_on_octave_with_masks
-        self.quiet_mode= quiet_mode
+        self.transforms = None
+        self.quiet = quiet
 
-        if self.quiet_mode  is False:
-            print("dreamer init on: ", self.device)
+    def get_default_transforms(self, rotate, scale_max, scale_min):
+        self.transforms= transforms.Compose([
+            random_resize(max_size_factor = scale_max, min_size_factor = scale_min),
+            transforms.RandomAffine(degrees = rotate)
+        ])
 
-    def deep_dream(self, config):
+    def set_custom_transforms(self, transforms):
+        self.transforms = transforms
 
-        for key in list(config.keys()):
-            self.config[key] = config[key]
+    def render(self, layers, image_parameter = None,  width= 256, height = 256, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, custom_func = None, weight_decay = 0., grad_clip = 1.):
+        """core function to visualize elements form within the pytorch model
 
-        image_np = load_image_from_config(self.config)
+        WARNING: width and height would be ignored if image_parameter is not None
 
-        original_size = image_np.shape[:-1]
+        Args:
+            layers (iterable): [model.layer1, model.layer2...]
+            image_parameter: instance of torch_dreams.auto.auto_image_param
+            width (int): width of image to be optimized 
+            height (int): height of image to be optimized 
+            iters (int): number of iterations, higher -> stronger visualization
+            lr (float): learning rate
+            rotate_degrees (int): max rotation in default transforms
+            scale_max (float, optional): Max image size factor. Defaults to 1.1.
+            scale_min (float, optional): Minimum image size factor. Defaults to 0.5.
+            custom_func (function, optional): See docs for a better explanation. Defaults to None.
+            weight_decay (float, optional): Weight decay for default optimizer. Helps prevent high frequency noise. Defaults to 0.
+            grad_clip (float, optional): Maximum value of norm of gradient. Defaults to 1.
 
-        octave_sizes = make_octave_sizes(
-            original_size=original_size, num_octaves= self.config["num_octaves"], octave_scale=self.config["octave_scale"])
-    
+        Returns:
+            image_parameter instance: To show image, use: plt.imshow(image_parameter.rgb)
+        """
+        if image_parameter is None:
 
-        image_parameter  = image_param(pytorch_input_adapter(image_np, device = self.device).unsqueeze(0))
+            image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
+        
+        if image_parameter.optimizer is None:
+            image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
 
-        if self.config['add_laplacian'] == True:
+        if self.transforms is None:
+            self.get_default_transforms(rotate = rotate_degrees, scale_max = scale_max, scale_min= scale_min)
+        else:
+            print("using your custom transforms")
 
-            octaves = []
-            img = image_param(pytorch_input_adapter(image_np, device = self.device).unsqueeze(0))
+        hooks = []
+        for layer in layers:
+            hook = Hook(layer)
+            hooks.append(hook)
 
-            for size in octave_sizes[::-1]:
-                old = img.tensor.copy()
-                hw = img.tensor.shape[-2], img.tensor.shape[-1]
-                img.resize_by_size(height = size[0], width = size[1])
-                low = img.tensor.copy()
-                img.resize_by_size(height = hw[0], width = hw[1])
-                hi = old - img.tensor
-                img = low
-                octaves.append(hi)
+        for i in tqdm(range(iters), disable= self.quiet):
+            image_parameter.optimizer.zero_grad()
 
-        count = 0        
+            img = fft_to_rgb(image_parameter.height, image_parameter.width, image_parameter.param, device= self.device)
+            img = lucid_colorspace_to_rgb(img,device= self.device)
+            img = torch.sigmoid(img)
+            img = normalize(img, device= self.device)
+            img = self.transforms(img)
 
-        for s in tqdm(range(self.config['num_octaves']), disable = self.quiet_mode):
-            size = octave_sizes[s]
+            # if i % 100 ==0:
+            #     import matplotlib.pyplot as plt
 
-            image_parameter.resize_by_size(height = size[0], width = size[1])
-            image_parameter.tensor.grad = None
-            image_parameter.get_optimizer(lr = self.config['lr'])
+            #     foo = img.detach()[0].cpu().permute(1,2,0)
+            #     plt.imshow(foo)
+            #     plt.show()
 
-            if self.config['add_laplacian']:
-                if  count > 0:
-                    hi = octaves[-count]
-                    image_np += hi
+            model_out = self.model(img)
 
-            image_parameter = self.dream_on_octave(
-                model=self.model,
-                image_parameter = image_parameter,
-                layers = self.config["layers"],
-                iterations = self.config["iterations"],
-                lr= self.config["lr"],
-                custom_func = self.config["custom_func"],
-                max_rotation = self.config["max_rotation"],
-                max_roll_x= self.config["max_roll_x"],
-                max_roll_y= self.config["max_roll_y"],
-                gradient_smoothing_coeff = self.config["gradient_smoothing_coeff"],
-                gradient_smoothing_kernel_size= self.config["gradient_smoothing_kernel_size"], 
-                default_func=self.default_func, 
-                device=self.device
-            )
-            count += 1
+            layer_outputs = []
 
-        img_out = image_parameter.tensor.squeeze(0).detach().cpu()
+            for hook in hooks:
+                out = hook.output[0]
+                layer_outputs.append(out)
 
-        img_out_np = img_out.numpy()
-        img_out_np = img_out_np.transpose(1,2,0)
-        image_np = post_process_numpy_image(img_out_np)
+            if custom_func is not None:
+                loss = custom_func(layer_outputs)
+            else:
+                loss = self.default_func(layer_outputs)
+            loss.backward()
+            image_parameter.clip_grads(grad_clip= 1)
+            image_parameter.optimizer.step()
+        
 
-        return image_np
+        for hook in hooks:
+            hook.close()
 
-
-    def deep_dream_with_masks(self, config):
-
-        for key in list(config.keys()):
-            self.config[key] = config[key]
-
-        image_np = load_image_from_config(self.config)
-
-        original_size = image_np.shape[:-1]
-
-        octave_sizes = make_octave_sizes(
-            original_size=original_size, num_octaves=self.config["num_octaves"], octave_scale=self.config["octave_scale"])
-
-        image_parameter  = image_param(pytorch_input_adapter(image_np, device = self.device).unsqueeze(0))
-
-        if self.config['add_laplacian'] == True:
-
-            octaves = []
-            img = image_param(pytorch_input_adapter(image_np, device = self.device).unsqueeze(0))
-
-            for size in octave_sizes[::-1]:
-                old = img.tensor.copy()
-                hw = img.tensor.shape[-2], img.tensor.shape[-1]
-                img.resize_by_size(height = size[0], width = size[1])
-                low = img.tensor.copy()
-                img.resize_by_size(height = hw[0], width = hw[1])
-                hi = old - img.tensor
-                img = low
-                octaves.append(hi)
-
-        count = 0
-
-        for s in tqdm(range(self.config['num_octaves']), disable = self.quiet_mode):
-
-            size = octave_sizes[s]
-
-            image_parameter.resize_by_size(height = size[0], width = size[1])
-            image_parameter.tensor.grad = None
-            # print(image_parameter.tensor.grad)
-            image_parameter.get_optimizer(lr = self.config['lr'])
-
-            if self.config['add_laplacian']:
-                if  count > 0:
-                    hi = octaves[-count]
-                    image_np += hi
-
-            if self.config["grad_mask"] is not None:
-                grad_mask = [cv2.resize(g, size) for g in self.config["grad_mask"]]
-
-            image_np = self.dream_on_octave_with_masks(
-                model=self.model, 
-                image_parameter=image_parameter, 
-                layers= self.config["layers"], 
-                iterations= self.config["iterations"], 
-                lr= self.config["lr"], 
-                custom_funcs= self.config["custom_func"], 
-                max_rotation= self.config["max_rotation"],
-                gradient_smoothing_coeff= self.config["gradient_smoothing_coeff"], 
-                gradient_smoothing_kernel_size= self.config["gradient_smoothing_kernel_size"], 
-                grad_mask= grad_mask, 
-                device=self.device, 
-                default_func=self.default_func
-            )
-            count += 1
-
-        img_out = image_parameter.tensor.squeeze(0).detach().cpu()
-
-        img_out_np = img_out.numpy()
-        img_out_np = img_out_np.transpose(1,2,0)
-        image_np = post_process_numpy_image(img_out_np)
-
-        return image_np
+        return image_parameter

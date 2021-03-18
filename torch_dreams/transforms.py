@@ -1,7 +1,7 @@
 import torchvision.transforms as transforms
 import torch.nn as nn
 import random
-from ..image_transforms import resize_4d_tensor_by_factor, resize_4d_tensor_by_size
+from .image_transforms import resize_4d_tensor_by_factor, resize_4d_tensor_by_size
 
 class random_resize(nn.Module):
     def __init__(self, max_size_factor, min_size_factor):
