@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="torch-dreams",
-    version="1.1.1-test",
+    version="1.2.0",
     author="Mayukh Deb", 
     author_email="mayukhmainak2000@gmail.com", 
     description= "Making neural networks more interpretable, for research and art",
@@ -41,4 +41,6 @@ setuptools.setup(
         "Topic :: Scientific/Engineering :: Visualization",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
+    test_suite='nose.collector',
+    tests_require=['nose']   
 )
