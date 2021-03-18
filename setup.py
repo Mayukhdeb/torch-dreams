@@ -3,6 +3,9 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setuptools.setup(
     name="torch-dreams",
     version="1.2.0",
@@ -13,13 +16,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Mayukhdeb/torch-dreams",
     packages=setuptools.find_packages(),
-    install_requires=[
-        "torch>=1.7.0",
-        "torchvision>=0.8.1",
-        "opencv-python",
-        "numpy",
-        "tqdm"
-      ],
+    install_requires= required,
     python_requires='>=3.6',   
     include_package_data=True,
     keywords=[
