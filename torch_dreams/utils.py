@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from torch import tensor
-import matplotlib.pyplot as plt
 from torchvision import transforms
 
 def init_image_param(height , width, sd=0.01, device = 'cuda'):
