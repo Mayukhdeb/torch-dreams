@@ -40,14 +40,17 @@ class dreamer():
     def set_custom_transforms(self, transforms):
         self.transforms = transforms
 
-    def render(self, width, height, iters, layers, lr, rotate_degrees, scale_max = 1.1,  scale_min = 0.5, custom_func = None, weight_decay = 0., grad_clip = 1.):
+    def render(self, layers, image_parameter = None,  width= 256, height = 256, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, custom_func = None, weight_decay = 0., grad_clip = 1.):
         """core function to visualize elements form within the pytorch model
 
+        WARNING: width and height would be ignored if image_parameter is not None
+
         Args:
+            layers (iterable): [model.layer1, model.layer2...]
+            image_parameter: instance of torch_dreams.auto.auto_image_param
             width (int): width of image to be optimized 
             height (int): height of image to be optimized 
             iters (int): number of iterations, higher -> stronger visualization
-            layers (iterable): [model.layer1, model.layer2...]
             lr (float): learning rate
             rotate_degrees (int): max rotation in default transforms
             scale_max (float, optional): Max image size factor. Defaults to 1.1.
@@ -59,9 +62,13 @@ class dreamer():
         Returns:
             image_parameter instance: To show image, use: plt.imshow(image_parameter.rgb)
         """
+        if image_parameter is None:
 
-        image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
-        image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
+            image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
+        
+        if image_parameter.optimizer is None:
+            image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
+
         if self.transforms is None:
             self.get_default_transforms(rotate = rotate_degrees, scale_max = scale_max, scale_min= scale_min)
         else:
@@ -75,7 +82,7 @@ class dreamer():
         for i in tqdm(range(iters), disable= self.quiet):
             image_parameter.optimizer.zero_grad()
 
-            img = fft_to_rgb(height, width, image_parameter.param, device= self.device)
+            img = fft_to_rgb(image_parameter.height, image_parameter.width, image_parameter.param, device= self.device)
             img = lucid_colorspace_to_rgb(img,device= self.device)
             img = torch.sigmoid(img)
             img = normalize(img, device= self.device)
