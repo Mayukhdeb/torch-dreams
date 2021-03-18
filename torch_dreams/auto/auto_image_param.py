@@ -9,6 +9,7 @@ class auto_image_param():
         self.width = width
         self.param = init_image_param(height = height, width = width, sd = standard_deviation, device = device)
         self.param.requires_grad_()
+        self.optimizer = None
 
     def fetch_optimizer(self, params_list, optimizer = None, lr = 1e-3, weight_decay = 0.):
         if optimizer is not None:
