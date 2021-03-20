@@ -34,7 +34,7 @@ plt.imshow(image_param.rgb)
 plt.show()
 ```
 
-## Visualize elements from different from multiple models simultaneously
+## Visualize features from multiple models simultaneously
 
 First, let's pick 2 models and specify which layers we'd want to work with
 
@@ -161,8 +161,8 @@ plt.show()
 * `grad_clip` (`float`, optional): Maximum value of the norm of gradient. Defaults to 1.
 
 ## Args for `dreamer.__init__()`
- * `model` (`nn.Module` or `torch_dreams.Modelbunch.model_bunch`)= Almost any PyTorch model which was trained on imagenet `mean` and `std`, and supports variable sized images (H, W) as inputs. You can also pass multiple models into this argument as a `torch_dreams.Modelbunch.model_bunch` instance.
- * `quiet` (`bool`) = Set to `True` if you want to disable any progress bars
+ * `model` (`nn.Module` or  `torch_dreams.model_bunch.Modelbunch`): Almost any PyTorch model which was trained on imagenet `mean` and `std`, and supports variable sized images (H, W) as inputs. You can also pass multiple models into this argument as a `torch_dreams.model_bunch.Modelbunch` instance.
+ * `quiet` (`bool`): Set to `True` if you want to disable any progress bars
  * `device` (`str`): `cuda` or `cpu` depending on your runtime 
 
 ## Acknowledgements
