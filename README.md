@@ -7,10 +7,31 @@ Making neural networks more interpretable, for research and art.
 [![](https://img.shields.io/github/last-commit/mayukhdeb/torch-dreams)](https://github.com/mayukhdeb/torch-dreams/commits/master)
 [![](https://img.shields.io/twitter/url?label=Docs&style=flat-square&url=https%3A%2F%2Fapp.gitbook.com%2F%40mayukh09%2Fs%2Ftorch-dreams%2F)](https://app.gitbook.com/@mayukh09/s/torch-dreams/)
 
-[<img src = "https://github.com/Mayukhdeb/torch-dreams/blob/master/images/banner_1.png?raw=true">](https://app.gitbook.com/@mayukh09/s/torch-dreams/visualizing-individual-channels)
+
+[<img src = "images/banner_segmentation_model.png">](https://app.gitbook.com/@mayukh09/s/torch-dreams/visualizing-individual-channels)
 
 ```
 pip install torch-dreams 
+```
+
+## Quick start
+> Make sure you also check out the [quick start colab notebook](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb) and the [docs](https://app.gitbook.com/@mayukh09/s/torch-dreams/) for more interesting examples. 
+
+
+```python
+import matplotlib.pyplot as plt
+import torchvision.models as models
+from torch_dreams.dreamer import dreamer
+
+model = models.inception_v3(pretrained=True)
+dreamy_boi = dreamer(model,  device = 'cuda', quiet =  False)
+
+image_param = dreamy_boi.render(
+    layers = [model.Mixed_5b],
+)
+
+plt.imshow(image_param.rgb.astype(np.float32))
+plt.show()
 ```
 
 ## Contents
@@ -23,36 +44,7 @@ pip install torch-dreams
     1. [Quick start on colab](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb)
 
 
-## Quick start
-> Make sure you also check out the [quick start colab notebook](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb) and the [docs](https://app.gitbook.com/@mayukh09/s/torch-dreams/) for more interesting examples. 
-```python
-import matplotlib.pyplot as plt
-import torchvision.models as models
-from torch_dreams.dreamer import dreamer
 
-model = models.inception_v3(pretrained=True)
-dreamy_boi = dreamer(model)
-
-config = {
-    "image_path": "seed.jpg",
-    "layers": [model.Mixed_6a],
-    "octave_scale": 1.1,  
-    "num_octaves": 16,  
-    "iterations": 20,  
-    "lr": 0.05,
-    "max_rotation": 0.9,                  ## optional
-    "max_roll_x": 100,                    ## optional
-    "max_roll_y": 100,                    ## optional
-    "custom_func":  None,                 ## optional
-    "add_laplacian": True,                ## optional
-    "gradient_smoothing_coeff": 0.1,      ## optional
-    "gradient_smoothing_kernel_size": 9   ## optional
-}
-
-out = dreamy_boi.deep_dream(config)  
-plt.imshow(out)
-plt.show()
-```
 ---
 
 ## Visualizing individual channels
