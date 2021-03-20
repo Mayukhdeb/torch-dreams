@@ -34,7 +34,7 @@ plt.imshow(image_param.rgb)
 plt.show()
 ```
 
-## You can also optimize activations from multiple models simultaneously
+## Visualize elements from different from multiple models simultaneously
 
 First, let's pick 2 models and specify which layers we'd want to work with
 
@@ -78,8 +78,6 @@ plt.show()
 ```
 
 
----
-
 ## Visualize individual channels
 
 ```python
@@ -101,6 +99,71 @@ image_param = dreamy_boi.render(
 plt.imshow(image_param.rgb)
 plt.show()
 ```
+
+## Using custom transforms:
+
+```python
+dreamy_boi = dreamer(model,  device = 'cuda', quiet =  False)
+
+my_transforms = transforms.Compose([
+    transforms.RandomAffine(degrees = 10, translate = (0.5,0.5)),
+    transforms.RandomHorizontalFlip(p = 0.3)
+])
+
+dreamy_boi.set_custom_transforms(transforms = my_transforms)
+
+image_param = dreamy_boi.render(
+    layers = [model.Mixed_5b],
+)
+
+plt.imshow(image_param.rgb)
+plt.show()
+
+```
+
+## You can also use outputs of one `render()` as the input of another
+
+```python
+import matplotlib.pyplot as plt
+import torchvision.models as models
+from torch_dreams.dreamer import dreamer
+
+model = models.inception_v3(pretrained=True)
+dreamy_boi = dreamer(model,  device = 'cuda', quiet =  False)
+
+image_param = dreamy_boi.render(
+    layers = [model.Mixed_5b],
+)
+
+image_param = dreamy_boi.render(
+    image_parameter= image_param,
+    layers = [model.Mixed_6a],
+    iters = 100
+)
+
+plt.imshow(image_param.rgb)
+plt.show()
+```
+
+## Args for `render()`
+
+* `layers` (`iterable`): List of the layers of model(s)'s layers to work on. `[model.layer1, model.layer2...]`
+* `image_parameter` (`auto_image_param`): instance of torch_dreams.auto_image_param
+* `width` (`int`): width of image to be optimized 
+* `height` (`int`): height of image to be optimized 
+* `iters` (`int`): number of iterations, higher -> stronger visualization
+* `lr` (`float`): learning rate
+* `rotate_degrees` (`int`): max rotation in default transforms
+* `scale_max` (`float`, optional): Max image size factor. Defaults to 1.1.
+* `scale_min` (`float`, optional): Minimum image size factor. Defaults to 0.5.
+* `custom_func` (`function`, optional): Can be used to define custom optimiziation conditions to `render()`. Defaults to None.
+* `weight_decay` (`float`, optional): Weight decay for default optimizer. Helps prevent high frequency noise. Defaults to 0.
+* `grad_clip` (`float`, optional): Maximum value of the norm of gradient. Defaults to 1.
+
+## Args for `dreamer.__init__()`
+ * `model` (`nn.Module` or `torch_dreams.Modelbunch.model_bunch`)= Almost any PyTorch model which was trained on imagenet `mean` and `std`, and supports variable sized images (H, W) as inputs. You can also pass multiple models into this argument as a `torch_dreams.Modelbunch.model_bunch` instance.
+ * `quiet` (`bool`) = Set to `True` if you want to disable any progress bars
+ * `device` (`str`): `cuda` or `cpu` depending on your runtime 
 
 ## Acknowledgements
 
