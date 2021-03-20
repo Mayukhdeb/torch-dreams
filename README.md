@@ -30,7 +30,7 @@ image_param = dreamy_boi.render(
     layers = [model.Mixed_5b],
 )
 
-plt.imshow(image_param.rgb.astype(np.float32))
+plt.imshow(image_param.rgb)
 plt.show()
 ```
 
@@ -73,7 +73,7 @@ image_param = dreamy_boi.render(
     iters= 100
 )
 
-plt.imshow((image_param.rgb).astype(np.float32))
+plt.imshow(image_param.rgb)
 plt.show()
 ```
 
@@ -98,7 +98,7 @@ image_param = dreamy_boi.render(
     layers = layers_to_use,
     custom_func = my_custom_func,
 )
-plt.imshow(image_param.rgb.astype(np.float32))
+plt.imshow(image_param.rgb)
 plt.show()
 ```
 
