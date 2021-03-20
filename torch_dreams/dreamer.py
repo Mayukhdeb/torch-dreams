@@ -31,16 +31,16 @@ class dreamer():
         self.transforms = None
         self.quiet = quiet
 
-    def get_default_transforms(self, rotate, scale_max, scale_min):
+    def get_default_transforms(self, rotate, scale_max, scale_min, translate_x, translate_y):
         self.transforms= transforms.Compose([
+            transforms.RandomAffine(degrees = rotate, translate= (translate_x, translate_y)),
             random_resize(max_size_factor = scale_max, min_size_factor = scale_min),
-            transforms.RandomAffine(degrees = rotate)
         ])
 
     def set_custom_transforms(self, transforms):
         self.transforms = transforms
 
-    def render(self, layers, image_parameter = None,  width= 256, height = 256, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, custom_func = None, weight_decay = 0., grad_clip = 1.):
+    def render(self, layers, image_parameter = None,  width= 256, height = 256, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0.1, translate_y = 0.1,  custom_func = None, weight_decay = 0., grad_clip = 1.):
         """core function to visualize elements form within the pytorch model
 
         WARNING: width and height would be ignored if image_parameter is not None
@@ -55,6 +55,8 @@ class dreamer():
             rotate_degrees (int): max rotation in default transforms
             scale_max (float, optional): Max image size factor. Defaults to 1.1.
             scale_min (float, optional): Minimum image size factor. Defaults to 0.5.
+            translate_x (float, optional): Maximum translation factor in x direction
+            translate_y (float, optional): Maximum translation factor in y direction
             custom_func (function, optional): See docs for a better explanation. Defaults to None.
             weight_decay (float, optional): Weight decay for default optimizer. Helps prevent high frequency noise. Defaults to 0.
             grad_clip (float, optional): Maximum value of norm of gradient. Defaults to 1.
@@ -70,9 +72,7 @@ class dreamer():
             image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
 
         if self.transforms is None:
-            self.get_default_transforms(rotate = rotate_degrees, scale_max = scale_max, scale_min= scale_min)
-        else:
-            print("using your custom transforms")
+            self.get_default_transforms(rotate = rotate_degrees, scale_max = scale_max, scale_min= scale_min, translate_x = translate_x, translate_y = translate_y)
 
         hooks = []
         for layer in layers:
