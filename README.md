@@ -34,126 +34,73 @@ plt.imshow(image_param.rgb.astype(np.float32))
 plt.show()
 ```
 
-## Contents
+## You can also optimize activations from multiple models simultaneously
 
-* Docs 
-    1. [Visualizing individual channels](https://app.gitbook.com/@mayukh09/s/torch-dreams/visualizing-individual-channels)
-    2. [Channel Algebra](https://app.gitbook.com/@mayukh09/s/torch-dreams/blending)
-    3. [Gradient Masks](https://app.gitbook.com/@mayukh09/s/torch-dreams/gradient-masks)
-* Notebooks
-    1. [Quick start on colab](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb)
-
-
-
----
-
-## Visualizing individual channels
-
-This section of torch_dreams was highly inspired by [Feature visualization by Olah, et al](https://distill.pub/2017/feature-visualization/). We basically optimize the input image to maximize activations of a certain channel of a layer in the neural network. 
-
-First, let's select the layer(s) we want to work on. Feel free to play around with other layers. 
+First, let's pick 2 models and specify which layers we'd want to work with
 
 ```python
-layers_to_use = [model.Mixed_6c.branch7x7_1.conv]
+from torch_dreams.model_bunch import ModelBunch
+
+bunch = ModelBunch(
+    model_dict = {
+        'inception': models.inception_v3(pretrained=True).eval(),
+        'resnet':    models.resnet18(pretrained= True).eval()
+    }
+)
+
+layers_to_use = [
+            bunch.model_dict['inception'].Mixed_6a,
+            bunch.model_dict['resnet'].layer2[0].conv1
+        ]
+
+dreamy_boi = dreamer(model = bunch, quiet= True, device= 'cuda')
 ```
 
-The next step now would be to define a `custom_func` that would enable use to selectively optimize a single channel. 
-
-
-```python 
-def my_custom_func(layer_outputs):
-    loss = layer_outputs[0][7].mean()  ## 7th channel of first layer from layers_to_use
-    return loss
-```
-
-The rest is actually very similar to the quick start snippet:
+Then define a `custom_func` which determines which exact activations of the models we have to optimize
 
 ```python
-config = {
-    "image_path": "noise.jpg",
-    "layers": layers_to_use,
-    "octave_scale": 1.1,  
-    "num_octaves": 20,  
-    "iterations": 100,  
-    "lr": 0.04,
-    "max_rotation": 0.7,
-    "custom_func":  my_custom_func,
-    "gradient_smoothing_kernel_size": None,  ##optional
-    "gradient_smoothing_coeff": None,        ##optional
-    'max_roll_x':None,                       ##optional
-    'max_roll_y':None                        ##optional
-}
+def custom_func(layer_outputs):
+    loss =   layer_outputs[0].mean()*2.0 + layer_outputs[1][89].mean() 
+    return -loss
+```
 
-out = dreamy_boi.deep_dream(config)
-plt.imshow(out)
+Run the optimization
+
+```python
+image_param = dreamy_boi.render(
+    layers = layers_to_use,
+    custom_func= custom_func,
+    iters= 100
+)
+
+plt.imshow((image_param.rgb).astype(np.float32))
 plt.show()
 ```
-If things go as planned, you will end up with something like:
 
-<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams-notebooks/main/images/raw_output/inceptionv3_channels/inceptionv3.Mixed_6c.branch7x7_1.conv_channel_7.jpg" width = "30%">
 
 ---
-## A closer look
 
-The `config` is where we get to customize how exactly we want the optimization to happen. Here's an example without using gradient masks:
+## Visualize individual channels
 
 ```python
-config = {
-    "image_path": "your_image.jpg",
-    "layers": [model.Mixed_6c.branch1x1],
-    "octave_scale": 1.2,
-    "num_octaves": 10,
-    "iterations": 20,
-    "lr": 0.03,
-    "custom_func": None,
-    "max_rotation": 0.5,
-    "gradient_smoothing_coeff": 0.1,
-    "gradient_smoothing_kernel_size": 3,
-    'max_roll_x':None,                       ##optional
-    'max_roll_y':None                        ##optional
-}
+
+layers_to_use = [model.Mixed_6b.branch1x1.conv]
+
+def make_custom_func(layer_number = 0, channel_number= 0): 
+    def custom_func(layer_outputs):
+        loss = layer_outputs[layer_number][channel_number].mean()
+        return -loss
+    return custom_func
+
+my_custom_func = make_custom_func(layer_number= 0, channel_number = 119)
+
+image_param = dreamy_boi.render(
+    layers = layers_to_use,
+    custom_func = my_custom_func,
+)
+plt.imshow(image_param.rgb.astype(np.float32))
+plt.show()
 ```
-
-* `image_path`: specifies the relative path to the input image. 
-
-* `layers`: List of layers whose outputs are to be "stored" for optimization later on. For example, if we want to use 2 layers:
-    ```python
-    config["layers"] = [
-        model.Mixed_6d.branch1x1,
-        model.Mixed_5c
-    ]
-    ```
-    
-* `octave_scale`: Factor by which the image is scaled up after each octave. 
-* `num_octaves`: Number of times the image is scaled up in order to reach back to the original size.
-* `iterations`: Number of gradient ascent steps taken per octave. 
-* `lr`: Learning rate used in each step of the gradient ascent. 
-* `custom_func` (optional): Use this to build your own custom optimization functions to optimize on individual channels/units/etc.
-
-    For example, if we want to optimize the th **47th channel of the first layer** and the **22nd channel of the 2nd layer** simultaneously:
-
-    ```python
-    
-    def my_custom_func(layer_outputs):
-        loss = layer_outputs[0][47].mean() + layer_outputs[1][22].mean()
-        return loss
-    config["custom_func"] = my_custom_func
-    ```
-* `max_rotation` (optional): Caps the maximum rotation to apply on the image.
-* `gradient_smoothing_coeff` (optional): Higher -> stronger blurring. 
-* `gradient_smoothing_kernel_size`: (optional) Kernel size to be used when applying gaussian blur.
-
-### New in `v1.1.1`
-* `add_laplacian` (optional): If set to `True`, it adds the high frequency components from the higher octave into the resulting image. Set it to `True` if you want to preserve the details of the original image as much as possible (especially when using gradient masks)
-* `max_roll_x` (optional): sets the maximum amount of random roll the image can undergo at each iteration. 
-    * By default, it's set to `None`, which means that the roll values would be a random value between 0 and the width of the image. 
-    * Set it to 0 if you want to disable any random roll in this direction. 
-* `max_roll_y` (optional): Same as `max_roll_x` but in Y direction
-
-## Relevant Reading:
-
-* [Feature visualization by Olah, et al.](https://distill.pub/2017/feature-visualization/)
-* [Google AI blog on DeepDreams](https://ai.googleblog.com/2015/06/inceptionism-going-deeper-into-neural.html)
 
 ## Acknowledgements
 
