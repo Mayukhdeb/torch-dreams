@@ -62,6 +62,8 @@ plt.show()
 ## Visualizing individual channels with `custom_func`
 
 ```python
+model = models.inception_v3(pretrained=True)
+dreamy_boi = dreamer(model, device = 'cuda')
 
 layers_to_use = [model.Mixed_6b.branch1x1.conv]
 
@@ -101,7 +103,7 @@ layers_to_use = [
             bunch.model_dict['resnet'].layer2[0].conv1
         ]
 
-dreamy_boi = dreamer(model = bunch, quiet= True, device= 'cuda')
+dreamy_boi = dreamer(model = bunch, quiet= False, device= 'cuda')
 ```
 
 Then define a `custom_func` which determines which exact activations of the models we have to optimize
@@ -129,6 +131,9 @@ plt.show()
 ## Using custom transforms:
 
 ```python
+import torchvision.transforms as transforms
+
+model = models.inception_v3(pretrained=True)
 dreamy_boi = dreamer(model,  device = 'cuda', quiet =  False)
 
 my_transforms = transforms.Compose([
@@ -144,7 +149,6 @@ image_param = dreamy_boi.render(
 
 plt.imshow(image_param.rgb)
 plt.show()
-
 ```
 
 ## You can also use outputs of one `render()` as the input of another to create feedback loops.
@@ -158,13 +162,13 @@ model = models.inception_v3(pretrained=True)
 dreamy_boi = dreamer(model,  device = 'cuda', quiet =  False)
 
 image_param = dreamy_boi.render(
-    layers = [model.Mixed_5b],
+    layers = [model.Mixed_6c],
 )
 
 image_param = dreamy_boi.render(
     image_parameter= image_param,
     layers = [model.Mixed_6a],
-    iters = 100
+    iters = 20
 )
 
 plt.imshow(image_param.rgb)
