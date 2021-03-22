@@ -31,10 +31,16 @@ class auto_image_param():
         torch.nn.utils.clip_grad_norm_(self.param,grad_clip)
 
     def to_hwc_tensor(self, device = 'cpu'):
-        rgb = image_buf_to_rgb(h = self.height, w = self.width, img_buf = self.param , device= device).permute(1,2,0).to(device)
+        rgb = image_buf_to_rgb(h = self.height, w = self.width, img_buf = self.param , device= device).permute(1,2,0).to(device = device, dtype = torch.float32)
         return rgb
         
-    @property
-    def rgb(self):
-        rgb = self.to_hwc_tensor().numpy().astype(np.float32)
-        return rgb
+    def to_hwc_numpy(self):
+        x = self.to_hwc_tensor().numpy()
+        return x
+
+    def to_chw_tensor(self, device = 'cpu'):
+        t = image_buf_to_rgb(h = self.height, w = self.width, img_buf = self.param , device= device)
+        return t
+
+    def __array__(self):
+        return self.to_hwc_numpy()
