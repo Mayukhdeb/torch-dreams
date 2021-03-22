@@ -40,7 +40,7 @@ class dreamer():
     def set_custom_transforms(self, transforms):
         self.transforms = transforms
 
-    def render(self, layers, image_parameter = None,  width= 256, height = 256, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0.1, translate_y = 0.1,  custom_func = None, weight_decay = 0., grad_clip = 1.):
+    def render(self, layers, image_parameter = None,  width= 256, height = 256, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0., translate_y = 0.,  custom_func = None, weight_decay = 0., grad_clip = 1.):
         """core function to visualize elements form within the pytorch model
 
         WARNING: width and height would be ignored if image_parameter is not None
