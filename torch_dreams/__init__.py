@@ -4,11 +4,14 @@ from .models import *
 from .model_bunch import *
 from .tests import *
 
-__version__ = "1.2.0"
+__version__ = "2.0-test"
 
 __all__ = [
     "dreamer",
     "utils",
     "models",
-    "model_bunch"
+    "model_bunch",
+    "auto_image_param",
+    "image_transforms",
+    "transforms"
 ]
