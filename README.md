@@ -30,7 +30,7 @@ image_param = dreamy_boi.render(
     layers = [model.Mixed_5b],
 )
 
-plt.imshow(image_param.rgb)
+plt.imshow(image_param)
 plt.show()
 ```
 
@@ -55,7 +55,7 @@ image_param = dreamy_boi.render(
     grad_clip = 1.,
 )
 
-plt.imshow(image_param.rgb)
+plt.imshow(image_param)
 plt.show()
 ```
 
@@ -79,7 +79,7 @@ image_param = dreamy_boi.render(
     layers = layers_to_use,
     custom_func = my_custom_func,
 )
-plt.imshow(image_param.rgb)
+plt.imshow(image_param)
 plt.show()
 ```
 
@@ -123,7 +123,7 @@ image_param = dreamy_boi.render(
     iters= 100
 )
 
-plt.imshow(image_param.rgb)
+plt.imshow(image_param)
 plt.show()
 ```
 
@@ -147,7 +147,7 @@ image_param = dreamy_boi.render(
     layers = [model.Mixed_5b],
 )
 
-plt.imshow(image_param.rgb)
+plt.imshow(image_param)
 plt.show()
 ```
 
@@ -167,12 +167,34 @@ image_param = dreamy_boi.render(
 
 image_param = dreamy_boi.render(
     image_parameter= image_param,
-    layers = [model.Mixed_6a],
+    layers = [model.Mixed_5b],
     iters = 20
 )
 
-plt.imshow(image_param.rgb)
+plt.imshow(image_param)
 plt.show()
+```
+
+## Other conveniences 
+
+You can convert an [`auto_image_param`](https://github.com/Mayukhdeb/torch-dreams/blob/master/torch_dreams/auto_image_param.py) instance to:
+
+1. Numpy array of dimensions `(height, width, color_channels)`
+
+```python
+numpy_image = image_param.to_hwc_numpy()
+```
+
+2. Torch Tensor of dimensions `(height, width, color_channels)`
+
+```python
+torch_image = image_param.to_hwc_tensor(device = 'cpu')
+```
+
+3. Torch Tensor of dimensions `(color_channels, height, width)`
+
+```python
+torch_image_chw = image_param.to_chw_tensor(device = 'cpu')
 ```
 
 ## Args for `render()`
