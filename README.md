@@ -8,14 +8,14 @@ Making neural networks more interpretable, for research and art.
 <!-- [![](https://img.shields.io/twitter/url?label=Docs&style=flat-square&url=https%3A%2F%2Fapp.gitbook.com%2F%40mayukh09%2Fs%2Ftorch-dreams%2F)](https://app.gitbook.com/@mayukh09/s/torch-dreams/) -->
 
 
-[<img src = "images/banner_segmentation_model.png">](https://app.gitbook.com/@mayukh09/s/torch-dreams/visualizing-individual-channels)
+<img src = "https://github.com/Mayukhdeb/torch-dreams/blob/master/images/banner_segmentation_model.png?raw=true">
 
 ```
 pip install torch-dreams 
 ```
 
 ## Minimal example
-> Make sure you also check out the [quick start colab notebook](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb) as well.
+> Make sure you also check out the [quick start colab notebook](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb) 
 
 
 ```python
