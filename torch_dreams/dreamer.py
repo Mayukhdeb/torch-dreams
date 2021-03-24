@@ -88,13 +88,6 @@ class dreamer():
             img = normalize(img, device= self.device)
             img = self.transforms(img)
 
-            # if i % 100 ==0:
-            #     import matplotlib.pyplot as plt
-
-            #     foo = img.detach()[0].cpu().permute(1,2,0)
-            #     plt.imshow(foo)
-            #     plt.show()
-
             model_out = self.model(img)
 
             layer_outputs = []
@@ -116,3 +109,24 @@ class dreamer():
             hook.close()
 
         return image_parameter
+    
+    def get_snapshot(self, layers, input_tensor):
+
+        with torch.no_grad():
+            input_tensor = input_tensor.to(self.device)
+
+            hooks = []
+            for layer in layers:
+                hook = Hook(layer)
+                hooks.append(hook)
+
+
+            model_out = self.model(input_tensor.float())
+
+            layer_outputs = []
+
+            for hook in hooks:
+                out = hook.output[0]
+                layer_outputs.append(out)
+
+        return layer_outputs
