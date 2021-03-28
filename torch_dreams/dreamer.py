@@ -1,5 +1,6 @@
 import torch 
 from tqdm import tqdm
+from copy import deepcopy
 import torchvision.transforms as transforms
 from .dreamer_utils import Hook, default_func_mean
 
@@ -68,8 +69,8 @@ class dreamer():
 
             image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
         else:
-            image_parameter = image_parameter.copy()
-            
+            image_parameter = deepcopy(image_parameter)
+
         if image_parameter.optimizer is None:
             image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
 
