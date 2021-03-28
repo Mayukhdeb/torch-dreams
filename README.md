@@ -14,6 +14,16 @@ Making neural networks more interpretable, for research and art.
 pip install torch-dreams 
 ```
 
+## Contents:
+
+* [Minimal example](https://github.com/Mayukhdeb/torch-dreams#minimal-example)
+* [Not so minimal example](https://github.com/Mayukhdeb/torch-dreams#not-so-minimal-example)
+* [Visualizing individual channels with `custom_func`](https://github.com/Mayukhdeb/torch-dreams#visualizing-individual-channels-with-custom_func)
+* [Visualize features from multiple models simultaneously](https://github.com/Mayukhdeb/torch-dreams#visualize-features-from-multiple-models-simultaneously)
+* [Use custom transforms](https://github.com/Mayukhdeb/torch-dreams#using-custom-transforms)
+* [Feedback loops](https://github.com/Mayukhdeb/torch-dreams#you-can-also-use-outputs-of-one-render-as-the-input-of-another-to-create-feedback-loops)
+* [Other conveniences](https://github.com/Mayukhdeb/torch-dreams#other-conveniences)
+
 ## Minimal example
 > Make sure you also check out the [quick start colab notebook](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb) 
 
@@ -82,7 +92,6 @@ image_param = dreamy_boi.render(
 plt.imshow(image_param)
 plt.show()
 ```
-
 
 ## Visualize features from multiple models simultaneously
 
