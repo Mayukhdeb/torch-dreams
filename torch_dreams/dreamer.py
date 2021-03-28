@@ -67,7 +67,9 @@ class dreamer():
         if image_parameter is None:
 
             image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
-        
+        else:
+            image_parameter = image_parameter.copy()
+            
         if image_parameter.optimizer is None:
             image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
 
