@@ -177,7 +177,7 @@ plt.show()
 
 ## Other conveniences 
 
-You can convert an [`auto_image_param`](https://github.com/Mayukhdeb/torch-dreams/blob/master/torch_dreams/auto_image_param.py) instance to:
+The following methods are handy for an [`auto_image_param`](https://github.com/Mayukhdeb/torch-dreams/blob/master/torch_dreams/auto_image_param.py) instance:
 
 1. Saving outputs as images:
 
