@@ -3,6 +3,7 @@ import torch
 import numpy as np
 
 from .utils import init_image_param, image_buf_to_rgb
+import torchvision.transforms as transforms
 
 class auto_image_param():
     def __init__(self, height, width, device, standard_deviation):
@@ -33,14 +34,25 @@ class auto_image_param():
     def to_hwc_tensor(self, device = 'cpu'):
         rgb = image_buf_to_rgb(h = self.height, w = self.width, img_buf = self.param , device= device).permute(1,2,0).to(device = device, dtype = torch.float32)
         return rgb
-        
-    def to_hwc_numpy(self):
-        x = self.to_hwc_tensor().numpy()
-        return x
 
     def to_chw_tensor(self, device = 'cpu'):
         t = image_buf_to_rgb(h = self.height, w = self.width, img_buf = self.param , device= device)
         return t
 
     def __array__(self):
-        return self.to_hwc_numpy()
+        return self.to_hwc_tensor().numpy()
+
+    def save(self, filename):
+        """Save an image_param as an image. Uses PIL to save the image
+
+        usage:
+            
+            image_param.save(filename = 'my_image.jpg')
+            
+
+        Args:
+            filename (str): image.jpg
+        """
+        ten = self.to_chw_tensor()
+        im = transforms.ToPILImage()(ten)
+        im.save(filename)
