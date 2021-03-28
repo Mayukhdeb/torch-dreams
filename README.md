@@ -179,10 +179,10 @@ plt.show()
 
 You can convert an [`auto_image_param`](https://github.com/Mayukhdeb/torch-dreams/blob/master/torch_dreams/auto_image_param.py) instance to:
 
-1. Numpy array of dimensions `(height, width, color_channels)`
+1. Saving outputs as images:
 
 ```python
-numpy_image = image_param.to_hwc_numpy()
+image_param.save('output.jpg')
 ```
 
 2. Torch Tensor of dimensions `(height, width, color_channels)`
@@ -195,6 +195,13 @@ torch_image = image_param.to_hwc_tensor(device = 'cpu')
 
 ```python
 torch_image_chw = image_param.to_chw_tensor(device = 'cpu')
+```
+
+4. Displaying outputs on matplotlib. 
+
+```python
+plt.imshow(image_param)
+plt.show()
 ```
 
 ## Args for `render()`
