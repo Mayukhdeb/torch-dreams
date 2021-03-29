@@ -4,7 +4,7 @@ from .models import *
 from .model_bunch import *
 from .tests import *
 
-__version__ = "2.0.2"
+__version__ = "2.0.3"
 
 __all__ = [
     "dreamer",
