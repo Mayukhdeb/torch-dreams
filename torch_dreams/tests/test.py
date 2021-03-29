@@ -97,6 +97,8 @@ class test(unittest.TestCase):
         self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
 
         os.remove('test_multiple_models_custom_func.jpg')
+
+
 if __name__ == '__main__':
 
     unittest.main()
