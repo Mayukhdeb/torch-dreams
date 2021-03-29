@@ -60,9 +60,10 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
             torch.Size([1, 3, height, width])
 
     """
-    scale = get_fft_scale(height, width, device = device)
 
-    t = scale * image_parameter.to(device)
+    scale = get_fft_scale(height, width).to(image_parameter.device)
+
+    t = scale * image_parameter
 
     if torch.__version__[:3] == "1.7":
         t = torch.irfft(t, 2, normalized=True, signal_sizes=(height,width))
@@ -71,8 +72,14 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
         hacky workaround to fix issues for the new torch.fft on torch 1.8.0
 
         """
+        # print(t.shape, 'before ')
         t = torch.complex(t[..., 0], t[..., 1])
-        t = torch.fft.irfftn(t, s = (3, height, width), dim = (1,2,3), norm = 'ortho')
+
+        # print(t.shape, 'after  ')
+
+        # t = torch.fft.irfftn(t, s = (3, height, width), dim = (1,2,3), norm = 'ortho')
+        t = torch.fft.irfft2(t,  s = (height, width), norm = 'ortho')
+        # print(2/0)
 
     return t
 
@@ -88,7 +95,7 @@ def lucid_colorspace_to_rgb(t,device = 'cuda'):
 
     t_flat = t.permute(0,2,3,1)
     # t_flat = torch.matmul(t_flat, color_correlation_normalized().T)
-    t_flat = torch.matmul(t_flat , color_correlation_normalized().T.to(device))
+    t_flat = torch.matmul(t_flat.to(device) , color_correlation_normalized().T.to(device))
     t = t_flat.permute(0,3,1,2)
     return t
 
