@@ -102,7 +102,7 @@ def lucid_colorspace_to_rgb(t,device = 'cuda'):
 def rgb_to_lucid_colorspace(t, device = 'cuda'):
     t_flat = t.permute(0,2,3,1)
     inverse = torch.inverse(color_correlation_normalized().T.to(device))
-    t_flat = torch.matmul(t_flat, inverse)
+    t_flat = torch.matmul(t_flat.to(device), inverse)
     t = t_flat.permute(0,3,1,2)
     return t
 
@@ -112,17 +112,32 @@ def imagenet_mean_std(device = 'cuda'):
 
 def denormalize(x):
     mean, std = imagenet_mean_std()
-    return x.float()*std[...,None,None] + mean[...,None,None]
+    return x.float()*std[...,None,None].to(x.device) + mean[...,None,None].to(x.device)
 
 def normalize(x, device = 'cuda'):
     mean, std = imagenet_mean_std(device = device)
     return (x-mean[...,None,None]) / std[...,None,None]
 
-def image_buf_to_rgb(h, w, img_buf, device = 'cuda'):
+def image_buf_to_rgb(h, w, img_buf, device = 'cuda', sigmoid = True):
+    """[summary]
+
+    Args:
+        h (int): height 
+        w (int): width
+        img_buf (torch.tensor): Image parameter in frequency domain
+        device (str, optional): Defaults to 'cuda'.
+        sigmoid (bool, optional): Set to False when using custom images. Defaults to True.
+
+    Returns:
+        torch.tensor of shape: [C, H, W]
+    """
     img = img_buf.detach()
     img = fft_to_rgb(h, w, img, device = device)
     img = lucid_colorspace_to_rgb(img, device=  device)
-    img = torch.sigmoid(img)
+
+    if sigmoid is True:
+        img = torch.sigmoid(img)
+    
     img = img[0]    
     return img
     
