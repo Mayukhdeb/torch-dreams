@@ -13,7 +13,6 @@ from .utils import (
 
 from .transforms import random_resize
 from .auto_image_param import auto_image_param
-
 class dreamer():
     """wrapper over a pytorch model for visualization
 
@@ -22,7 +21,7 @@ class dreamer():
             quiet (bool, optional): enable or disable progress bar. Defaults to True.
             device (str, optional): 'cpu' or 'cuda'. Defaults to 'cuda'.
     """
-    def __init__(self, model, quiet = True, device = 'cuda'):
+    def __init__(self, model, quiet = False, device = 'cuda'):
         
         self.model = model 
         self.model.eval()
@@ -85,7 +84,8 @@ class dreamer():
         for i in tqdm(range(iters), disable= self.quiet):
             image_parameter.optimizer.zero_grad()
 
-            img = fft_to_rgb(image_parameter.height, image_parameter.width, image_parameter.param, device= self.device)
+            img = fft_to_rgb(height = image_parameter.height, width =  image_parameter.width, image_parameter =  image_parameter.param, device= self.device)
+
             img = lucid_colorspace_to_rgb(img,device= self.device)
             img = torch.sigmoid(img)
             img = normalize(img, device= self.device)
@@ -104,7 +104,7 @@ class dreamer():
             else:
                 loss = self.default_func(layer_outputs)
             loss.backward()
-            image_parameter.clip_grads(grad_clip= 1)
+            image_parameter.clip_grads(grad_clip= grad_clip)
             image_parameter.optimizer.step()
         
 
