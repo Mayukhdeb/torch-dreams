@@ -2,9 +2,11 @@ import numpy as np
 import torch
 from torch import tensor
 from torchvision import transforms
+from .image_transforms import resize_4d_tensor_by_size
+
 
 def init_image_param(height , width, sd=0.01, device = 'cuda'):
-    """Initializes an image parameter 
+    """Initializes an image parameter in the frequency domain
 
     Args:
         height (int): height of image
@@ -22,16 +24,17 @@ def init_image_param(height , width, sd=0.01, device = 'cuda'):
 def get_fft_scale(h, w, decay_power=.75, device = 'cuda'):
     d=.5**.5 # set center frequency scale to 1
     fy = np.fft.fftfreq(h,d=d)[:,None]
-    if w % 2 == 1:
-        fx = np.fft.fftfreq(w,d=d)[: w // 2 + 2]
+
+    if w %2 ==1:
+        fx = np.fft.rfftfreq(w,d=d)[: (w+1) // 2]   
     else:
-        fx = np.fft.fftfreq(w,d=d)[: w // 2]        
+
+        fx = np.fft.rfftfreq(w,d=d)[: w // 2]     
+
     freqs = (fx*fx + fy*fy) ** decay_power
     scale = 1.0 / np.maximum(freqs, 1.0 / (max(w, h)*d))
     scale = tensor(scale).float().to(device)
 
-
-    # print(scale.shape, 'get fft scale', scale.dtype)
     return scale
 
 
@@ -66,25 +69,19 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
     """
     scale = get_fft_scale(height, width).to(image_parameter.device)
     # print(scale.shape, image_parameter.shape)
+    if width %2 ==1:
+        image_parameter = image_parameter.reshape(1,3,height, (width+1)//2, 2)
+    else:
+        image_parameter = image_parameter.reshape(1,3,height, width//2, 2)
 
-    image_parameter = image_parameter.reshape(1,3,height, width//2, 2)
     image_parameter = torch.complex(image_parameter[..., 0], image_parameter[..., 1])
     t = scale * image_parameter
 
     if torch.__version__[:3] == "1.7":
         t = torch.irfft(t, 2, normalized=True, signal_sizes=(height,width))
     elif  torch.__version__[:3] == '1.8':
-        """
-        hacky workaround to fix issues for the new torch.fft on torch 1.8.0
 
-        """
-        # print(t.shape, 'before ')
-        # t = t.reshape(1,3,height, width//2, 2)
-        # t = torch.complex(t[..., 0], t[..., 1])
-
-        # print(t.shape, 'after  ')
         t = torch.fft.irfft2(t,  s = (height, width), norm = 'ortho')
-        # print(2/0)
 
     return t
 
@@ -142,6 +139,8 @@ def image_buf_to_rgb(h, w, img_buf, device = 'cuda', sigmoid = True):
 
     if sigmoid is True:
         img = torch.sigmoid(img)
+    
+    img = resize_4d_tensor_by_size(img, height = h, width = w)
     
     img = img[0]    
     return img
