@@ -39,6 +39,28 @@ class test(unittest.TestCase):
         self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
         os.remove('test_single_model.jpg')
 
+    def test_custom_size(self):
+
+        model = models.inception_v3(pretrained=True)
+
+        dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
+
+        image_param = dreamy_boi.render(
+            layers = [model.Mixed_6a],
+            iters = 5,
+            width = 255,
+            height = 255
+        )
+
+        image_param.save(filename = 'test_custom_size.jpg')
+
+        self.assertTrue(os.path.exists('test_custom_size.jpg'))
+        self.assertTrue(isinstance(image_param, auto_image_param), 'should be an instance of auto_image_param')
+        self.assertTrue(isinstance(image_param.__array__(), np.ndarray))
+        self.assertTrue(isinstance(image_param.to_hwc_tensor(), torch.Tensor), 'should be a torch.Tensor')
+        self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
+        os.remove('test_custom_size.jpg')
+
     def  test_single_model_custom_func(self):
         model = models.inception_v3(pretrained=True)
 
