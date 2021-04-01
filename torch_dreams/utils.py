@@ -28,8 +28,10 @@ def get_fft_scale(h, w, decay_power=.75, device = 'cuda'):
         fx = np.fft.fftfreq(w,d=d)#[: w // 2 + 1]        
     freqs = (fx*fx + fy*fy) ** decay_power
     scale = 1.0 / np.maximum(freqs, 1.0 / (max(w, h)*d))
-    scale = tensor(scale).float()[None,None,...,None].to(device).squeeze(-1)
-    # print(scale.shape, 'get fft scale', scale.dtype)
+    scale = tensor(scale).float().to(device)
+
+
+    print(scale.shape, 'get fft scale', scale.dtype)
     return scale
 
 
@@ -74,7 +76,8 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
 
         """
         # print(t.shape, 'before ')
-        # t = torch.complex(t[..., 0], t[..., 1])
+        t = t.reshape(1,3,height, width//2, 2)
+        t = torch.complex(t[..., 0], t[..., 1])
 
         # print(t.shape, 'after  ')
         t = torch.fft.irfft2(t,  s = (height, width), norm = 'ortho')
