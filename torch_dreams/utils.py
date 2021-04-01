@@ -15,7 +15,7 @@ def init_image_param(height , width, sd=0.01, device = 'cuda'):
     Returns:
         torch.tensor: image param to backpropagate on
     """
-    img_buf = np.random.normal(size=(1, 3, height, width//2 + 1, 2), scale=sd).astype(np.float32)
+    img_buf = np.random.normal(size=(1, 3, height, width), scale=sd).astype(np.float32)
     spectrum_t = tensor(img_buf).float().to(device)
     return spectrum_t
 
@@ -23,13 +23,15 @@ def get_fft_scale(h, w, decay_power=.75, device = 'cuda'):
     d=.5**.5 # set center frequency scale to 1
     fy = np.fft.fftfreq(h,d=d)[:,None]
     if w % 2 == 1:
-        fx = np.fft.fftfreq(w,d=d)[: w // 2 + 2]
+        fx = np.fft.fftfreq(w,d=d)#[: w // 2 + 2]
     else:
-        fx = np.fft.fftfreq(w,d=d)[: w // 2 + 1]        
+        fx = np.fft.fftfreq(w,d=d)#[: w // 2 + 1]        
     freqs = (fx*fx + fy*fy) ** decay_power
     scale = 1.0 / np.maximum(freqs, 1.0 / (max(w, h)*d))
-    scale = tensor(scale).float()[None,None,...,None].to(device)
+    scale = tensor(scale).float()[None,None,...,None].to(device).squeeze(-1)
+    # print(scale.shape, 'get fft scale', scale.dtype)
     return scale
+
 
 def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
     """convert image param to NCHW 
@@ -60,9 +62,8 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
             torch.Size([1, 3, height, width])
 
     """
-
     scale = get_fft_scale(height, width).to(image_parameter.device)
-
+    # print(scale.shape, image_parameter.shape)
     t = scale * image_parameter
 
     if torch.__version__[:3] == "1.7":
@@ -73,11 +74,9 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
 
         """
         # print(t.shape, 'before ')
-        t = torch.complex(t[..., 0], t[..., 1])
+        # t = torch.complex(t[..., 0], t[..., 1])
 
         # print(t.shape, 'after  ')
-
-        # t = torch.fft.irfftn(t, s = (3, height, width), dim = (1,2,3), norm = 'ortho')
         t = torch.fft.irfft2(t,  s = (height, width), norm = 'ortho')
         # print(2/0)
 
