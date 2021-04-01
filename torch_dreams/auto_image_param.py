@@ -48,7 +48,6 @@ class BaseImageParam():
             
             image_param.save(filename = 'my_image.jpg')
             
-
         Args:
             filename (str): image.jpg
         """
@@ -62,7 +61,15 @@ class auto_image_param(BaseImageParam):
         super().__init__()
         self.height = height
         self.width = width
-        self.param = init_image_param(height = height, width = width, sd = standard_deviation, device = device)
+
+        '''
+        odd width is resized to even with one extra column
+        '''
+        if self.width %2 ==1:
+            self.param = init_image_param(height = self.height, width = width + 1, sd = standard_deviation, device = device)
+        else:
+            self.param = init_image_param(height = self.height, width = self.width, sd = standard_deviation, device = device)
+
         self.param.requires_grad_()
         self.optimizer = None
 
