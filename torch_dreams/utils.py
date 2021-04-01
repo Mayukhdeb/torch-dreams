@@ -57,15 +57,6 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
     Returns:
         torch.tensor: NCHW tensor
 
-    size log:
-        before: 
-            torch.Size([1, 3, height, width//2, 2]) 
-            OR 
-            torch.Size([1, 3, height, width+1//2, 2])
-
-        after: 
-            torch.Size([1, 3, height, width])
-
     """
     scale = get_fft_scale(height, width).to(image_parameter.device)
     # print(scale.shape, image_parameter.shape)
