@@ -58,7 +58,7 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
         torch.tensor: NCHW tensor
 
     """
-    scale = get_fft_scale(height, width).to(image_parameter.device)
+    scale = get_fft_scale(height, width, device= device).to(image_parameter.device)
     # print(scale.shape, image_parameter.shape)
     if width %2 ==1:
         image_parameter = image_parameter.reshape(1,3,height, (width+1)//2, 2)
