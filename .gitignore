@@ -11,3 +11,4 @@ output/
 models/
 test_snippet.py
 myenv/
+.coverage/
