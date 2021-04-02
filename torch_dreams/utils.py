@@ -3,6 +3,7 @@ import torch
 from torch import tensor
 from torchvision import transforms
 from .image_transforms import resize_4d_tensor_by_size
+from .error_handlers import PytorchVersionError
 
 
 def init_image_param(height , width, sd=0.01, device = 'cuda'):
@@ -68,11 +69,12 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
     image_parameter = torch.complex(image_parameter[..., 0], image_parameter[..., 1])
     t = scale * image_parameter
 
-    if torch.__version__[:3] == "1.7":
-        t = torch.irfft(t, 2, normalized=True, signal_sizes=(height,width))
-    elif  torch.__version__[:3] == '1.8':
+   
+    if  torch.__version__[:3] == '1.8':
 
         t = torch.fft.irfft2(t,  s = (height, width), norm = 'ortho')
+    else:
+        raise PytorchVersionError(version = torch.__version__)
 
     return t
 
