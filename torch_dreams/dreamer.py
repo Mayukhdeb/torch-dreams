@@ -8,7 +8,6 @@ from .utils import (
     fft_to_rgb, 
     lucid_colorspace_to_rgb, 
     normalize, 
-    show_rgb
 )
 
 from .transforms import random_resize

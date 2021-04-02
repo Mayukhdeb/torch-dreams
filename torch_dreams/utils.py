@@ -138,25 +138,3 @@ def image_buf_to_rgb(h, w, img_buf, device = 'cuda', sigmoid = True):
     img = img[0]    
     return img
     
-def show_rgb(img, label=None, ax=None, dpi=25, **kwargs):
-    plt_show = True if ax == None else False
-    if ax == None: _, ax = plt.subplots(figsize=(img.shape[2]/dpi,img.shape[1]/dpi))
-    x = img.cpu().permute(1,2,0).numpy()
-    ax.imshow(x)
-    ax.axis('off')
-    ax.set_title(label)
-    if plt_show: plt.show()
-
-def gpu_affine_grid(size):
-    size = ((1,)+size)
-    N, C, H, W = size
-    grid = torch.FloatTensor(N, H, W, 2).cuda()
-    linear_points = torch.linspace(-1, 1, W) if W > 1 else tensor([-1.])
-    grid[:, :, :, 0] = torch.ger(torch.ones(H), linear_points).expand_as(grid[:, :, :, 0])
-    linear_points = torch.linspace(-1, 1, H) if H > 1 else tensor([-1.])
-    grid[:, :, :, 1] = torch.ger(linear_points, torch.ones(W)).expand_as(grid[:, :, :, 1])
-    return vision.FlowField(size[2:], grid)
-
-def tensor_stats(t, label=""):
-    if len(label) > 0: label += " "
-    return("%smean:%.2f std:%.2f max:%.2f min:%.2f" % (label, t.mean().item(),t.std().item(),t.max().item(),t.min().item()))
