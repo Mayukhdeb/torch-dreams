@@ -29,5 +29,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
+          pip install pytest-cov
       - name: Run tests
-        run: pytest torch_dreams/tests/test.py 
+        run: pytest torch_dreams/tests/test.py --cov=torch_dreams
