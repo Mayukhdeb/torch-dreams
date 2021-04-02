@@ -2,10 +2,17 @@ import torch
 import numpy as np
 
 def default_func_mean(layer_outputs):
-    losses = []
-    for output in layer_outputs:
-        losses.append(output.mean())
-    loss = torch.mean(torch.stack(losses))
+    """Default loss function for torch_dreams
+
+    Args:
+        layer_outputs (list): List of layers whose outputs are to be maximized. 
+
+    Returns:
+        [torch.tensor]: -loss
+    """
+    loss = 0.
+    for out in layer_outputs:
+        loss += out.mean()
     return -loss
 
 class Hook():

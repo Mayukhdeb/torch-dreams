@@ -57,7 +57,17 @@ class BaseImageParam():
 
 
 class auto_image_param(BaseImageParam):
+    """Trainable image parameter which can be used to activate 
+           different parts of a neural net
+
+        Args:
+            height (int): Height of image
+            width (int): Width of image
+            device (str): 'cpu' or 'cuda'
+            standard_deviation (float): Standard deviation of the image initiated in the frequency domain. ). 0.01 works well
+    """
     def __init__(self, height, width, device, standard_deviation):
+        
         super().__init__()
         self.height = height
         self.width = width

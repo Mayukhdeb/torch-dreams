@@ -2,7 +2,6 @@ import torch
 from tqdm import tqdm
 from copy import deepcopy
 import torchvision.transforms as transforms
-from .dreamer_utils import Hook, default_func_mean
 
 from .utils import (
     fft_to_rgb, 
@@ -12,8 +11,10 @@ from .utils import (
 
 from .transforms import random_resize
 from .auto_image_param import auto_image_param
+from .dreamer_utils import Hook, default_func_mean
+
 class dreamer():
-    """wrapper over a pytorch model for visualization
+    """wrapper over a pytorch model for feature visualization
 
         Args:
             model (torch.nn.Module): pytorch model 
@@ -64,7 +65,6 @@ class dreamer():
             image_parameter instance: To show image, use: plt.imshow(image_parameter.rgb)
         """
         if image_parameter is None:
-
             image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
         else:
             image_parameter = deepcopy(image_parameter)
@@ -113,6 +113,15 @@ class dreamer():
         return image_parameter
     
     def get_snapshot(self, layers, input_tensor):
+        """Registers the outputs of a set of layers within a model
+
+        Args:
+            layers (list): [model.layer1, model.layer2,...]
+            input_tensor (torch.Tensor): NCHW tensor to be fed into the model
+
+        Returns:
+            [list]: list of layer outputs
+        """
 
         with torch.no_grad():
             input_tensor = input_tensor.to(self.device)
