@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name="torch-dreams",
-    version="2.0.3",
+    version="2.0.4",
     author="Mayukh Deb", 
     author_email="mayukhmainak2000@gmail.com", 
     description= "Making neural networks more interpretable, for research and art",

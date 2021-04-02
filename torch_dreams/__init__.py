@@ -3,7 +3,7 @@ from .utils import *
 from .model_bunch import *
 from .tests import *
 
-__version__ = "2.0.3"
+__version__ = "2.0.4"
 
 __all__ = [
     "dreamer",
