@@ -2,8 +2,10 @@ import numpy as np
 import torch
 from torch import tensor
 from torchvision import transforms
+
 from .image_transforms import resize_4d_tensor_by_size
 from .error_handlers import PytorchVersionError
+from .constants import Constants
 
 
 def init_image_param(height , width, sd=0.01, device = 'cuda'):
@@ -78,19 +80,11 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
 
     return t
 
-def color_correlation_normalized():
-    color_correlation_svd_sqrt = np.asarray([[0.26, 0.09, 0.02],
-                                             [0.27, 0.00, -0.05],
-                                             [0.27, -0.09, 0.03]]).astype(np.float32)
-    max_norm_svd_sqrt = np.max(np.linalg.norm(color_correlation_svd_sqrt, axis=0))
-    color_correlation_normalized = tensor(color_correlation_svd_sqrt / max_norm_svd_sqrt)
-    return color_correlation_normalized
 
 def lucid_colorspace_to_rgb(t,device = 'cuda'):
 
     t_flat = t.permute(0,2,3,1)
-    # t_flat = torch.matmul(t_flat, color_correlation_normalized().T)
-    t_flat = torch.matmul(t_flat.to(device) , color_correlation_normalized().T.to(device))
+    t_flat = torch.matmul(t_flat.to(device) , Constants.color_correlation_matrix.T.to(device))
     t = t_flat.permute(0,3,1,2)
     return t
 
@@ -101,17 +95,13 @@ def rgb_to_lucid_colorspace(t, device = 'cuda'):
     t = t_flat.permute(0,3,1,2)
     return t
 
-def imagenet_mean_std(device = 'cuda'):
-    return (tensor([0.485, 0.456, 0.406]).to(device), 
-            tensor([0.229, 0.224, 0.225]).to(device))
 
 def denormalize(x):
-    mean, std = imagenet_mean_std()
-    return x.float()*std[...,None,None].to(x.device) + mean[...,None,None].to(x.device)
+
+    return x.float()*Constants.imagenet_std[...,None,None].to(x.device) + Constants.imagenet_mean[...,None,None].to(x.device)
 
 def normalize(x, device = 'cuda'):
-    mean, std = imagenet_mean_std(device = device)
-    return (x-mean[...,None,None]) / std[...,None,None]
+    return (x-Constants.imagenet_mean[...,None,None].to(device)) / Constants.imagenet_std[...,None,None].to(device)
 
 def image_buf_to_rgb(h, w, img_buf, device = 'cuda', sigmoid = True):
     """[summary]
