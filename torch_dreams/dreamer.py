@@ -81,13 +81,10 @@ class dreamer():
             hooks.append(hook)
 
         for i in tqdm(range(iters), disable= self.quiet):
+            
             image_parameter.optimizer.zero_grad()
 
-            img = fft_to_rgb(height = image_parameter.height, width =  image_parameter.width, image_parameter =  image_parameter.param, device= self.device)
-
-            img = lucid_colorspace_to_rgb(img,device= self.device)
-            img = torch.sigmoid(img)
-            img = normalize(img, device= self.device)
+            img = image_parameter.forward(device = self.device)
             img = self.transforms(img)
 
             model_out = self.model(img)
