@@ -45,7 +45,7 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
     """convert image param to NCHW 
 
     WARNING: torch v1.7.0 works differently from torch v1.8.0 on fft. 
-    Hence you might find some weird workarounds in this function.
+    torch-dreams supports ONLY 1.8.x 
 
     Latest docs: https://pytorch.org/docs/stable/fft.html
 
@@ -70,7 +70,6 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
 
     image_parameter = torch.complex(image_parameter[..., 0], image_parameter[..., 1])
     t = scale * image_parameter
-
    
     if  torch.__version__[:3] == '1.8':
 
@@ -90,7 +89,7 @@ def lucid_colorspace_to_rgb(t,device = 'cuda'):
 
 def rgb_to_lucid_colorspace(t, device = 'cuda'):
     t_flat = t.permute(0,2,3,1)
-    inverse = torch.inverse(color_correlation_normalized().T.to(device))
+    inverse = torch.inverse(Constants.color_correlation_matrix.T.to(device))
     t_flat = torch.matmul(t_flat.to(device), inverse)
     t = t_flat.permute(0,3,1,2)
     return t
