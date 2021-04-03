@@ -5,12 +5,41 @@ import numpy as np
 from .utils import init_image_param, image_buf_to_rgb
 import torchvision.transforms as transforms
 
-class BaseImageParam():
+from .utils import fft_to_rgb, lucid_colorspace_to_rgb, normalize
+
+class BaseImageParam(nn.Module):
     def __init__(self):
+        super().__init__()
         self.height = None
         self.width = None
         self.param = None
         self.optimizer = None
+    
+    def forward(self):
+        """This is what the model gets, should be processed and normalized with the right values
+
+        The model gets:  self.normalize(self.postprocess(self.param))
+
+        Raises:
+            NotImplementedError: Implemented below, you're in the base class.
+        """
+        raise NotImplementedError
+
+    def postprocess(self):
+        """Moves the image from the frequency domain to Spatial (Visible to the eyes)
+
+        Raises:
+            NotImplementedError: Implemented below, you're in the base class.
+        """
+        raise NotImplementedError
+
+    def normalize(self):
+        """Normalizing wrapper, you can either use torchvision.transforms.Normalize() or something else
+
+        Raises:
+            NotImplementedError: Implemented below, you're in the base class.
+        """
+        raise NotImplementedError
         
     def fetch_optimizer(self, params_list, optimizer = None, lr = 1e-3, weight_decay = 0.):
         if optimizer is not None:
@@ -31,14 +60,19 @@ class BaseImageParam():
         torch.nn.utils.clip_grad_norm_(self.param,grad_clip)
 
     def to_hwc_tensor(self, device = 'cpu'):
-        rgb = image_buf_to_rgb(h = self.height, w = self.width, img_buf = self.param , device= device).permute(1,2,0).to(device = device, dtype = torch.float32)
+        rgb = self.postprocess(device = device)[0].permute(1,2,0).detach()
         return rgb
 
     def to_chw_tensor(self, device = 'cpu'):
-        t = image_buf_to_rgb(h = self.height, w = self.width, img_buf = self.param , device= device)
+        t = self.postprocess(device = device)[0].detach()
         return t
 
     def __array__(self):
+        """Generally used for plt.imshow(), converts the image parameter to a numpy array
+
+        Returns:
+            numpy.ndarray
+        """
         return self.to_hwc_tensor().numpy()
 
     def save(self, filename):
@@ -83,4 +117,16 @@ class auto_image_param(BaseImageParam):
         self.param.requires_grad_()
         self.optimizer = None
 
-    
+    def postprocess(self, device):
+        img = fft_to_rgb(height = self.height, width = self.width,  image_parameter = self.param, device= device)
+        img = lucid_colorspace_to_rgb(t = img, device = device)
+        img = torch.sigmoid(img)
+        return img
+
+    def normalize(self,x, device):
+        return normalize(x = x, device= device)
+
+    def forward(self, device):
+        return self.normalize(self.postprocess(device = device), device= device)
+
+# class custom_image_param(BaseImageParam):
