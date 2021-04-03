@@ -102,28 +102,4 @@ def denormalize(x):
 def normalize(x, device = 'cuda'):
     return (x-Constants.imagenet_mean[...,None,None].to(device)) / Constants.imagenet_std[...,None,None].to(device)
 
-def image_buf_to_rgb(h, w, img_buf, device = 'cuda', sigmoid = True):
-    """[summary]
-
-    Args:
-        h (int): height 
-        w (int): width
-        img_buf (torch.tensor): Image parameter in frequency domain
-        device (str, optional): Defaults to 'cuda'.
-        sigmoid (bool, optional): Set to False when using custom images. Defaults to True.
-
-    Returns:
-        torch.tensor of shape: [C, H, W]
-    """
-    img = img_buf.detach()
-    img = fft_to_rgb(h, w, img, device = device)
-    img = lucid_colorspace_to_rgb(img, device=  device)
-
-    if sigmoid is True:
-        img = torch.sigmoid(img)
-    
-    img = resize_4d_tensor_by_size(img, height = h, width = w)
-    
-    img = img[0]    
-    return img
     

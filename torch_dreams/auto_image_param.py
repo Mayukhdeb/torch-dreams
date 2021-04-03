@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 import numpy as np
 
-from .utils import init_image_param, image_buf_to_rgb
+from .utils import init_image_param
 import torchvision.transforms as transforms
 
 from .utils import fft_to_rgb, lucid_colorspace_to_rgb, normalize
