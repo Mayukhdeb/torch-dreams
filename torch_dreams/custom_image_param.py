@@ -103,6 +103,9 @@ class custom_image_param(BaseImageParam):
         return self.normalize(self.postprocess(device = device), device= device).clamp(0,1)
 
     def to_chw_tensor(self, device = 'cpu'):
-        t = self.forward(device= device).squeeze(0).clamp(0,1)
+        t = self.forward(device= device).squeeze(0).clamp(0,1).detach()
         return t
         
+    def to_hwc_tensor(self, device = 'cpu'):
+        t = self.forward(device= device).squeeze(0).clamp(0,1).permute(1,2,0).detach()
+        return t
