@@ -21,7 +21,6 @@ def get_fft_scale_custom_img(h, w, decay_power=.75, device = 'cuda'):
     return scale
 
 
-
 def denormalize(x):
 
     return x.float()*Constants.imagenet_std[...,None,None].to(x.device) + Constants.imagenet_mean[...,None,None].to(x.device)
@@ -44,11 +43,9 @@ def chw_rgb_to_fft_param(x, device):
 def fft_to_rgb_custom_img(height, width, image_parameter, device = 'cuda'):
 
     scale = get_fft_scale_custom_img(height, width , device= device).to(image_parameter.device)
-
     t = scale * image_parameter
    
     if  torch.__version__[:3] == '1.8':
-
         t = torch.fft.irfft2(t,  s = (height, width), norm = 'ortho')
     else:
         raise PytorchVersionError(version = torch.__version__)
@@ -109,3 +106,44 @@ class custom_image_param(BaseImageParam):
     def to_hwc_tensor(self, device = 'cpu'):
         t = self.forward(device= device).squeeze(0).clamp(0,1).permute(1,2,0).detach()
         return t
+
+    def to_nchw_tensor(self, device = 'cpu'):
+        """returns a tensor of shape  [1,3, height, width] which represents the image 
+
+        Args:
+            device (str, optional): 'cuda' or 'cpu'. Defaults to 'cpu'.
+
+        Returns:
+            torch.tensor: NCHW tensor 
+        """
+        t = self.forward(device= device).clamp(0,1).detach()
+        return t
+
+    def set_param(self, tensor):
+        """sets an NCHW tensor as the parameter in the frequency domain, 
+        useful for transforming custom images between iterations.
+
+        Use in combination with `self.to_nchw_tensor()` like:
+
+        ```
+        a = self.to_nchw_tensor()
+        # do something with a
+        t = transforms.Compose([
+            transforms.RandomRotation(45)
+        ])
+        a = t(a)
+        #set as parameter again
+        self.set_param(a)
+        ```
+
+        WARNING: tensor should have values clipped between 0 and 1. 
+
+        Args:
+            tensor (torch.tensor): input tensor with shape [1,3, height, width] and values clipped between 0,1.
+        """
+        assert len(tensor.shape) == 4
+
+        self.height, self.width = tensor.shape[-2], tensor.shape[-1]
+        self.param = chw_rgb_to_fft_param(tensor.squeeze(0), device = self.device)  / get_fft_scale_custom_img(h = self.height, w = self.width, device= self.device)
+        self.param.requires_grad_()
+        self.optimizer = None
