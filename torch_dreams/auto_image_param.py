@@ -128,5 +128,3 @@ class auto_image_param(BaseImageParam):
 
     def forward(self, device):
         return self.normalize(self.postprocess(device = device), device= device)
-
-# class custom_image_param(BaseImageParam):

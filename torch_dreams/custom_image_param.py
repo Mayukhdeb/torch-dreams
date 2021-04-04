@@ -6,8 +6,16 @@ import numpy as np
 
 from .constants import Constants
 from .error_handlers import PytorchVersionError
-from .utils import lucid_colorspace_to_rgb, get_fft_scale, normalize, get_fft_scale
 
+from .utils import (
+    lucid_colorspace_to_rgb, 
+    normalize,
+    get_fft_scale_custom_img,
+    denormalize,
+    rgb_to_lucid_colorspace,
+    chw_rgb_to_fft_param,
+    fft_to_rgb_custom_img
+)
 
 def get_fft_scale_custom_img(h, w, decay_power=.75, device = 'cuda'):
     d=.5**.5 # set center frequency scale to 1
@@ -19,7 +27,6 @@ def get_fft_scale_custom_img(h, w, decay_power=.75, device = 'cuda'):
     scale = torch.tensor(scale).float().to(device)
 
     return scale
-
 
 def denormalize(x):
 
@@ -53,32 +60,34 @@ def fft_to_rgb_custom_img(height, width, image_parameter, device = 'cuda'):
     return t
     
 class custom_image_param(BaseImageParam):
+    """FFT parameterization for custom images 
+
+    Works well with:
+    * lower learning rates (3e-4) 
+    * gradients clipped to (0, 0.1)
+    * weight decay (1e-1)
+
+    Args:
+        filename (str): 'path/to/image.jpg'
+        device (str): 'cuda' or 'cpu'
+
+    Example: 
+    ```
+    param = custom_image_param(filename = 'image.jpg', device= 'cuda')
+
+    image_param = dreamy_boi.render(
+        image_parameter= param,
+        layers = [model.Mixed_6c],
+        lr = 3e-4,
+        grad_clip = 0.1,
+        weight_decay= 1e-1
+    )
+
+    image_param.save('saved.jpg')
+    ```
+    """
     def __init__(self, filename, device):
-        """FFT parameterization for custom images 
-
-        Works well with:
-        * lower learning rates (3e-4) 
-        * gradients clipped to (0, 0.1)
-        * weight decay (1e-1)
-
-        Args:
-            filename (str): 'path/to/image.jpg'
-            device (str): 'cuda' or 'cpu'
-
-        Example: 
-
-            param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cuda')
-
-            image_param = dreamy_boi.render(
-                image_parameter= param,
-                layers = [model.Mixed_6c],
-                lr = 3e-4,
-                grad_clip = 0.1,
-                weight_decay= 1e-1
-            )
-
-            image_param.save('saved.jpg')
-        """
+        
         super().__init__()
         im = cv2.cvtColor(cv2.imread(filename), cv2.COLOR_BGR2RGB)/255.
         self.device = device

@@ -55,7 +55,7 @@ def fft_to_rgb(height, width, image_parameter, device = 'cuda'):
     Args:
         height (int): height of image
         width (int): width of image 
-        image_parameter (auto_image_param): instance of class auto_image_param()
+        image_parameter (auto_image_param): auto_image_param.param
 
     Returns:
         torch.tensor: NCHW tensor
@@ -87,6 +87,25 @@ def lucid_colorspace_to_rgb(t,device = 'cuda'):
     t = t_flat.permute(0,3,1,2)
     return t
 
+
+def normalize(x, device = 'cuda'):
+    return (x-Constants.imagenet_mean[...,None,None].to(device)) / Constants.imagenet_std[...,None,None].to(device)
+
+def get_fft_scale_custom_img(h, w, decay_power=.75, device = 'cuda'):
+    d=.5**.5 # set center frequency scale to 1
+    fy = np.fft.fftfreq(h,d=d)[:,None]
+
+    fx = np.fft.rfftfreq(w,d=d)[:(w//2)+1]   
+    freqs = (fx*fx + fy*fy) ** decay_power
+    scale = 1.0 / np.maximum(freqs, 1.0 / (max(w, h)*d))
+    scale = torch.tensor(scale).float().to(device)
+
+    return scale
+
+def denormalize(x):
+
+    return x.float()*Constants.imagenet_std[...,None,None].to(x.device) + Constants.imagenet_mean[...,None,None].to(x.device)
+
 def rgb_to_lucid_colorspace(t, device = 'cuda'):
     t_flat = t.permute(0,2,3,1)
     inverse = torch.inverse(Constants.color_correlation_matrix.T.to(device))
@@ -94,12 +113,22 @@ def rgb_to_lucid_colorspace(t, device = 'cuda'):
     t = t_flat.permute(0,3,1,2)
     return t
 
+def chw_rgb_to_fft_param(x, device):
+    im_tensor = torch.tensor(x).unsqueeze(0).float()
 
-def denormalize(x):
+    x = rgb_to_lucid_colorspace(denormalize(im_tensor), device= device)
 
-    return x.float()*Constants.imagenet_std[...,None,None].to(x.device) + Constants.imagenet_mean[...,None,None].to(x.device)
+    x = torch.fft.rfft2(x, s = (x.shape[-2], x.shape[-1]), norm = 'ortho')
+    return x
 
-def normalize(x, device = 'cuda'):
-    return (x-Constants.imagenet_mean[...,None,None].to(device)) / Constants.imagenet_std[...,None,None].to(device)
+def fft_to_rgb_custom_img(height, width, image_parameter, device = 'cuda'):
 
-    
+    scale = get_fft_scale_custom_img(height, width , device= device).to(image_parameter.device)
+    t = scale * image_parameter
+   
+    if  torch.__version__[:3] == '1.8':
+        t = torch.fft.irfft2(t,  s = (height, width), norm = 'ortho')
+    else:
+        raise PytorchVersionError(version = torch.__version__)
+
+    return t    
