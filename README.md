@@ -23,6 +23,7 @@ pip install torch-dreams
 * [Visualize features from multiple models simultaneously](https://github.com/Mayukhdeb/torch-dreams#visualize-features-from-multiple-models-simultaneously)
 * [Use custom transforms](https://github.com/Mayukhdeb/torch-dreams#using-custom-transforms)
 * [Feedback loops](https://github.com/Mayukhdeb/torch-dreams#you-can-also-use-outputs-of-one-render-as-the-input-of-another-to-create-feedback-loops)
+* [Custom images]()
 * [Other conveniences](https://github.com/Mayukhdeb/torch-dreams#other-conveniences)
 
 ## Minimal example
@@ -185,6 +186,48 @@ plt.imshow(image_param)
 plt.show()
 ```
 
+## Using custom images
+
+Note that you might have to use smaller values for certain hyperparameters like `lr` and `grad_clip`.
+
+```python
+param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cuda')
+
+image_param = dreamy_boi.render(
+    image_parameter= param,
+    layers = [model.Mixed_6c],
+    lr = 2e-4,
+    grad_clip = 0.1,
+    weight_decay= 1e-1,
+    iters = 120
+)
+```
+
+## Making videos
+
+You can also apply transforms to custom image parameters, this is going to be useful for videos. 
+
+```python
+image_tensor = image_param.to_nchw_tensor()
+
+t = transforms.Compose([
+    transforms.RandomRotation(5)
+])
+
+transformed_image_tensor = t(image_tensor) 
+
+image_param.set_param(tensor = transformed_image_tensor)
+
+image_param = dreamy_boi.render(
+    image_parameter= image_param,
+    layers = [model.Mixed_5d],
+    lr = 2e-4,
+    grad_clip = 0.1,
+    weight_decay= 1e-1,
+    iters = 50
+)
+```
+
 ## Other conveniences 
 
 The following methods are handy for an [`auto_image_param`](https://github.com/Mayukhdeb/torch-dreams/blob/master/torch_dreams/auto_image_param.py) instance:
@@ -214,10 +257,19 @@ plt.imshow(image_param)
 plt.show()
 ```
 
+5. For instances of `custom_image_param`, you can set any NCHW tensor as the image parameter: 
+
+```python
+image_tensor = image_param.to_nchw_tensor()
+## do some stuff with image_tensor
+image_param.set_param(tensor = image_tensor)
+```
+
 ## Args for `render()`
 
 * `layers` (`iterable`): List of the layers of model(s)'s layers to work on. `[model.layer1, model.layer2...]`
 * `image_parameter` (`auto_image_param`, optional): Instance of `torch_dreams.auto_image_param.auto_image_param`
+
 * `width` (`int`, optional): Width of image to be optimized 
 * `height` (`int`, optional): Height of image to be optimized 
 * `iters` (`int`, optional): Number of iterations, higher -> stronger visualization
