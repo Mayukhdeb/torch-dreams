@@ -23,7 +23,7 @@ pip install torch-dreams
 * [Visualize features from multiple models simultaneously](https://github.com/Mayukhdeb/torch-dreams#visualize-features-from-multiple-models-simultaneously)
 * [Use custom transforms](https://github.com/Mayukhdeb/torch-dreams#using-custom-transforms)
 * [Feedback loops](https://github.com/Mayukhdeb/torch-dreams#you-can-also-use-outputs-of-one-render-as-the-input-of-another-to-create-feedback-loops)
-* [Custom images]()
+* [Custom images](https://github.com/Mayukhdeb/torch-dreams#using-custom-images)
 * [Other conveniences](https://github.com/Mayukhdeb/torch-dreams#other-conveniences)
 
 ## Minimal example
@@ -203,31 +203,6 @@ image_param = dreamy_boi.render(
 )
 ```
 
-## Making videos
-
-You can also apply transforms to custom image parameters, this is going to be useful for videos. 
-
-```python
-image_tensor = image_param.to_nchw_tensor()
-
-t = transforms.Compose([
-    transforms.RandomRotation(5)
-])
-
-transformed_image_tensor = t(image_tensor) 
-
-image_param.set_param(tensor = transformed_image_tensor)
-
-image_param = dreamy_boi.render(
-    image_parameter= image_param,
-    layers = [model.Mixed_5d],
-    lr = 2e-4,
-    grad_clip = 0.1,
-    weight_decay= 1e-1,
-    iters = 50
-)
-```
-
 ## Other conveniences 
 
 The following methods are handy for an [`auto_image_param`](https://github.com/Mayukhdeb/torch-dreams/blob/master/torch_dreams/auto_image_param.py) instance:
@@ -261,8 +236,14 @@ plt.show()
 
 ```python
 image_tensor = image_param.to_nchw_tensor()
+
 ## do some stuff with image_tensor
-image_param.set_param(tensor = image_tensor)
+t = transforms.Compose([
+    transforms.RandomRotation(5)
+])
+transformed_image_tensor = t(image_tensor) 
+
+image_param.set_param(tensor = transformed_image_tensor)
 ```
 
 ## Args for `render()`
