@@ -33,10 +33,10 @@ def rgb_to_lucid_colorspace(t, device = 'cuda'):
     t = t_flat.permute(0,3,1,2)
     return t
 
-def chw_rgb_to_fft_param(x):
+def chw_rgb_to_fft_param(x, device):
     im_tensor = torch.tensor(x).unsqueeze(0).float()
 
-    x = rgb_to_lucid_colorspace(denormalize(im_tensor))
+    x = rgb_to_lucid_colorspace(denormalize(im_tensor), device= device)
 
     x = torch.fft.rfft2(x, s = (x.shape[-2], x.shape[-1]), norm = 'ortho')
     return x
@@ -87,7 +87,7 @@ class custom_image_param(BaseImageParam):
         self.device = device
         im_tensor_chw = torch.tensor(im).permute(-1,0,1)
         self.height, self.width = im_tensor_chw.shape[-2], im_tensor_chw.shape[-1]
-        self.param = chw_rgb_to_fft_param(im_tensor_chw)  / get_fft_scale_custom_img(h = self.height, w = self.width, device= self.device)
+        self.param = chw_rgb_to_fft_param(im_tensor_chw, device = self.device)  / get_fft_scale_custom_img(h = self.height, w = self.width, device= self.device)
         self.param.requires_grad_()
         self.optimizer = None
 
