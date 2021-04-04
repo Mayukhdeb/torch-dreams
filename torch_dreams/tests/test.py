@@ -145,7 +145,33 @@ class test(unittest.TestCase):
         self.assertTrue(isinstance(image_param.to_hwc_tensor(), torch.Tensor), 'should be a torch.Tensor')
         self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
         os.remove('test_custom_image_param.jpg')
-        
+
+    def test_custom_image_param_set_param(self):
+        """
+        checks if custom_image_param.set_param correctly 
+        loads the image without discrepancies with an absolute tolerance of 1e-5 element-wise
+        """
+        model = models.inception_v3(pretrained=True)
+
+        dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
+        param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cpu')
+
+        image_param = dreamy_boi.render(
+            image_parameter= param,
+            layers = [model.Mixed_6a],
+            iters = 5,
+            lr = 2e-4,
+            grad_clip = 0.1,
+            weight_decay= 1e-1
+        )
+
+        image_tensor = image_param.to_nchw_tensor()
+
+        image_param.set_param(tensor = image_tensor)
+        # print(torch.abs((image_tensor - image_param.to_nchw_tensor())).mean())
+
+        self.assertTrue(torch.allclose(image_tensor ,image_param.to_nchw_tensor(), atol = 1e-5))
+                
 
 if __name__ == '__main__':
 
