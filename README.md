@@ -191,6 +191,7 @@ plt.show()
 Note that you might have to use smaller values for certain hyperparameters like `lr` and `grad_clip`.
 
 ```python
+from torch_dreams.custom_image_param import custom_image_param
 param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cuda')
 
 image_param = dreamy_boi.render(
