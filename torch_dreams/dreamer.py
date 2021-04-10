@@ -9,9 +9,10 @@ from .utils import (
     normalize, 
 )
 
-from .transforms import random_resize
+from .transforms import random_resize , pair_random_resize, pair_random_affine
 from .auto_image_param import auto_image_param
 from .dreamer_utils import Hook, default_func_mean
+from .losses import CaricatureLoss
 
 class dreamer():
     """wrapper over a pytorch model for feature visualization
@@ -62,7 +63,7 @@ class dreamer():
             grad_clip (float, optional): Maximum value of norm of gradient. Defaults to 1.
 
         Returns:
-            image_parameter instance: To show image, use: plt.imshow(image_parameter.rgb)
+            image_parameter instance: To show image, use: plt.imshow(image_parameter)
         """
         if image_parameter is None:
             image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
@@ -138,3 +139,73 @@ class dreamer():
                 layer_outputs.append(out)
 
         return layer_outputs
+
+    def caricature(self, input_tensor, layers, power = 1., image_parameter = None, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0.1, translate_y = 0.1,  weight_decay = 1e-3, grad_clip = 1.):
+        """ 
+        Example:
+        ```python
+        param = dreamy_boi.caricature(
+            input_tensor = image_tensor, 
+            layers = [model.some_layer],
+            power= 1.0
+        )
+        param.save('caricature.jpg')
+        ```
+        """
+
+        if image_parameter is None:
+            height , width = input_tensor.shape[-2], input_tensor.shape[-1]
+            image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
+        else:
+            image_parameter = deepcopy(image_parameter)
+
+        if image_parameter.optimizer is None:
+            image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
+
+        self.random_resize_pair = pair_random_resize(max_size_factor = scale_max, min_size_factor = scale_min)
+        
+        self.random_affine_pair = pair_random_affine(degrees = rotate_degrees, translate_x = translate_x, translate_y = translate_y)
+        
+        caricature_loss = CaricatureLoss(power= power)
+
+        hooks = []
+        for layer in layers:
+            hook = Hook(layer)
+            hooks.append(hook)
+
+        for i in tqdm(range(iters), disable= self.quiet):
+            
+            image_parameter.optimizer.zero_grad()
+
+            img = image_parameter.forward(device = self.device)
+
+            img_transformed, input_tensor_transformed = self.random_resize_pair(x1 = img, x2 = input_tensor)
+            img_transformed, input_tensor_transformed = self.random_affine_pair(x1 = img_transformed, x2 = input_tensor_transformed)
+
+            model_out = self.model(img_transformed)
+
+            layer_outputs = []
+
+            for hook in hooks:
+                out = hook.output[0]
+                layer_outputs.append(out)
+
+            model_out = self.model(input_tensor_transformed.to(self.device))
+
+            ideal_layer_outputs = []
+
+            for hook in hooks:
+                out = hook.output[0]
+                ideal_layer_outputs.append(out)
+
+            loss = caricature_loss.forward(layer_outputs = layer_outputs, ideal_layer_outputs = ideal_layer_outputs)
+
+            loss.backward()
+            image_parameter.clip_grads(grad_clip= grad_clip)
+            image_parameter.optimizer.step()
+
+        for hook in hooks:
+            hook.close()
+
+        return image_parameter
+            
