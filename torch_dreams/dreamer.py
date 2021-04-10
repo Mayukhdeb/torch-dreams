@@ -141,7 +141,25 @@ class dreamer():
         return layer_outputs
 
     def caricature(self, input_tensor, layers, power = 1., image_parameter = None, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0.1, translate_y = 0.1,  weight_decay = 1e-3, grad_clip = 1.):
-        """ 
+        """Generates an "exaggerated" reconstruction of the input image by 
+        optimizing random noise to replicate and "exaggerate" the activations of
+        certain layers after feeding the input image
+
+        Args:
+            input_tensor (torch.tensor): input image tensor, should be clipped between 0,1 and Normalised w.r.t image mean and std
+            layers (list): list of layers whose activations are to be registered and later replicated on random noise
+            power (float, optional): Determined the "exaggeration" factor. 1 means "no exaggeration". Defaults to 1..
+            image_parameter ([type], optional): [description]. Defaults to None.
+            iters (int, optional): Number of optimization steps. Defaults to 120.
+            lr (float, optional): learning rate. Defaults to 9e-3.
+            rotate_degrees (int, optional): Maximum amount of random rotation in degrees. Defaults to 15.
+            scale_max (float, optional): Maximum scale factor for random scaling. Defaults to 1.2.
+            scale_min (float, optional): Minimum scale factor for random scaling. Defaults to 0.5.
+            translate_x (float, optional): Maximum amount of horizontal jitter. Defaults to 0.1.
+            translate_y (float, optional): Maximum amount of vertical jitter. Defaults to 0.1.
+            weight_decay (float, optional): Helps reduce high frequency noise, higher means lower noise. Defaults to 1e-3.
+            grad_clip (float, optional): Maximum value of grad norm. Smaller -> more "careful" steps. Defaults to 1..
+
         Example:
         ```python
         param = dreamy_boi.caricature(
@@ -151,8 +169,11 @@ class dreamer():
         )
         param.save('caricature.jpg')
         ```
+        
+        Returns:
+            instance of torch_dreams.auto_image_param.BaseImageParam
         """
-
+ 
         if image_parameter is None:
             height , width = input_tensor.shape[-2], input_tensor.shape[-1]
             image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
