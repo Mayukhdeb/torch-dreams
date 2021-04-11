@@ -20,6 +20,7 @@ pip install torch-dreams
 * [Minimal example](https://github.com/Mayukhdeb/torch-dreams#minimal-example)
 * [Not so minimal example](https://github.com/Mayukhdeb/torch-dreams#not-so-minimal-example)
 * [Visualizing individual channels with `custom_func`](https://github.com/Mayukhdeb/torch-dreams#visualizing-individual-channels-with-custom_func)
+* [Caricatures](https://github.com/Mayukhdeb/torch-dreams#caricatures)
 * [Visualize features from multiple models simultaneously](https://github.com/Mayukhdeb/torch-dreams#visualize-features-from-multiple-models-simultaneously)
 * [Use custom transforms](https://github.com/Mayukhdeb/torch-dreams#using-custom-transforms)
 * [Feedback loops](https://github.com/Mayukhdeb/torch-dreams#you-can-also-use-outputs-of-one-render-as-the-input-of-another-to-create-feedback-loops)
