@@ -172,6 +172,23 @@ class test(unittest.TestCase):
 
         self.assertTrue(torch.allclose(image_tensor ,image_param.to_nchw_tensor(), atol = 1e-5))
                 
+    def test_caricature(self):
+
+        model = models.resnet18(pretrained=True)
+
+        dreamy_boi = dreamer(model, device = 'cpu')
+        param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cpu')
+
+        image_tensor = param.to_nchw_tensor()
+
+        param = dreamy_boi.caricature(
+            input_tensor = image_tensor, 
+            layers = [model.layer3],
+            power= 1.0,
+            iters = 5
+        )
+
+        self.assertTrue(isinstance(param, auto_image_param), 'should be an "auto_image_param')
 
 if __name__ == '__main__':
 
