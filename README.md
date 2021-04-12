@@ -99,6 +99,8 @@ plt.show()
 
 Caricatures create a new image that has a similar but more extreme activation pattern to the input image at a given layer (or multiple layers at a time). It's inspired from [this issue](https://github.com/tensorflow/lucid/issues/121)
 
+<img src = "images/caricature.png" width = "70%">
+
 In this case, let's use googlenet 
 
 ```python
