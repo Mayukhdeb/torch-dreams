@@ -140,7 +140,7 @@ class dreamer():
 
         return layer_outputs
 
-    def caricature(self, input_tensor, layers, power = 1., image_parameter = None, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0.1, translate_y = 0.1,  weight_decay = 1e-3, grad_clip = 1.):
+    def caricature(self, input_tensor, layers, power = 1., image_parameter = None, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0.1, translate_y = 0.1,  weight_decay = 1e-3, grad_clip = 1., static = False):
         """Generates an "exaggerated" reconstruction of the input image by 
         optimizing random noise to replicate and "exaggerate" the activations of
         certain layers after feeding the input image
@@ -183,25 +183,47 @@ class dreamer():
         if image_parameter.optimizer is None:
             image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
 
-        self.random_resize_pair = pair_random_resize(max_size_factor = scale_max, min_size_factor = scale_min)
-        
-        self.random_affine_pair = pair_random_affine(degrees = rotate_degrees, translate_x = translate_x, translate_y = translate_y)
-        
-        caricature_loss = CaricatureLoss(power= power)
 
         hooks = []
         for layer in layers:
             hook = Hook(layer)
             hooks.append(hook)
 
+        caricature_loss = CaricatureLoss(power= power)
+
+
+        if static == False:
+            """
+            if static is false, we have to transforms the input tensor and the image parameter identically before each iteration 
+            """
+            self.random_resize_pair = pair_random_resize(max_size_factor = scale_max, min_size_factor = scale_min)
+            self.random_affine_pair = pair_random_affine(degrees = rotate_degrees, translate_x = translate_x, translate_y = translate_y)
+        else:
+            """
+            if static is true, then we collect the layer outputs first, and use the same ideal layer outputs as the target at each iteration,
+            this would be useful particularly for adversarial examples where the outcome depends on the position of each pixel
+            """
+            self.get_default_transforms(rotate = rotate_degrees, scale_max = scale_max, scale_min= scale_min, translate_x = translate_x, translate_y = translate_y)
+            model_out = self.model(input_tensor.to(self.device))
+
+            ideal_layer_outputs = []
+
+            for hook in hooks:
+                out = hook.output[0]
+                ideal_layer_outputs.append(out)
+
+        
         for i in tqdm(range(iters), disable= self.quiet):
             
             image_parameter.optimizer.zero_grad()
 
             img = image_parameter.forward(device = self.device)
 
-            img_transformed, input_tensor_transformed = self.random_resize_pair(x1 = img, x2 = input_tensor)
-            img_transformed, input_tensor_transformed = self.random_affine_pair(x1 = img_transformed, x2 = input_tensor_transformed)
+            if static == False:
+                img_transformed, input_tensor_transformed = self.random_resize_pair(x1 = img, x2 = input_tensor)
+                img_transformed, input_tensor_transformed = self.random_affine_pair(x1 = img_transformed, x2 = input_tensor_transformed)
+            else:
+                img_transformed = self.transforms(img)
 
             model_out = self.model(img_transformed)
 
@@ -211,13 +233,15 @@ class dreamer():
                 out = hook.output[0]
                 layer_outputs.append(out)
 
-            model_out = self.model(input_tensor_transformed.to(self.device))
 
-            ideal_layer_outputs = []
+            if static == False:
+                model_out = self.model(input_tensor_transformed.to(self.device))
 
-            for hook in hooks:
-                out = hook.output[0]
-                ideal_layer_outputs.append(out)
+                ideal_layer_outputs = []
+
+                for hook in hooks:
+                    out = hook.output[0]
+                    ideal_layer_outputs.append(out)
 
             loss = caricature_loss.forward(layer_outputs = layer_outputs, ideal_layer_outputs = ideal_layer_outputs)
 
