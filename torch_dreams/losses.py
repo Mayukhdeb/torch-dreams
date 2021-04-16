@@ -26,9 +26,11 @@ class CaricatureLoss(nn.Module):
             """
             if their shapes are not equal (likely due to using static caricatures), then resize the target accordingly
             """
-            y = resize_4d_tensor_by_size(y.unsqueeze(0), height = x.shape[-2], width = x.shape[-1] ).squeeze(0).detach()
+            y = resize_4d_tensor_by_size(y.unsqueeze(0), height = x.shape[-2], width = x.shape[-1] ).squeeze(0)
+
+        y = y.detach()
         
-        numerator = (x*y).sum() 
+        numerator = (x*y.detach()).sum() 
         denominator = torch.sqrt((y**2).sum()) + eps
         cossim = numerator/denominator
         cossim = torch.maximum(torch.tensor(0.1).to(cossim.device), cossim)
