@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch
 
+from .image_transforms import resize_4d_tensor_by_size
 
 class CaricatureLoss(nn.Module):
 
@@ -20,6 +21,13 @@ class CaricatureLoss(nn.Module):
         or find me on github: 
             github.com/mayukhdeb
         """
+
+        if x.shape != y.shape:
+            """
+            if their shapes are not equal (likely due to using static caricatures), then resize the target accordingly
+            """
+            y = resize_4d_tensor_by_size(y.unsqueeze(0), height = x.shape[-2], width = x.shape[-1] ).squeeze(0).detach()
+        
         numerator = (x*y).sum() 
         denominator = torch.sqrt((y**2).sum()) + eps
         cossim = numerator/denominator
