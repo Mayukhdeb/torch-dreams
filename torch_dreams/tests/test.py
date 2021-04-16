@@ -188,7 +188,26 @@ class test(unittest.TestCase):
             iters = 5
         )
 
-        self.assertTrue(isinstance(param, auto_image_param), 'should be an "auto_image_param')
+        self.assertTrue(isinstance(param, auto_image_param), 'should be an auto_image_param')
+
+    def test_static_caricature(self):
+
+        model = models.resnet18(pretrained=True)
+
+        dreamy_boi = dreamer(model, device = 'cpu')
+        param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cpu')
+
+        image_tensor = param.to_nchw_tensor()
+
+        param = dreamy_boi.caricature(
+            input_tensor = image_tensor, 
+            layers = [model.layer3],
+            power= 1.0,
+            iters = 5,
+            static= True
+        )
+
+        self.assertTrue(isinstance(param, auto_image_param), 'should be an auto_image_param')
 
 if __name__ == '__main__':
 
