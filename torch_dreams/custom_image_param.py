@@ -44,16 +44,14 @@ class custom_image_param(BaseImageParam):
     image_param.save('saved.jpg')
     ```
     """
-    def __init__(self, filename, device):
+    def __init__(self, image, device):
         
         super().__init__()
-        im = cv2.cvtColor(cv2.imread(filename), cv2.COLOR_BGR2RGB)/255.
         self.device = device
-        im_tensor_chw = torch.tensor(im).permute(-1,0,1)
-        self.height, self.width = im_tensor_chw.shape[-2], im_tensor_chw.shape[-1]
-        self.param = chw_rgb_to_fft_param(im_tensor_chw, device = self.device)  / get_fft_scale_custom_img(h = self.height, w = self.width, device= self.device)
-        self.param.requires_grad_()
-        self.optimizer = None
+        if isinstance(image, str):
+            image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_BGR2RGB)/255.
+            image = torch.tensor(image).permute(-1,0,1).unsqueeze(0)
+        self.set_param(image)
 
     def normalize(self,x, device):
         return normalize(x = x, device= device)
