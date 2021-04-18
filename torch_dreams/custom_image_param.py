@@ -26,12 +26,12 @@ class custom_image_param(BaseImageParam):
     * weight decay (1e-1)
 
     Args:
-        filename (str): 'path/to/image.jpg'
+        image (str or torch.tensor): 'path/to/image.jpg' or input tensor with shape [1,3, height, width] and values clipped between 0,1.
         device (str): 'cuda' or 'cpu'
 
     Example: 
     ```
-    param = custom_image_param(filename = 'image.jpg', device= 'cuda')
+    param = custom_image_param(image = 'image.jpg', device= 'cuda')
 
     image_param = dreamy_boi.render(
         image_parameter= param,
