@@ -126,7 +126,7 @@ class test(unittest.TestCase):
         model = models.inception_v3(pretrained=True)
 
         dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
-        param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cpu')
+        param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_param = dreamy_boi.render(
             image_parameter= param,
@@ -154,7 +154,7 @@ class test(unittest.TestCase):
         model = models.inception_v3(pretrained=True)
 
         dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
-        param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cpu')
+        param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_param = dreamy_boi.render(
             image_parameter= param,
@@ -177,7 +177,7 @@ class test(unittest.TestCase):
         model = models.resnet18(pretrained=True)
 
         dreamy_boi = dreamer(model, device = 'cpu')
-        param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cpu')
+        param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_tensor = param.to_nchw_tensor()
 
@@ -195,7 +195,7 @@ class test(unittest.TestCase):
         model = models.resnet18(pretrained=True)
 
         dreamy_boi = dreamer(model, device = 'cpu')
-        param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cpu')
+        param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_tensor = param.to_nchw_tensor()
 
