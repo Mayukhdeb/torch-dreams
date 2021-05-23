@@ -1,9 +1,10 @@
 import cv2
 import torch
 from .custom_image_param import custom_image_param
+from .transforms import imagenet_transform
 
 class masked_image_param(custom_image_param):
-    def __init__(self, image, mask_tensor, device):
+    def __init__(self, mask_tensor, image = None , device = 'cuda'):
         """Custom image param, but with a mask over the original image. 
 
         The mask helps update only certain parts of the image 
@@ -15,6 +16,23 @@ class masked_image_param(custom_image_param):
             mask_tensor (torch.tensor): NCHW tensor whose values are clipped between 0,1
             device (str): 'cpu' or 'cuda'
         """
+
+        self.width = mask_tensor.shape[-1]
+        self.height = mask_tensor.shape[-2]
+
+        if image is None:
+            from .utils import init_image_param, fft_to_rgb, lucid_colorspace_to_rgb
+            if self.width %2 ==1:
+                self.param = init_image_param(height = self.height, width = self.width + 1, sd = 0.01, device = device)
+            else:
+                self.param = init_image_param(height = self.height, width = self.width, sd = 0.01, device = device)
+            img = fft_to_rgb(height = self.height, width = self.width,  image_parameter = self.param, device= device)
+            img = lucid_colorspace_to_rgb(t = img, device = device)
+            image = torch.sigmoid(img)
+
+
+            # image = torch.ones(1,3,self.height,self.width)
+
         super().__init__(image = image, device= device)
 
         self.mask = mask_tensor.to(self.device)
