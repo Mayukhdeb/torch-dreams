@@ -25,7 +25,7 @@ class masked_image_param(custom_image_param):
 
         self.original_nchw_image_tensor = image.to(device)
 
-        assert self.mask.shape[-2:] == self.to_nchw_tensor(device = self.device).shape[-2:]
+        assert self.mask.shape[-2:] == self.to_nchw_tensor(device = self.device).shape[-2:], "The height and width of the input image" + str(self.to_nchw_tensor(device = self.device).shape[-2:]) + "and the mask" + str(self.mask.shape[-2:]) + "do not match."
 
     def to_chw_tensor(self, device = 'cpu'):
         t = self.forward(device= device).squeeze(0).clamp(0,1).detach()  + self.original_nchw_image_tensor.to(device) * (1-self.mask.to(device)) 
@@ -33,3 +33,17 @@ class masked_image_param(custom_image_param):
 
     def forward(self, device):
         return self.normalize(self.postprocess(device = device), device= device).clamp(0,1) * self.mask.to(device) 
+
+    def update_mask(self, mask):
+        """updates the mask to have a new value
+
+        Warning: it also updates the original image 
+
+        Args:
+            mask (torch.tensor): new mask to be used
+        """
+
+        self.original_nchw_image_tensor = self.to_chw_tensor(device = self.device).unsqueeze(0)
+        self.mask = mask.to(self.device)
+
+
