@@ -14,7 +14,7 @@ class masked_image_param(custom_image_param):
 
         self.original_nchw_image_tensor = image.to(device)
 
-        assert self.mask.shape == self.to_nchw_tensor(device = self.device).shape
+        assert self.mask.shape[-2:] == self.to_nchw_tensor(device = self.device).shape[-2:]
 
     def to_chw_tensor(self, device = 'cpu'):
         t = self.forward(device= device).squeeze(0).clamp(0,1).detach()  + self.original_nchw_image_tensor.to(device) * (1-self.mask.to(device)) 
