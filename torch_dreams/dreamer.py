@@ -9,10 +9,13 @@ from .utils import (
     normalize, 
 )
 
-from .transforms import random_resize , pair_random_resize, pair_random_affine
+from .transforms import random_resize , pair_random_resize, pair_random_affine, imagenet_transform
 from .auto_image_param import auto_image_param
 from .dreamer_utils import Hook, default_func_mean
 from .losses import CaricatureLoss
+
+from .masked_image_param import masked_image_param
+
 
 class dreamer():
     """wrapper over a pytorch model for feature visualization
@@ -81,12 +84,24 @@ class dreamer():
             hook = Hook(layer)
             hooks.append(hook)
 
+        if isinstance(image_parameter, masked_image_param):
+            self.random_resize_pair = pair_random_resize(max_size_factor = scale_max, min_size_factor = scale_min)
+            self.random_affine_pair = pair_random_affine(degrees = rotate_degrees, translate_x = translate_x, translate_y = translate_y)
+
         for i in tqdm(range(iters), disable= self.quiet):
             
             image_parameter.optimizer.zero_grad()
 
             img = image_parameter.forward(device = self.device)
-            img = self.transforms(img)
+
+            if isinstance(image_parameter, masked_image_param):
+                img_transformed, mask_transformed, original_image_transformed = self.random_resize_pair(tensors = [ img,image_parameter.mask.to(self.device), image_parameter.original_nchw_image_tensor])
+                img_transformed, mask_transformed, original_image_transformed = self.random_affine_pair([img_transformed, mask_transformed, original_image_transformed])
+                
+                img = img_transformed * mask_transformed.to(self.device) + original_image_transformed.float() * (1-mask_transformed.to(self.device))
+
+            else:
+                img = self.transforms(img)
 
             model_out = self.model(img)
 
@@ -220,8 +235,8 @@ class dreamer():
             img = image_parameter.forward(device = self.device)
 
             if static == False:
-                img_transformed, input_tensor_transformed = self.random_resize_pair(x1 = img, x2 = input_tensor)
-                img_transformed, input_tensor_transformed = self.random_affine_pair(x1 = img_transformed, x2 = input_tensor_transformed)
+                img_transformed, input_tensor_transformed = self.random_resize_pair(tensors = [img, input_tensor])
+                img_transformed, input_tensor_transformed = self.random_affine_pair(tensors = [img_transformed, input_tensor_transformed])
             else:
                 img_transformed = self.transforms(img)
 
