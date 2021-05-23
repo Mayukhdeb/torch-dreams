@@ -6,6 +6,8 @@ from torch_dreams.dreamer import dreamer
 
 from torch_dreams.auto_image_param import auto_image_param
 from torch_dreams.custom_image_param import custom_image_param
+from torch_dreams.masked_image_param import masked_image_param
+
 from torch_dreams.model_bunch import ModelBunch
 import numpy as np
 import torch
@@ -171,7 +173,40 @@ class test(unittest.TestCase):
         # print(torch.abs((image_tensor - image_param.to_nchw_tensor())).mean())
 
         self.assertTrue(torch.allclose(image_tensor ,image_param.to_nchw_tensor(), atol = 1e-5))
-                
+
+    def test_masked_image_param(self):
+
+        model = models.inception_v3(pretrained=True)
+
+        dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
+
+        mask_tensor = torch.ones(1,3,512,512)
+        mask_tensor[:,:,:256,:] = 0.
+
+        param = masked_image_param(
+            image = 'images/sample_small.jpg',
+            mask = mask_tensor,
+            device = 'cpu'
+        )
+
+        image_param = dreamy_boi.render(
+            image_parameter= param,
+            layers = [model.Mixed_6a],
+            iters = 5,
+            lr = 2e-4,
+            grad_clip = 0.1,
+            weight_decay= 1e-1
+        )
+
+        image_param.save(filename = 'test_masked_image_param.jpg')
+
+        self.assertTrue(os.path.exists('test_masked_image_param.jpg'))
+        self.assertTrue(isinstance(image_param, custom_image_param), 'should be an instance of auto_image_param')
+        self.assertTrue(isinstance(image_param.__array__(), np.ndarray))
+        self.assertTrue(isinstance(image_param.to_hwc_tensor(), torch.Tensor), 'should be a torch.Tensor')
+        self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
+        os.remove('test_masked_image_param.jpg')     
+
     def test_caricature(self):
 
         model = models.resnet18(pretrained=True)
