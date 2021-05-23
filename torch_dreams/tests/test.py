@@ -185,7 +185,7 @@ class test(unittest.TestCase):
 
         param = masked_image_param(
             image = 'images/sample_small.jpg',
-            mask = mask_tensor,
+            mask_tensor = mask_tensor,
             device = 'cpu'
         )
 
