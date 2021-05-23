@@ -3,10 +3,21 @@ import torch
 from .custom_image_param import custom_image_param
 
 class masked_image_param(custom_image_param):
-    def __init__(self, image, mask, device):
+    def __init__(self, image, mask_tensor, device):
+        """Custom image param, but with a mask over the original image. 
+
+        The mask helps update only certain parts of the image 
+        and leave the rest untouched by training. Ideal for 
+        things like: "differentiable" backgrounds.
+
+        Args:
+            image (str or torch.tensor): "path/to/image.jpg" or NCHW tensor
+            mask_tensor (torch.tensor): NCHW tensor whose values are clipped between 0,1
+            device (str): 'cpu' or 'cuda'
+        """
         super().__init__(image = image, device= device)
 
-        self.mask = mask.to(self.device)
+        self.mask = mask_tensor.to(self.device)
 
         if isinstance(image, str):
             image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_BGR2RGB)/255.
