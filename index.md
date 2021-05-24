@@ -5,7 +5,7 @@ A python package to reverse engineer neural nets for interpretability.
 When a deep-learning model looks for a potted plant, what does it actually look for? Does it look for pots or plants? perhaps both? This is exactly what torch-dreams can help us answer.
 
 <p align="center">
-  <img src="banner.png" />    
+  <img src="images/banner.png" />    
    <br>A breakdown of a segmentation model’s classes with torch-dreams
 
 </p>
@@ -34,7 +34,7 @@ A good example is the ability to simultaneously optimize features from different
 
 
 <p align="center">
-  <img src="modelbunch.jpeg" />    
+  <img src="images/modelbunch.jpeg" />    
    <br> Maximizing the activations of features from 2 different models
 </p>
 
@@ -42,7 +42,7 @@ Another important area of research that can be explored are adversarial attacks.
 
 
 <p align="center">
-  <img src="adversarial.jpeg" />    
+  <img src="images/adversarial.jpeg" />    
    <br> Caricatures reveal how each layer “sees” the adversarial example.
 </p>
 
