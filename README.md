@@ -235,6 +235,8 @@ Can be used to optimize only certain parts of the image using a mask whose value
 Here's an example with a vertical gradient 
 
 ```python 
+from torch_dreams.masked_image_param import masked_image_param
+
 mask = torch.ones(1,1,512,512)
 
 for i in range(0, 512, 1):  ## vertical gradient
