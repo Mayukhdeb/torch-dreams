@@ -214,7 +214,7 @@ Note that you might have to use smaller values for certain hyperparameters like 
 
 ```python
 from torch_dreams.custom_image_param import custom_image_param
-param = custom_image_param(filename = 'images/sample_small.jpg', device= 'cuda')
+param = custom_image_param(image = 'images/sample_small.jpg', device= 'cuda')  ## image could either be a filename or a torch.tensor of shape NCHW
 
 image_param = dreamy_boi.render(
     image_parameter= param,
