@@ -225,6 +225,13 @@ image_param = dreamy_boi.render(
 )
 ```
 
+## Masked Image parameters: 
+
+They can be used to optimize only certain parts of the image using a mask wholse values are clipped between `[0,1]`.
+
+<img src = "images/masked_param.png" width = "70%">
+
+
 ## Other conveniences 
 
 The following methods are handy for an [`auto_image_param`](https://github.com/Mayukhdeb/torch-dreams/blob/master/torch_dreams/auto_image_param.py) instance:
