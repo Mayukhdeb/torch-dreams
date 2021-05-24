@@ -25,6 +25,7 @@ pip install torch-dreams
 * [Use custom transforms](https://github.com/Mayukhdeb/torch-dreams#using-custom-transforms)
 * [Feedback loops](https://github.com/Mayukhdeb/torch-dreams#you-can-also-use-outputs-of-one-render-as-the-input-of-another-to-create-feedback-loops)
 * [Custom images](https://github.com/Mayukhdeb/torch-dreams#using-custom-images)
+* [Masked image parametrs](https://github.com/Mayukhdeb/torch-dreams#masked-image-parameters)
 * [Other conveniences](https://github.com/Mayukhdeb/torch-dreams#other-conveniences)
 
 ## Minimal example
@@ -225,11 +226,55 @@ image_param = dreamy_boi.render(
 )
 ```
 
-## Masked Image parameters: 
+## Masked Image parameters
 
-They can be used to optimize only certain parts of the image using a mask wholse values are clipped between `[0,1]`.
+Can be used to optimize only certain parts of the image using a mask whose values are clipped between `[0,1]`.
 
-<img src = "images/masked_param.png" width = "70%">
+<img src = "https://raw.githubusercontent.com/Mayukhdeb/torch-dreams/master/images/masked_param.png" width = "80%">
+
+Here's an example with a vertical gradient 
+
+```python 
+mask = torch.ones(1,1,512,512)
+
+for i in range(0, 512, 1):  ## vertical gradient
+    mask[:,:,i,:] = (i/512)
+
+param = masked_image_param(
+    image= 'images/sample_small.jpg',  ## optional
+    mask_tensor = mask,
+    device = 'cuda'
+)
+
+param = dreamy_boi.render(
+    layers = [model.inception4c],
+    image_parameter= param,
+    lr = 1e-4,
+    grad_clip= 0.1,
+    weight_decay= 1e-1,
+    iters= 200,
+)
+
+param.save('masked_param_output.jpg')
+```
+
+It's also possible to update the mask on the fly with `param.update_mask(some_mask)`
+
+```python
+
+param.update_mask(mask = torch.flip(mask, dims = (2,)))
+
+param = dreamy_boi.render(
+    layers = [model.inception4a],
+    image_parameter= param,
+    lr = 1e-4,
+    grad_clip= 0.1,
+    weight_decay= 1e-1,
+    iters= 200,
+)
+
+param.save('masked_param_output_2.jpg')
+```
 
 
 ## Other conveniences 
