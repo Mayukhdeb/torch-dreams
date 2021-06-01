@@ -1,6 +1,7 @@
 import torch 
 from tqdm import tqdm
 from copy import deepcopy
+import torchvision
 import torchvision.transforms as transforms
 
 from .utils import (
