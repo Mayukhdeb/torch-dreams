@@ -18,7 +18,7 @@ transform_and_rotate = transforms.Compose([
             ])
 
 class InverseTransform(nn.Module):
-    def __init__(self, old_mean, old_std, new_mean, new_std):
+    def __init__(self, old_mean, old_std, new_transforms):
         super().__init__()
         self.inverse_transform =  transforms.Compose([ 
             transforms.Normalize(
@@ -31,11 +31,8 @@ class InverseTransform(nn.Module):
                 ),
         ]) 
 
-        self.new_transform =  transforms.Normalize(
-                mean = new_mean,
-                std = new_std
-        )
-
+        self.new_transform =  new_transforms
+        
     def forward(self, x):
         x=  self.inverse_transform(x)
         x = self.new_transform(x)

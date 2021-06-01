@@ -1,4 +1,5 @@
 import torch 
+import torch.nn as nn
 from tqdm import tqdm
 from copy import deepcopy
 import torchvision
@@ -53,20 +54,31 @@ class dreamer():
             self.__custom_normalization_transform__
         ])
 
-    def set_custom_normalization(self, mean = [0.5, 0.5, 0.5] , std = [0.5, 0.5, 0.5]):
+    def set_custom_normalization(self, normalization_transform):
         """Adds support for models trained in pretty much any image normalization.
 
         Args:
-            mean (list, optional): Mean through channels. Defaults to [0.5, 0.5, 0.5].
-            std (list, optional): Std through channels. Defaults to [0.5, 0.5, 0.5].
+            normalization_transform (torch.nn.Module): transforms that would normalize the image as per your model. 
+
+        Example: 
+
+        ```python
+        t = torchvision.transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+
+        dreamer.set_custom_normalization(normalization_transform = t)
+        ```
         """
+
+        assert isinstance(normalization_transform, nn.Module) == True , "normalization_transform should be an instance of torch.nn.module, not: " +  str(type(normalization_transform))
 
         self.__custom_normalization_transform__ = InverseTransform(
                                                             old_mean = Constants.imagenet_mean,
                                                             old_std = Constants.imagenet_std,
-                                                            new_mean = mean,
-                                                            new_std = std
-                                                        )
+                                                            new_transforms = normalization_transform
+                                                            )
 
     def set_custom_transforms(self, transforms):
         if self.__custom_normalization_transform__ == None:
