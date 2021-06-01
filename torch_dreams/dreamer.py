@@ -10,11 +10,14 @@ from .utils import (
 )
 
 from .transforms import random_resize , pair_random_resize, pair_random_affine, imagenet_transform
+
+from .image_transforms import InverseTransform
 from .auto_image_param import auto_image_param
 from .dreamer_utils import Hook, default_func_mean
 from .losses import CaricatureLoss
 
 from .masked_image_param import masked_image_param
+from .constants import Constants
 
 
 class dreamer():
@@ -34,6 +37,7 @@ class dreamer():
         self.default_func = default_func_mean
         self.transforms = None
         self.quiet = quiet
+        self.__custom_normalization_transform__ = None
 
     def get_default_transforms(self, rotate, scale_max, scale_min, translate_x, translate_y):
         self.transforms= transforms.Compose([
@@ -41,8 +45,36 @@ class dreamer():
             random_resize(max_size_factor = scale_max, min_size_factor = scale_min),
         ])
 
+        if self.__custom_normalization_transform__ is not None: 
+            self.transforms= transforms.Compose([
+            transforms.RandomAffine(degrees = rotate, translate= (translate_x, translate_y)),
+            random_resize(max_size_factor = scale_max, min_size_factor = scale_min),
+            self.__custom_normalization_transform__
+        ])
+
+    def set_custom_normalization(self, mean = [0.5, 0.5, 0.5] , std = [0.5, 0.5, 0.5]):
+        """Adds support for models trained in pretty much any image normalization.
+
+        Args:
+            mean (list, optional): Mean through channels. Defaults to [0.5, 0.5, 0.5].
+            std (list, optional): Std through channels. Defaults to [0.5, 0.5, 0.5].
+        """
+
+        self.__custom_normalization_transform__ = InverseTransform(
+                                                            old_mean = Constants.imagenet_mean,
+                                                            old_std = Constants.imagenet_std,
+                                                            new_mean = mean,
+                                                            new_std = std
+                                                        )
+
     def set_custom_transforms(self, transforms):
-        self.transforms = transforms
+        if self.__custom_normalization_transform__ == None:
+            self.transforms = transforms
+        else: 
+            self.transforms = torchvision.transforms.Compose([
+                transforms, 
+                self.__custom_normalization_transform__
+            ])
 
     def render(self, layers, image_parameter = None,  width= 256, height = 256, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0., translate_y = 0.,  custom_func = None, weight_decay = 0., grad_clip = 1.):
         """core function to visualize elements form within the pytorch model

@@ -1,6 +1,7 @@
 import torchvision.transforms as transforms
 import torch
 import torch.nn.functional as F
+import torch.nn as nn
 
 
 import warnings
@@ -15,6 +16,39 @@ transform_and_rotate = transforms.Compose([
                 transforms.RandomRotation(degrees = 5, resample=False, expand=False, center=None, fill=None),
                 transforms.ToTensor()
             ])
+
+class InverseTransform(nn.Module):
+    def __init__(self, old_mean, old_std, new_mean, new_std):
+        super().__init__()
+        self.inverse_transform =  transforms.Compose([ 
+            transforms.Normalize(
+                mean = [ 0., 0., 0. ],
+                std = [ 1/old_std[0], 1/old_std[1], 1/old_std[2]]
+                ),
+            transforms.Normalize(
+                mean = [ -old_mean[0], -old_mean[1], -old_mean[2]],
+                std = [ 1., 1., 1. ]
+                ),
+        ]) 
+
+        self.new_transform =  transforms.Compose([ 
+            transforms.Normalize(
+                mean = [ 0., 0., 0. ],
+                std = [ 1/new_std[0], 1/new_std[1], 1/new_std[2]]
+                ),
+            transforms.Normalize(
+                mean = [ -new_mean[0], -new_mean[1], -new_mean[2]],
+                std = [ 1., 1., 1. ]
+                ),
+        ]) 
+
+    def forward(self, x):
+        x=  self.inverse_transform(x)
+        x = self.new_transform(x)
+        return x
+
+    def __repr__(self):
+        return 'InverseTransform(\n        ' + str(self.inverse_transform) + '\n        ' + str(self.new_transform) + ')'
 
 
 def resize_4d_tensor_by_factor(x, height_factor, width_factor):
