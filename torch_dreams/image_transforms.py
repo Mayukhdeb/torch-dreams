@@ -31,16 +31,10 @@ class InverseTransform(nn.Module):
                 ),
         ]) 
 
-        self.new_transform =  transforms.Compose([ 
-            transforms.Normalize(
-                mean = [ 0., 0., 0. ],
-                std = [ 1/new_std[0], 1/new_std[1], 1/new_std[2]]
-                ),
-            transforms.Normalize(
-                mean = [ -new_mean[0], -new_mean[1], -new_mean[2]],
-                std = [ 1., 1., 1. ]
-                ),
-        ]) 
+        self.new_transform =  transforms.Normalize(
+                mean = new_mean,
+                std = new_std
+        )
 
     def forward(self, x):
         x=  self.inverse_transform(x)
