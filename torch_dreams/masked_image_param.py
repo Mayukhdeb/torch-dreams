@@ -64,4 +64,6 @@ class masked_image_param(custom_image_param):
         self.original_nchw_image_tensor = self.to_chw_tensor(device = self.device).unsqueeze(0)
         self.mask = mask.to(self.device)
 
-
+    def to_hwc_tensor(self, device = 'cpu'):
+        t = self.forward(device= device).squeeze(0).clamp(0,1).detach()  + self.original_nchw_image_tensor.to(device) * (1-self.mask.to(device)) 
+        return t.squeeze(0).permute(1,2,0)
