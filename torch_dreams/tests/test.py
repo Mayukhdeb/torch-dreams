@@ -2,13 +2,16 @@ import unittest
 from unittest import TestCase
 
 import torchvision.models as models
+import torchvision.transforms as transforms
 from torch_dreams.dreamer import dreamer
 
 from torch_dreams.auto_image_param import auto_image_param
 from torch_dreams.custom_image_param import custom_image_param
 from torch_dreams.masked_image_param import masked_image_param
-
+from torch_dreams.transforms import random_resize   
 from torch_dreams.model_bunch import ModelBunch
+from torch_dreams.image_transforms import InverseTransform
+
 import numpy as np
 import torch
 import os 
@@ -243,6 +246,37 @@ class test(unittest.TestCase):
         )
 
         self.assertTrue(isinstance(param, auto_image_param), 'should be an auto_image_param')
+
+    def test_custom_normalization(self):
+
+        model = models.resnet18(pretrained=True)
+
+        dreamy_boi = dreamer(model, device = 'cpu')
+
+        t = transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+
+        dreamy_boi.set_custom_normalization(normalization_transform = t)
+
+        param = dreamy_boi.render(
+            layers = [model.layer3],
+            iters = 5
+        )
+
+        expected_transforms = transforms.Compose([
+
+            transforms.RandomAffine(15, translate= (0,0)),
+            random_resize(max_size_factor = 1.2, min_size_factor = 0.5),
+            InverseTransform(
+                old_mean = [0.485, 0.456, 0.406],
+                old_std = [0.229, 0.224, 0.225],
+                new_transforms = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  
+            )
+        ])
+
+        self.assertTrue(expected_transforms , dreamy_boi.transforms)
 
 if __name__ == '__main__':
 
