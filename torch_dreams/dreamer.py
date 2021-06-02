@@ -1,8 +1,8 @@
 import torch 
+import torchvision
 import torch.nn as nn
 from tqdm import tqdm
 from copy import deepcopy
-import torchvision
 import torchvision.transforms as transforms
 
 from .utils import (
@@ -11,24 +11,38 @@ from .utils import (
     normalize, 
 )
 
-from .transforms import random_resize , pair_random_resize, pair_random_affine, imagenet_transform
+from .transforms import (
+    random_resize, 
+    pair_random_resize, 
+    pair_random_affine, 
+    imagenet_transform
+)
 
+from .constants import Constants
+from .losses import CaricatureLoss
 from .image_transforms import InverseTransform
 from .auto_image_param import auto_image_param
 from .dreamer_utils import Hook, default_func_mean
-from .losses import CaricatureLoss
-
 from .masked_image_param import masked_image_param
-from .constants import Constants
 
 
 class dreamer():
-    """wrapper over a pytorch model for feature visualization
+    """wrapper over a pytorch model for feature visualization 
 
         Args:
             model (torch.nn.Module): pytorch model 
             quiet (bool, optional): enable or disable progress bar. Defaults to True.
             device (str, optional): 'cpu' or 'cuda'. Defaults to 'cuda'.
+
+        Example:
+
+        ```python
+        import torchvision.models as models
+        from torch_dreams.dreamer import dreamer
+
+        model = models.inception_v3(pretrained=True)
+        dreamy_boi = dreamer(model, device = 'cuda')
+        ```
     """
     def __init__(self, model, quiet = False, device = 'cuda'):
         
@@ -81,6 +95,22 @@ class dreamer():
                                                             )
 
     def set_custom_transforms(self, transforms):
+        """Sets a custom set of transforms as the robustness transforms to be used for training the image parameter. Does not override custom image normalization if configured. 
+
+        Args:
+            transforms (torch.nn.Module): Bunch of transforms to be used for training the image parameter. Generally `torchvision.transforms.Compose([your_transforms])` is preferred.
+            
+        Example: 
+
+        ```python
+        my_transforms = transforms.Compose([
+            transforms.RandomAffine(degrees = 10, translate = (0.5,0.5)),
+            transforms.RandomHorizontalFlip(p = 0.3)
+        ])
+
+        dreamy_boi.set_custom_transforms(transforms = my_transforms)
+        ```
+        """
         if self.__custom_normalization_transform__ == None:
             self.transforms = transforms
         else: 
