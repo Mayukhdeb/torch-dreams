@@ -25,6 +25,7 @@ pip install torch-dreams
 * [Use custom transforms](https://github.com/Mayukhdeb/torch-dreams#using-custom-transforms)
 * [Feedback loops](https://github.com/Mayukhdeb/torch-dreams#you-can-also-use-outputs-of-one-render-as-the-input-of-another-to-create-feedback-loops)
 * [Custom images](https://github.com/Mayukhdeb/torch-dreams#using-custom-images)
+* [Working on models with different image normalizations]()
 * [Masked image parametrs](https://github.com/Mayukhdeb/torch-dreams#masked-image-parameters)
 * [Other conveniences](https://github.com/Mayukhdeb/torch-dreams#other-conveniences)
 
@@ -224,6 +225,19 @@ image_param = dreamy_boi.render(
     weight_decay= 1e-1,
     iters = 120
 )
+```
+
+## Working on models with different image normalizations
+
+`torch-dreams` generally works with models trained on images normalized with imagenet `mean` and `std`, but that can be easily overriden to support any other normalization. For example, if you have a model with `mean = [0.5, 0.5, 0.5]` and `std = [0.5, 0.5, 0.5]`: 
+
+```python 
+t = torchvision.transforms.Normalize(
+                mean = [0.5, 0.5, 0.5],
+                std =  [0.5, 0.5, 0.5]
+            )
+
+dreamy_boi.set_custom_normalization(normalization_transform = t) ## normalization_transform could be any instance of torch.nn.Module
 ```
 
 ## Masked Image parameters
