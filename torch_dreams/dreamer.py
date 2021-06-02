@@ -69,7 +69,7 @@ class dreamer():
         ])
 
     def set_custom_normalization(self, normalization_transform):
-        """Adds support for models trained in pretty much any image normalization.
+        """Overrides the usual imagenet normalization to be compatible with any other normalization defined by the user.
 
         Args:
             normalization_transform (torch.nn.Module): transforms that would normalize the image as per your model. 
