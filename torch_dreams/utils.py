@@ -125,8 +125,12 @@ def fft_to_rgb_custom_img(height, width, image_parameter, device = 'cuda'):
 
     scale = get_fft_scale_custom_img(height, width , device= device).to(image_parameter.device)
     t = scale * image_parameter
-   
-    if  float(torch.__version__[:3]) >= 1.8:
+
+    version = torch.__version__.split('.')[:2]
+    main_version = int(version[0])
+    sub_version = int(version[1])
+
+    if  main_version >= 1 and sub_version >= 8:  ## if torch.__version__ is greater than 1.8
         t = torch.fft.irfft2(t,  s = (height, width), norm = 'ortho')
     else:
         raise PytorchVersionError(version = torch.__version__)
