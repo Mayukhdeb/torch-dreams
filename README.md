@@ -358,6 +358,17 @@ image_param.set_param(tensor = transformed_image_tensor)
  * `quiet` (`bool`): Set to `True` if you want to disable any progress bars
  * `device` (`str`): `cuda` or `cpu` depending on your runtime 
 
+## Citation
+```
+@misc{mayukhdebtorchdreams,
+  title={Feature Visualization library for PyTorch},
+  author={Mayukh Deb},
+  year={2021},
+  publisher={GitHub},
+  howpublished={\url{https://github.com/Mayukhdeb/torch-dreams}},
+}
+```
+
 ## Acknowledgements
 
 * [amFOSS](https://amfoss.in/)
