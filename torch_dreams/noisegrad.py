@@ -26,9 +26,9 @@ class NoiseGradModule(nn.Module):
     model.Mixed_5b = NoiseGradModule(module = model.Mixed_5b, mean = 1, std = 0.2)
     ```
     """
-    def __init__(self, module: nn.Module, mean: float, std: float):
+    def __init__(self, module: nn.Module, mean: float = 1, std: float = 0.2):
         super().__init__()
-        
+
         self.mean = mean
         self.std = std
 
