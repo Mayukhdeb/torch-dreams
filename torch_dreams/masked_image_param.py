@@ -1,9 +1,9 @@
 import cv2
 import torch
-from .custom_image_param import custom_image_param
+from .custom_image_param import CustomImageParam
 from .transforms import imagenet_transform
 
-class masked_image_param(custom_image_param):
+class MaskedImageParam(CustomImageParam):
     def __init__(self, mask_tensor, image = None , device = 'cuda'):
         """Custom image param, but with a mask over the original image. 
 

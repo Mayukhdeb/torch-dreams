@@ -17,7 +17,7 @@ from .utils import (
     fft_to_rgb_custom_img
 )
 
-class custom_image_param(BaseImageParam):
+class CustomImageParam(BaseImageParam):
     """FFT parameterization for custom images 
 
     Works well with:

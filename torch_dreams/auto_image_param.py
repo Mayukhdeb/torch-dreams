@@ -90,7 +90,7 @@ class BaseImageParam(nn.Module):
         im.save(filename)
 
 
-class auto_image_param(BaseImageParam):
+class AutoImageParam(BaseImageParam):
     """Trainable image parameter which can be used to activate 
            different parts of a neural net
 

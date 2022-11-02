@@ -21,9 +21,9 @@ from .transforms import (
 from .constants import Constants
 from .losses import CaricatureLoss
 from .image_transforms import InverseTransform
-from .auto_image_param import auto_image_param
+from .auto_image_param import AutoImageParam
 from .dreamer_utils import Hook, default_func_mean
-from .masked_image_param import masked_image_param
+from .masked_image_param import MaskedImageParam
 
 
 class Dreamer():
@@ -144,7 +144,7 @@ class Dreamer():
             image_parameter instance: To show image, use: plt.imshow(image_parameter)
         """
         if image_parameter is None:
-            image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
+            image_parameter = AutoImageParam(height= height, width = width, device = self.device, standard_deviation = 0.01)
         else:
             image_parameter = deepcopy(image_parameter)
 
@@ -159,7 +159,7 @@ class Dreamer():
             hook = Hook(layer)
             hooks.append(hook)
 
-        if isinstance(image_parameter, masked_image_param):
+        if isinstance(image_parameter, MaskedImageParam):
             self.random_resize_pair = pair_random_resize(max_size_factor = scale_max, min_size_factor = scale_min)
             self.random_affine_pair = pair_random_affine(degrees = rotate_degrees, translate_x = translate_x, translate_y = translate_y)
 
@@ -169,7 +169,7 @@ class Dreamer():
 
             img = image_parameter.forward(device = self.device)
 
-            if isinstance(image_parameter, masked_image_param):
+            if isinstance(image_parameter, MaskedImageParam):
                 img_transformed, mask_transformed, original_image_transformed = self.random_resize_pair(tensors = [ img,image_parameter.mask.to(self.device), image_parameter.original_nchw_image_tensor])
                 img_transformed, mask_transformed, original_image_transformed = self.random_affine_pair([img_transformed, mask_transformed, original_image_transformed])
                 
@@ -266,7 +266,7 @@ class Dreamer():
  
         if image_parameter is None:
             height , width = input_tensor.shape[-2], input_tensor.shape[-1]
-            image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
+            image_parameter = AutoImageParam(height= height, width = width, device = self.device, standard_deviation = 0.01)
         else:
             image_parameter = deepcopy(image_parameter)
 

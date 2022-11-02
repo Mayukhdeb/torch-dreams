@@ -5,9 +5,9 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from torch_dreams import Dreamer
 
-from torch_dreams.auto_image_param import auto_image_param
-from torch_dreams.custom_image_param import custom_image_param
-from torch_dreams.masked_image_param import masked_image_param
+from torch_dreams.auto_image_param import AutoImageParam
+from torch_dreams.custom_image_param import CustomImageParam
+from torch_dreams.masked_image_param import MaskedImageParam
 from torch_dreams.transforms import random_resize   
 from torch_dreams.model_bunch import ModelBunch
 from torch_dreams.image_transforms import InverseTransform
@@ -39,7 +39,7 @@ class test(unittest.TestCase):
         image_param.save(filename = 'test_single_model.jpg')
 
         self.assertTrue(os.path.exists('test_single_model.jpg'))
-        self.assertTrue(isinstance(image_param, auto_image_param), 'should be an instance of auto_image_param')
+        self.assertTrue(isinstance(image_param, AutoImageParam), 'should be an instance of auto_image_param')
         self.assertTrue(isinstance(image_param.__array__(), np.ndarray))
         self.assertTrue(isinstance(image_param.to_hwc_tensor(), torch.Tensor), 'should be a torch.Tensor')
         self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
@@ -61,7 +61,7 @@ class test(unittest.TestCase):
         image_param.save(filename = 'test_custom_size.jpg')
 
         self.assertTrue(os.path.exists('test_custom_size.jpg'))
-        self.assertTrue(isinstance(image_param, auto_image_param), 'should be an instance of auto_image_param')
+        self.assertTrue(isinstance(image_param, AutoImageParam), 'should be an instance of auto_image_param')
         self.assertTrue(isinstance(image_param.__array__(), np.ndarray))
         self.assertTrue(isinstance(image_param.to_hwc_tensor(), torch.Tensor), 'should be a torch.Tensor')
         self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
@@ -81,7 +81,7 @@ class test(unittest.TestCase):
         image_param.save(filename = 'test_single_model_custom_func.jpg')
         
         self.assertTrue(os.path.exists('test_single_model_custom_func.jpg'))
-        self.assertTrue(isinstance(image_param, auto_image_param), 'should be an instance of auto_image_param')
+        self.assertTrue(isinstance(image_param, AutoImageParam), 'should be an instance of auto_image_param')
         self.assertTrue(isinstance(image_param.__array__(), np.ndarray))
         self.assertTrue(isinstance(image_param.to_hwc_tensor(), torch.Tensor), 'should be a torch.Tensor')
         self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
@@ -119,7 +119,7 @@ class test(unittest.TestCase):
         image_param.save(filename = 'test_multiple_models_custom_func.jpg')
 
         self.assertTrue(os.path.exists('test_multiple_models_custom_func.jpg'))
-        self.assertTrue(isinstance(image_param, auto_image_param), 'should be an instance of auto_image_param')
+        self.assertTrue(isinstance(image_param, AutoImageParam), 'should be an instance of auto_image_param')
         self.assertTrue(isinstance(image_param.__array__(), np.ndarray))
         self.assertTrue(isinstance(image_param.to_hwc_tensor(), torch.Tensor), 'should be a torch.Tensor')
         self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
@@ -131,7 +131,7 @@ class test(unittest.TestCase):
         model = models.inception_v3(pretrained=True)
 
         dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
-        param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
+        param = CustomImageParam(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_param = dreamy_boi.render(
             image_parameter= param,
@@ -145,7 +145,7 @@ class test(unittest.TestCase):
         image_param.save(filename = 'test_custom_image_param.jpg')
 
         self.assertTrue(os.path.exists('test_custom_image_param.jpg'))
-        self.assertTrue(isinstance(image_param, custom_image_param), 'should be an instance of auto_image_param')
+        self.assertTrue(isinstance(image_param, CustomImageParam), 'should be an instance of auto_image_param')
         self.assertTrue(isinstance(image_param.__array__(), np.ndarray))
         self.assertTrue(isinstance(image_param.to_hwc_tensor(), torch.Tensor), 'should be a torch.Tensor')
         self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
@@ -159,7 +159,7 @@ class test(unittest.TestCase):
         model = models.inception_v3(pretrained=True)
 
         dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
-        param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
+        param = CustomImageParam(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_param = dreamy_boi.render(
             image_parameter= param,
@@ -177,7 +177,7 @@ class test(unittest.TestCase):
 
         self.assertTrue(torch.allclose(image_tensor ,image_param.to_nchw_tensor(), atol = 1e-5))
 
-    def test_masked_image_param(self):
+    def test_MaskedImageParam(self):
 
         model = models.inception_v3(pretrained=True)
 
@@ -186,7 +186,7 @@ class test(unittest.TestCase):
         mask_tensor = torch.ones(1,3,512,512)
         mask_tensor[:,:,:256,:] = 0.
 
-        param = masked_image_param(
+        param = MaskedImageParam(
             image = 'images/sample_small.jpg',
             mask_tensor = mask_tensor,
             device = 'cpu'
@@ -201,21 +201,21 @@ class test(unittest.TestCase):
             weight_decay= 1e-1
         )
 
-        image_param.save(filename = 'test_masked_image_param.jpg')
+        image_param.save(filename = 'test_MaskedImageParam.jpg')
 
-        self.assertTrue(os.path.exists('test_masked_image_param.jpg'))
-        self.assertTrue(isinstance(image_param, custom_image_param), 'should be an instance of auto_image_param')
+        self.assertTrue(os.path.exists('test_MaskedImageParam.jpg'))
+        self.assertTrue(isinstance(image_param, CustomImageParam), 'should be an instance of auto_image_param')
         self.assertTrue(isinstance(image_param.__array__(), np.ndarray))
         self.assertTrue(isinstance(image_param.to_hwc_tensor(), torch.Tensor), 'should be a torch.Tensor')
         self.assertTrue(isinstance(image_param.to_chw_tensor(), torch.Tensor), 'should be a torch.Tensor')
-        os.remove('test_masked_image_param.jpg')     
+        os.remove('test_MaskedImageParam.jpg')     
 
     def test_caricature(self):
 
         model = models.resnet18(pretrained=True)
 
         dreamy_boi = Dreamer(model, device = 'cpu')
-        param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
+        param = CustomImageParam(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_tensor = param.to_nchw_tensor()
 
@@ -226,14 +226,14 @@ class test(unittest.TestCase):
             iters = 5
         )
 
-        self.assertTrue(isinstance(param, auto_image_param), 'should be an auto_image_param')
+        self.assertTrue(isinstance(param, AutoImageParam), 'should be an auto_image_param')
 
     def test_static_caricature(self):
 
         model = models.resnet18(pretrained=True)
 
         dreamy_boi = Dreamer(model, device = 'cpu')
-        param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
+        param = CustomImageParam(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_tensor = param.to_nchw_tensor()
 
@@ -245,7 +245,7 @@ class test(unittest.TestCase):
             static= True
         )
 
-        self.assertTrue(isinstance(param, auto_image_param), 'should be an auto_image_param')
+        self.assertTrue(isinstance(param, AutoImageParam), 'should be an auto_image_param')
 
     def test_custom_normalization(self):
 
