@@ -26,7 +26,7 @@ from .dreamer_utils import Hook, default_func_mean
 from .masked_image_param import masked_image_param
 
 
-class dreamer():
+class Dreamer():
     """wrapper over a pytorch model for feature visualization 
 
         Args:
@@ -38,10 +38,10 @@ class dreamer():
 
         ```python
         import torchvision.models as models
-        from torch_dreams.dreamer import dreamer
+        from torch_dreams import Dreamer
 
         model = models.inception_v3(pretrained=True)
-        dreamy_boi = dreamer(model, device = 'cuda')
+        dreamy_boi = Dreamer(model, device = 'cuda')
         ```
     """
     def __init__(self, model, quiet = False, device = 'cuda'):

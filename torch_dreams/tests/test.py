@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import torchvision.models as models
 import torchvision.transforms as transforms
-from torch_dreams.dreamer import dreamer
+from torch_dreams import Dreamer
 
 from torch_dreams.auto_image_param import auto_image_param
 from torch_dreams.custom_image_param import custom_image_param
@@ -29,7 +29,7 @@ class test(unittest.TestCase):
 
         model = models.inception_v3(pretrained=True)
 
-        dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
+        dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
 
         image_param = dreamy_boi.render(
             layers = [model.Mixed_6a],
@@ -49,7 +49,7 @@ class test(unittest.TestCase):
 
         model = models.inception_v3(pretrained=True)
 
-        dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
+        dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
 
         image_param = dreamy_boi.render(
             layers = [model.Mixed_6a],
@@ -70,7 +70,7 @@ class test(unittest.TestCase):
     def  test_single_model_custom_func(self):
         model = models.inception_v3(pretrained=True)
 
-        dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
+        dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
 
         image_param = dreamy_boi.render(
             layers = [model.Mixed_6a],
@@ -104,7 +104,7 @@ class test(unittest.TestCase):
             bunch.model_dict['resnet'].layer2[0].conv1
         ]
 
-        dreamy_boi = dreamer(model = bunch, quiet= False, device= 'cpu')
+        dreamy_boi = Dreamer(model = bunch, quiet= False, device= 'cpu')
 
         def custom_func(layer_outputs):
             loss =  layer_outputs[1][89].mean() + layer_outputs[0].mean()**2
@@ -130,7 +130,7 @@ class test(unittest.TestCase):
 
         model = models.inception_v3(pretrained=True)
 
-        dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
+        dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
         param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_param = dreamy_boi.render(
@@ -158,7 +158,7 @@ class test(unittest.TestCase):
         """
         model = models.inception_v3(pretrained=True)
 
-        dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
+        dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
         param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_param = dreamy_boi.render(
@@ -181,7 +181,7 @@ class test(unittest.TestCase):
 
         model = models.inception_v3(pretrained=True)
 
-        dreamy_boi = dreamer(model = model, device= 'cpu', quiet= False)
+        dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
 
         mask_tensor = torch.ones(1,3,512,512)
         mask_tensor[:,:,:256,:] = 0.
@@ -214,7 +214,7 @@ class test(unittest.TestCase):
 
         model = models.resnet18(pretrained=True)
 
-        dreamy_boi = dreamer(model, device = 'cpu')
+        dreamy_boi = Dreamer(model, device = 'cpu')
         param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_tensor = param.to_nchw_tensor()
@@ -232,7 +232,7 @@ class test(unittest.TestCase):
 
         model = models.resnet18(pretrained=True)
 
-        dreamy_boi = dreamer(model, device = 'cpu')
+        dreamy_boi = Dreamer(model, device = 'cpu')
         param = custom_image_param(image = 'images/sample_small.jpg', device= 'cpu')
 
         image_tensor = param.to_nchw_tensor()
@@ -251,7 +251,7 @@ class test(unittest.TestCase):
 
         model = models.resnet18(pretrained=True)
 
-        dreamy_boi = dreamer(model, device = 'cpu')
+        dreamy_boi = Dreamer(model, device = 'cpu')
 
         t = transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],

@@ -1,4 +1,4 @@
-from .dreamer import *
+from .dreamer import Dreamer
 from .utils import *
 from .model_bunch import *
 from .tests import *
