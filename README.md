@@ -213,8 +213,8 @@ plt.show()
 Note that you might have to use smaller values for certain hyperparameters like `lr` and `grad_clip`.
 
 ```python
-from torch_dreams.custom_image_param import custom_image_param
-param = custom_image_param(image = 'images/sample_small.jpg', device= 'cuda')  ## image could either be a filename or a torch.tensor of shape NCHW
+from torch_dreams.custom_image_param import CustomImageParam
+param = CustomImageParam(image = 'images/sample_small.jpg', device= 'cuda')  ## image could either be a filename or a torch.tensor of shape NCHW
 
 image_param = dreamy_boi.render(
     image_parameter= param,
@@ -248,14 +248,14 @@ Can be used to optimize only certain parts of the image using a mask whose value
 Here's an example with a vertical gradient 
 
 ```python 
-from torch_dreams.masked_image_param import masked_image_param
+from torch_dreams.masked_image_param import MaskedImageParam
 
 mask = torch.ones(1,1,512,512)
 
 for i in range(0, 512, 1):  ## vertical gradient
     mask[:,:,i,:] = (i/512)
 
-param = masked_image_param(
+param = MaskedImageParam(
     image= 'images/sample_small.jpg',  ## optional
     mask_tensor = mask,
     device = 'cuda'
