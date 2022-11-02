@@ -35,10 +35,10 @@ pip install torch-dreams
 ```python
 import matplotlib.pyplot as plt
 import torchvision.models as models
-from torch_dreams.dreamer import dreamer
+from torch_dreams import Dreamer
 
 model = models.inception_v3(pretrained=True)
-dreamy_boi = dreamer(model, device = 'cuda')
+dreamy_boi = Dreamer(model, device = 'cuda')
 
 image_param = dreamy_boi.render(
     layers = [model.Mixed_5b],
@@ -51,7 +51,7 @@ plt.show()
 ## Not so minimal example
 ```python
 model = models.inception_v3(pretrained=True)
-dreamy_boi = dreamer(model, device = 'cuda', quiet = False)
+dreamy_boi = Dreamer(model, device = 'cuda', quiet = False)
 
 image_param = dreamy_boi.render(
     layers = [model.Mixed_5b],
@@ -77,7 +77,7 @@ plt.show()
 
 ```python
 model = models.inception_v3(pretrained=True)
-dreamy_boi = dreamer(model, device = 'cuda')
+dreamy_boi = Dreamer(model, device = 'cuda')
 
 layers_to_use = [model.Mixed_6b.branch1x1.conv]
 
@@ -106,7 +106,7 @@ In this case, let's use googlenet
 
 ```python
 model = models.googlenet(pretrained = True)
-dreamy_boi = dreamer(model = model, quiet= False, device= 'cuda')
+dreamy_boi = Dreamer(model = model, quiet= False, device= 'cuda')
 
 image_param = dreamy_boi.caricature(
     input_tensor = image_tensor, 
@@ -136,7 +136,7 @@ layers_to_use = [
             bunch.model_dict['resnet'].layer2[0].conv1
         ]
 
-dreamy_boi = dreamer(model = bunch, quiet= False, device= 'cuda')
+dreamy_boi = Dreamer(model = bunch, quiet= False, device= 'cuda')
 ```
 
 Then define a `custom_func` which determines which exact activations of the models we have to optimize
@@ -167,7 +167,7 @@ plt.show()
 import torchvision.transforms as transforms
 
 model = models.inception_v3(pretrained=True)
-dreamy_boi = dreamer(model,  device = 'cuda', quiet =  False)
+dreamy_boi = Dreamer(model,  device = 'cuda', quiet =  False)
 
 my_transforms = transforms.Compose([
     transforms.RandomAffine(degrees = 10, translate = (0.5,0.5)),
@@ -189,10 +189,10 @@ plt.show()
 ```python
 import matplotlib.pyplot as plt
 import torchvision.models as models
-from torch_dreams.dreamer import dreamer
+from torch_dreams import Dreamer
 
 model = models.inception_v3(pretrained=True)
-dreamy_boi = dreamer(model,  device = 'cuda', quiet =  False)
+dreamy_boi = Dreamer(model,  device = 'cuda', quiet =  False)
 
 image_param = dreamy_boi.render(
     layers = [model.Mixed_6c],
@@ -353,7 +353,7 @@ image_param.set_param(tensor = transformed_image_tensor)
 * `weight_decay` (`float`, optional): Weight decay for default optimizer. Helps prevent high frequency noise. Defaults to 0.
 * `grad_clip` (`float`, optional): Maximum value of the norm of gradient. Defaults to 1.
 
-## Args for `dreamer.__init__()`
+## Args for `Dreamer.__init__()`
  * `model` (`nn.Module` or  `torch_dreams.model_bunch.Modelbunch`): Almost any PyTorch model which was trained on imagenet `mean` and `std`, and supports variable sized images as inputs. You can pass multiple models into this argument as a `torch_dreams.model_bunch.Modelbunch` instance.
  * `quiet` (`bool`): Set to `True` if you want to disable any progress bars
  * `device` (`str`): `cuda` or `cpu` depending on your runtime 
