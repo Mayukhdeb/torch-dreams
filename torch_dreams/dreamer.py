@@ -24,7 +24,7 @@ from .image_transforms import InverseTransform
 from .auto_image_param import AutoImageParam
 from .dreamer_utils import Hook, default_func_mean
 from .masked_image_param import MaskedImageParam
-
+from .batched_image_param import BatchedImageParam
 
 class Dreamer():
     """wrapper over a pytorch model for feature visualization 
@@ -183,7 +183,13 @@ class Dreamer():
             layer_outputs = []
 
             for hook in hooks:
-                out = hook.output[0]
+                ## if it's a BatchedImageParam, then include all batch items from hook output
+                if isinstance(image_parameter, BatchedImageParam):
+                    out = hook.output
+                else:
+                ## else select only the first and only batch item
+                    out = hook.output[0]  
+                    
                 layer_outputs.append(out)
 
             if custom_func is not None:
