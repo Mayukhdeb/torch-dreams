@@ -16,6 +16,10 @@ class BatchedOptimizer:
         for opt in self.optimizers:
             opt.zero_grad()
 
+    def step(self):
+        for opt in self.optimizers:
+            opt.step()
+
 
 class BatchedImageParam:
     def __init__(
@@ -39,6 +43,10 @@ class BatchedImageParam:
         )
         return image_param_batch
 
+    def clip_grads(self, grad_clip: float = 1.0):
+        for p in self.image_params:
+            p.clip_grads(grad_clip=grad_clip)
+
 
 class BatchedAutoImageParam(BatchedImageParam):
     def __init__(
@@ -48,6 +56,8 @@ class BatchedAutoImageParam(BatchedImageParam):
         width: int = 256,
         standard_deviation: float = 0.01,
         device: str = "cuda:0",
+        weight_decay=0.0,
+        lr=9e-3,
     ) -> None:
         image_params = [
             AutoImageParam(
@@ -58,8 +68,16 @@ class BatchedAutoImageParam(BatchedImageParam):
             )
             for x in range(batch_size)
         ]
+        for p in image_params:
+            p.get_optimizer(lr=lr, weight_decay=weight_decay)
 
         self.optimizer = BatchedOptimizer(
             optimizers=[x.optimizer for x in image_params]
         )
         super().__init__(image_params)
+
+    def __getitem__(self, idx):
+        return self.image_params[idx]
+
+    def __len__(self):
+        return len(self.image_params)
