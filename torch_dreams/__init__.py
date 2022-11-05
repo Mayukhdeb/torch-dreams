@@ -1,9 +1,9 @@
-from .dreamer import *
+from .dreamer import Dreamer
 from .utils import *
 from .model_bunch import *
 from .tests import *
-from .auto_image_param import auto_image_param
-from .custom_image_param import custom_image_param
+from .auto_image_param import AutoImageParam
+from .custom_image_param import CustomImageParam
 
 __version__ = "2.3.2"
 

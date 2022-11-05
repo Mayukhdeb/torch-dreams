@@ -1,52 +1,43 @@
-import torch 
+import torch
 import torchvision
 import torch.nn as nn
 from tqdm import tqdm
 from copy import deepcopy
 import torchvision.transforms as transforms
 
-from .utils import (
-    fft_to_rgb, 
-    lucid_colorspace_to_rgb, 
-    normalize, 
-)
-
-from .transforms import (
-    random_resize, 
-    pair_random_resize, 
-    pair_random_affine, 
-    imagenet_transform
-)
+from .transforms import random_resize, pair_random_resize, pair_random_affine
 
 from .constants import Constants
 from .losses import CaricatureLoss
 from .image_transforms import InverseTransform
-from .auto_image_param import auto_image_param
+from .auto_image_param import AutoImageParam
 from .dreamer_utils import Hook, default_func_mean
-from .masked_image_param import masked_image_param
+from .masked_image_param import MaskedImageParam
+from .batched_image_param import BatchedImageParam
 
 
-class dreamer():
-    """wrapper over a pytorch model for feature visualization 
+class Dreamer:
+    """wrapper over a pytorch model for feature visualization
 
-        Args:
-            model (torch.nn.Module): pytorch model 
-            quiet (bool, optional): enable or disable progress bar. Defaults to True.
-            device (str, optional): 'cpu' or 'cuda'. Defaults to 'cuda'.
+    Args:
+        model (torch.nn.Module): pytorch model
+        quiet (bool, optional): enable or disable progress bar. Defaults to True.
+        device (str, optional): 'cpu' or 'cuda'. Defaults to 'cuda'.
 
-        Example:
+    Example:
 
-        ```python
-        import torchvision.models as models
-        from torch_dreams.dreamer import dreamer
+    ```python
+    import torchvision.models as models
+    from torch_dreams import Dreamer
 
-        model = models.inception_v3(pretrained=True)
-        dreamy_boi = dreamer(model, device = 'cuda')
-        ```
+    model = models.inception_v3(pretrained=True)
+    dreamy_boi = Dreamer(model, device = 'cuda')
+    ```
     """
-    def __init__(self, model, quiet = False, device = 'cuda'):
-        
-        self.model = model 
+
+    def __init__(self, model, quiet=False, device="cuda"):
+
+        self.model = model
         self.model.eval()
         self.device = device
         self.model.to(self.device)
@@ -55,26 +46,36 @@ class dreamer():
         self.quiet = quiet
         self.__custom_normalization_transform__ = None
 
-    def get_default_transforms(self, rotate, scale_max, scale_min, translate_x, translate_y):
-        self.transforms= transforms.Compose([
-            transforms.RandomAffine(degrees = rotate, translate= (translate_x, translate_y)),
-            random_resize(max_size_factor = scale_max, min_size_factor = scale_min),
-        ])
+    def get_default_transforms(
+        self, rotate, scale_max, scale_min, translate_x, translate_y
+    ):
+        self.transforms = transforms.Compose(
+            [
+                transforms.RandomAffine(
+                    degrees=rotate, translate=(translate_x, translate_y)
+                ),
+                random_resize(max_size_factor=scale_max, min_size_factor=scale_min),
+            ]
+        )
 
-        if self.__custom_normalization_transform__ is not None: 
-            self.transforms= transforms.Compose([
-            transforms.RandomAffine(degrees = rotate, translate= (translate_x, translate_y)),
-            random_resize(max_size_factor = scale_max, min_size_factor = scale_min),
-            self.__custom_normalization_transform__
-        ])
+        if self.__custom_normalization_transform__ is not None:
+            self.transforms = transforms.Compose(
+                [
+                    transforms.RandomAffine(
+                        degrees=rotate, translate=(translate_x, translate_y)
+                    ),
+                    random_resize(max_size_factor=scale_max, min_size_factor=scale_min),
+                    self.__custom_normalization_transform__,
+                ]
+            )
 
     def set_custom_normalization(self, normalization_transform):
         """Overrides the usual imagenet normalization to be compatible with any other normalization defined by the user.
 
         Args:
-            normalization_transform (torch.nn.Module): transforms that would normalize the image as per your model. 
+            normalization_transform (torch.nn.Module): transforms that would normalize the image as per your model.
 
-        Example: 
+        Example:
 
         ```python
         t = torchvision.transforms.Normalize(
@@ -86,21 +87,24 @@ class dreamer():
         ```
         """
 
-        assert isinstance(normalization_transform, nn.Module) == True , "normalization_transform should be an instance of torch.nn.module, not: " +  str(type(normalization_transform))
+        assert isinstance(normalization_transform, nn.Module) == True, (
+            "normalization_transform should be an instance of torch.nn.module, not: "
+            + str(type(normalization_transform))
+        )
 
         self.__custom_normalization_transform__ = InverseTransform(
-                                                            old_mean = Constants.imagenet_mean,
-                                                            old_std = Constants.imagenet_std,
-                                                            new_transforms = normalization_transform
-                                                            )
+            old_mean=Constants.imagenet_mean,
+            old_std=Constants.imagenet_std,
+            new_transforms=normalization_transform,
+        )
 
     def set_custom_transforms(self, transforms):
-        """Sets a custom set of transforms as the robustness transforms to be used for training the image parameter. Does not override custom image normalization if configured. 
+        """Sets a custom set of transforms as the robustness transforms to be used for training the image parameter. Does not override custom image normalization if configured.
 
         Args:
             transforms (torch.nn.Module): Bunch of transforms to be used for training the image parameter. Generally `torchvision.transforms.Compose([your_transforms])` is preferred.
-            
-        Example: 
+
+        Example:
 
         ```python
         my_transforms = transforms.Compose([
@@ -113,13 +117,28 @@ class dreamer():
         """
         if self.__custom_normalization_transform__ == None:
             self.transforms = transforms
-        else: 
-            self.transforms = torchvision.transforms.Compose([
-                transforms, 
-                self.__custom_normalization_transform__
-            ])
+        else:
+            self.transforms = torchvision.transforms.Compose(
+                [transforms, self.__custom_normalization_transform__]
+            )
 
-    def render(self, layers, image_parameter = None,  width= 256, height = 256, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0., translate_y = 0.,  custom_func = None, weight_decay = 0., grad_clip = 1.):
+    def render(
+        self,
+        layers,
+        image_parameter=None,
+        width=256,
+        height=256,
+        iters=120,
+        lr=9e-3,
+        rotate_degrees=15,
+        scale_max=1.2,
+        scale_min=0.5,
+        translate_x=0.0,
+        translate_y=0.0,
+        custom_func=None,
+        weight_decay=0.0,
+        grad_clip=1.0,
+    ):
         """core function to visualize elements form within the pytorch model
 
         WARNING: width and height would be ignored if image_parameter is not None
@@ -127,8 +146,8 @@ class dreamer():
         Args:
             layers (iterable): [model.layer1, model.layer2...]
             image_parameter: instance of torch_dreams.auto.auto_image_param
-            width (int): width of image to be optimized 
-            height (int): height of image to be optimized 
+            width (int): width of image to be optimized
+            height (int): height of image to be optimized
             iters (int): number of iterations, higher -> stronger visualization
             lr (float): learning rate
             rotate_degrees (int): max rotation in default transforms
@@ -144,36 +163,68 @@ class dreamer():
             image_parameter instance: To show image, use: plt.imshow(image_parameter)
         """
         if image_parameter is None:
-            image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
+            image_parameter = AutoImageParam(
+                height=height, width=width, device=self.device, standard_deviation=0.01
+            )
         else:
             image_parameter = deepcopy(image_parameter)
 
         if image_parameter.optimizer is None:
-            image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
+            image_parameter.get_optimizer(lr=lr, weight_decay=weight_decay)
 
         if self.transforms is None:
-            self.get_default_transforms(rotate = rotate_degrees, scale_max = scale_max, scale_min= scale_min, translate_x = translate_x, translate_y = translate_y)
+            self.get_default_transforms(
+                rotate=rotate_degrees,
+                scale_max=scale_max,
+                scale_min=scale_min,
+                translate_x=translate_x,
+                translate_y=translate_y,
+            )
 
         hooks = []
         for layer in layers:
             hook = Hook(layer)
             hooks.append(hook)
 
-        if isinstance(image_parameter, masked_image_param):
-            self.random_resize_pair = pair_random_resize(max_size_factor = scale_max, min_size_factor = scale_min)
-            self.random_affine_pair = pair_random_affine(degrees = rotate_degrees, translate_x = translate_x, translate_y = translate_y)
+        if isinstance(image_parameter, MaskedImageParam):
+            self.random_resize_pair = pair_random_resize(
+                max_size_factor=scale_max, min_size_factor=scale_min
+            )
+            self.random_affine_pair = pair_random_affine(
+                degrees=rotate_degrees, translate_x=translate_x, translate_y=translate_y
+            )
 
-        for i in tqdm(range(iters), disable= self.quiet):
-            
+        for i in tqdm(range(iters), disable=self.quiet):
+
             image_parameter.optimizer.zero_grad()
 
-            img = image_parameter.forward(device = self.device)
+            img = image_parameter.forward(device=self.device)
 
-            if isinstance(image_parameter, masked_image_param):
-                img_transformed, mask_transformed, original_image_transformed = self.random_resize_pair(tensors = [ img,image_parameter.mask.to(self.device), image_parameter.original_nchw_image_tensor])
-                img_transformed, mask_transformed, original_image_transformed = self.random_affine_pair([img_transformed, mask_transformed, original_image_transformed])
-                
-                img = img_transformed * mask_transformed.to(self.device) + original_image_transformed.float() * (1-mask_transformed.to(self.device))
+            if isinstance(image_parameter, MaskedImageParam):
+                (
+                    img_transformed,
+                    mask_transformed,
+                    original_image_transformed,
+                ) = self.random_resize_pair(
+                    tensors=[
+                        img,
+                        image_parameter.mask.to(self.device),
+                        image_parameter.original_nchw_image_tensor,
+                    ]
+                )
+                (
+                    img_transformed,
+                    mask_transformed,
+                    original_image_transformed,
+                ) = self.random_affine_pair(
+                    [img_transformed, mask_transformed, original_image_transformed]
+                )
+
+                img = img_transformed * mask_transformed.to(
+                    self.device
+                ) + original_image_transformed.float() * (
+                    1 - mask_transformed.to(self.device)
+                )
 
             else:
                 img = self.transforms(img)
@@ -183,7 +234,13 @@ class dreamer():
             layer_outputs = []
 
             for hook in hooks:
-                out = hook.output[0]
+                ## if it's a BatchedImageParam, then include all batch items from hook output
+                if isinstance(image_parameter, BatchedImageParam):
+                    out = hook.output
+                else:
+                    ## else select only the first and only batch item
+                    out = hook.output[0]
+
                 layer_outputs.append(out)
 
             if custom_func is not None:
@@ -191,15 +248,14 @@ class dreamer():
             else:
                 loss = self.default_func(layer_outputs)
             loss.backward()
-            image_parameter.clip_grads(grad_clip= grad_clip)
+            image_parameter.clip_grads(grad_clip=grad_clip)
             image_parameter.optimizer.step()
-        
 
         for hook in hooks:
             hook.close()
 
         return image_parameter
-    
+
     def get_snapshot(self, layers, input_tensor):
         """Registers the outputs of a set of layers within a model
 
@@ -219,7 +275,6 @@ class dreamer():
                 hook = Hook(layer)
                 hooks.append(hook)
 
-
             model_out = self.model(input_tensor.float())
 
             layer_outputs = []
@@ -230,8 +285,24 @@ class dreamer():
 
         return layer_outputs
 
-    def caricature(self, input_tensor, layers, power = 1., image_parameter = None, iters = 120, lr = 9e-3, rotate_degrees = 15,  scale_max = 1.2,  scale_min = 0.5, translate_x = 0.1, translate_y = 0.1,  weight_decay = 1e-3, grad_clip = 1., static = False):
-        """Generates an "exaggerated" reconstruction of the input image by 
+    def caricature(
+        self,
+        input_tensor,
+        layers,
+        power=1.0,
+        image_parameter=None,
+        iters=120,
+        lr=9e-3,
+        rotate_degrees=15,
+        scale_max=1.2,
+        scale_min=0.5,
+        translate_x=0.1,
+        translate_y=0.1,
+        weight_decay=1e-3,
+        grad_clip=1.0,
+        static=False,
+    ):
+        """Generates an "exaggerated" reconstruction of the input image by
         optimizing random noise to replicate and "exaggerate" the activations of
         certain layers after feeding the input image
 
@@ -253,47 +324,57 @@ class dreamer():
         Example:
         ```python
         param = dreamy_boi.caricature(
-            input_tensor = image_tensor, 
+            input_tensor = image_tensor,
             layers = [model.some_layer],
             power= 1.0
         )
         param.save('caricature.jpg')
         ```
-        
+
         Returns:
             instance of torch_dreams.auto_image_param.BaseImageParam
         """
- 
+
         if image_parameter is None:
-            height , width = input_tensor.shape[-2], input_tensor.shape[-1]
-            image_parameter = auto_image_param(height= height, width = width, device = self.device, standard_deviation = 0.01)
+            height, width = input_tensor.shape[-2], input_tensor.shape[-1]
+            image_parameter = AutoImageParam(
+                height=height, width=width, device=self.device, standard_deviation=0.01
+            )
         else:
             image_parameter = deepcopy(image_parameter)
 
         if image_parameter.optimizer is None:
-            image_parameter.get_optimizer(lr = lr, weight_decay = weight_decay)
-
+            image_parameter.get_optimizer(lr=lr, weight_decay=weight_decay)
 
         hooks = []
         for layer in layers:
             hook = Hook(layer)
             hooks.append(hook)
 
-        caricature_loss = CaricatureLoss(power= power)
-
+        caricature_loss = CaricatureLoss(power=power)
 
         if static == False:
             """
-            if static is false, we have to transforms the input tensor and the image parameter identically before each iteration 
+            if static is false, we have to transforms the input tensor and the image parameter identically before each iteration
             """
-            self.random_resize_pair = pair_random_resize(max_size_factor = scale_max, min_size_factor = scale_min)
-            self.random_affine_pair = pair_random_affine(degrees = rotate_degrees, translate_x = translate_x, translate_y = translate_y)
+            self.random_resize_pair = pair_random_resize(
+                max_size_factor=scale_max, min_size_factor=scale_min
+            )
+            self.random_affine_pair = pair_random_affine(
+                degrees=rotate_degrees, translate_x=translate_x, translate_y=translate_y
+            )
         else:
             """
             if static is true, then we collect the layer outputs first, and use the same ideal layer outputs as the target at each iteration,
             this would be useful particularly for adversarial examples where the outcome depends on the position of each pixel
             """
-            self.get_default_transforms(rotate = rotate_degrees, scale_max = scale_max, scale_min= scale_min, translate_x = translate_x, translate_y = translate_y)
+            self.get_default_transforms(
+                rotate=rotate_degrees,
+                scale_max=scale_max,
+                scale_min=scale_min,
+                translate_x=translate_x,
+                translate_y=translate_y,
+            )
             model_out = self.model(input_tensor.to(self.device))
 
             ideal_layer_outputs = []
@@ -302,16 +383,19 @@ class dreamer():
                 out = hook.output[0]
                 ideal_layer_outputs.append(out)
 
-        
-        for i in tqdm(range(iters), disable= self.quiet):
-            
+        for i in tqdm(range(iters), disable=self.quiet):
+
             image_parameter.optimizer.zero_grad()
 
-            img = image_parameter.forward(device = self.device)
+            img = image_parameter.forward(device=self.device)
 
             if static == False:
-                img_transformed, input_tensor_transformed = self.random_resize_pair(tensors = [img, input_tensor])
-                img_transformed, input_tensor_transformed = self.random_affine_pair(tensors = [img_transformed, input_tensor_transformed])
+                img_transformed, input_tensor_transformed = self.random_resize_pair(
+                    tensors=[img, input_tensor]
+                )
+                img_transformed, input_tensor_transformed = self.random_affine_pair(
+                    tensors=[img_transformed, input_tensor_transformed]
+                )
             else:
                 img_transformed = self.transforms(img)
 
@@ -323,7 +407,6 @@ class dreamer():
                 out = hook.output[0]
                 layer_outputs.append(out)
 
-
             if static == False:
                 model_out = self.model(input_tensor_transformed.to(self.device))
 
@@ -333,14 +416,15 @@ class dreamer():
                     out = hook.output[0]
                     ideal_layer_outputs.append(out)
 
-            loss = caricature_loss.forward(layer_outputs = layer_outputs, ideal_layer_outputs = ideal_layer_outputs)
+            loss = caricature_loss.forward(
+                layer_outputs=layer_outputs, ideal_layer_outputs=ideal_layer_outputs
+            )
 
             loss.backward()
-            image_parameter.clip_grads(grad_clip= grad_clip)
+            image_parameter.clip_grads(grad_clip=grad_clip)
             image_parameter.optimizer.step()
 
         for hook in hooks:
             hook.close()
 
         return image_parameter
-            

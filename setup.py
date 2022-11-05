@@ -3,21 +3,21 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     required = f.read().splitlines()
 
 setuptools.setup(
     name="torch-dreams",
-    version="2.3.2",
-    author="Mayukh Deb", 
-    author_email="mayukhmainak2000@gmail.com", 
-    description= "Making neural networks more interpretable, for research and art",
+    version="3.0.0",
+    author="Mayukh Deb",
+    author_email="mayukhmainak2000@gmail.com",
+    description="Making neural networks more interpretable, for research and art",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Mayukhdeb/torch-dreams",
     packages=setuptools.find_packages(),
-    install_requires= required,
-    python_requires='>=3.6',   
+    install_requires=required,
+    python_requires=">=3.6",
     include_package_data=True,
     keywords=[
         "PyTorch",
@@ -26,7 +26,7 @@ setuptools.setup(
         "convolutional neural networks",
         "feature visualization",
         "optimization",
-        ],
+    ],
     classifiers=[
         "Intended Audience :: Science/Research",
         "Intended Audience :: Education",
@@ -38,6 +38,6 @@ setuptools.setup(
         "Topic :: Scientific/Engineering :: Visualization",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    test_suite='nose.collector',
-    tests_require=['nose']   
+    test_suite="nose.collector",
+    tests_require=["nose"],
 )

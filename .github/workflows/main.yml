@@ -6,7 +6,7 @@ name: build
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [ master, dev ]
   pull_request:
     branches: [ master ]
 
@@ -31,7 +31,7 @@ jobs:
           pip install pytest
           pip install pytest-cov
       - name: Run tests
-        run: pytest torch_dreams/tests/test.py --cov=torch_dreams --cov-report=xml
+        run: pytest torch_dreams/tests/* --cov=torch_dreams --cov-report=xml
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v1
         with:
