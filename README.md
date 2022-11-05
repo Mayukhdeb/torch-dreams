@@ -27,6 +27,7 @@ pip install torch-dreams
 * [Working on models with different image normalizations](https://github.com/Mayukhdeb/torch-dreams#working-on-models-with-different-image-normalizations)
 * [Masked image parametrs](https://github.com/Mayukhdeb/torch-dreams#masked-image-parameters)
 * [Other conveniences](https://github.com/Mayukhdeb/torch-dreams#other-conveniences)
+* [Development](https://github.com/Mayukhdeb/torch-dreams#development)
 
 ## Minimal example
 > Make sure you also check out the [quick start colab notebook](https://colab.research.google.com/github/Mayukhdeb/torch-dreams-notebooks/blob/main/docs_notebooks/hello_torch_dreams.ipynb) 
@@ -408,6 +409,24 @@ image_param.set_param(tensor = transformed_image_tensor)
  * `model` (`nn.Module` or  `torch_dreams.model_bunch.Modelbunch`): Almost any PyTorch model which was trained on imagenet `mean` and `std`, and supports variable sized images as inputs. You can pass multiple models into this argument as a `torch_dreams.model_bunch.Modelbunch` instance.
  * `quiet` (`bool`): Set to `True` if you want to disable any progress bars
  * `device` (`str`): `cuda` or `cpu` depending on your runtime 
+
+ ## Development
+
+1. Clone the repo and navigate into the folder
+```
+git clone git@github.com:Mayukhdeb/torch-dreams.git
+cd torch-dreams/
+```
+
+2. Install dependencies
+```
+pip install -r requirements.txt
+```
+
+3. Install `torch-dreams` as an editable module
+```
+python3 setup.py develop
+```
 
 ## Citation
 ```
