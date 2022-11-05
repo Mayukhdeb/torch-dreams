@@ -26,7 +26,7 @@ def test_batched_auto_image_param(iters, batch_size):
     model = models.inception_v3(pretrained=True)
     dreamy_boi = Dreamer(model=model, device="cpu", quiet=False)
 
-    image_param = BatchedAutoImageParam(batch_size=batch_size)
+    image_param = BatchedAutoImageParam(batch_size=batch_size, device="cpu")
 
     result = dreamy_boi.render(
         layers=[model.Mixed_6a], iters=iters, image_parameter=image_param
@@ -58,7 +58,7 @@ def test_batched_auto_image_param_with_custom_func(iters, batch_size):
     model = models.inception_v3(pretrained=True)
     dreamy_boi = Dreamer(model=model, device="cpu", quiet=False)
 
-    image_param = BatchedAutoImageParam(batch_size=batch_size)
+    image_param = BatchedAutoImageParam(batch_size=batch_size, device="cpu")
 
     objective_functions = []
     for i in range(batch_size):
