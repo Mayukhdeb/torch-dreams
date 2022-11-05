@@ -14,7 +14,7 @@ transform_and_rotate = transforms.Compose(
     [
         transforms.ToPILImage(),
         transforms.RandomRotation(
-            degrees=5, resample=False, expand=False, center=None, fill=None
+            degrees=5, expand=False, center=None, fill=None
         ),
         transforms.ToTensor(),
     ]
