@@ -23,7 +23,7 @@ class BatchedObjective:
 
         assert batch_size == len(
             self.objectives
-        ), f"Batch size of x and len(self.objectives) do not match: {x.shape[0]} and {len(self.objectives)}"
+        ), f"Batch size of x and len(self.objectives) do not match: {x[0].shape[0]} and {len(self.objectives)}"
 
         loss_sum = torch.tensor(0.0).to(x[0].device)
 
