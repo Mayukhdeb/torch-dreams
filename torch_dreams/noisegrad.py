@@ -3,6 +3,7 @@ import torch.nn as nn
 
 import copy
 
+
 class NoiseGradModule(nn.Module):
     """
     A tiny wrapper to apply noisegrad in nn.Module instances.
@@ -15,7 +16,7 @@ class NoiseGradModule(nn.Module):
         module (nn.Module): a layer/module within the model
         mean (float): mean of the distribution from which we'd sample the noise values
         std (float): standard deviation of the distribution from which we'd sample the noise values
-    
+
     Usage:
 
     ```python
@@ -26,6 +27,7 @@ class NoiseGradModule(nn.Module):
     model.Mixed_5b = NoiseGradModule(module = model.Mixed_5b, mean = 1, std = 0.2)
     ```
     """
+
     def __init__(self, module: nn.Module, mean: float = 1, std: float = 0.2):
         super().__init__()
 

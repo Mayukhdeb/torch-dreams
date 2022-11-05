@@ -1,10 +1,11 @@
-import torch.nn as nn 
+import torch.nn as nn
 
-class ModelBunch():
+
+class ModelBunch:
     def __init__(self, model_dict: dict):
-        self.model_dict = model_dict 
+        self.model_dict = model_dict
 
-    def forward(self,x):
+    def forward(self, x):
 
         outs = []
 
