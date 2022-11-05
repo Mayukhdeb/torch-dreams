@@ -96,6 +96,57 @@ image_param = dreamy_boi.render(
 plt.imshow(image_param)
 plt.show()
 ```
+
+## Batched generation for large scale experiments
+
+The `BatchedAutoImageParam` paired with the `BatchedObjective` can be used to generate multiple feature visualizations in parallel. This takes up more memory based on the batch size, but is also faster than generating one visualization at a time.
+
+```python
+from torch_dreams import Dreamer
+import torchvision.models as models
+from torch_dreams.batched_objective import BatchedObjective
+from torch_dreams.batched_image_param import BatchedAutoImageParam
+
+model = models.inception_v3(pretrained=True)
+dreamy_boi = Dreamer(model, device="cuda")
+
+## specify list of neuron indices to visualize
+batch_neuron_indices = [i for i in range(10,20)]
+
+## set up a batch of trainable image parameters
+bap = BatchedAutoImageParam(
+    batch_size=len(batch_neuron_indices), 
+    width=256, 
+    height=256, 
+    standard_deviation=0.01
+)
+
+## objective generator for each neuron
+def make_custom_func(layer_number=0, channel_number=0):
+    def custom_func(layer_outputs):
+        loss = layer_outputs[layer_number][channel_number].norm()
+        return -loss
+
+    return custom_func
+
+## prepare objective functions for each neuron index
+batched_objective = BatchedObjective(
+    objectives=[make_custom_func(channel_number=i) for i in batch_neuron_indices]
+)
+
+## render activation maximization signals
+result_batch = dreamy_boi.render(
+    layers=[model.Mixed_5b],
+    image_parameter=bap,
+    iters=120,
+    custom_func=batched_objective,
+)
+
+## save results in a folder
+for i in batch_neuron_indices:
+    result_batch[batch_neuron_indices.index(i)].save(f"results/{i}.jpg")
+```
+
 ## Caricatures
 
 Caricatures create a new image that has a similar but more extreme activation pattern to the input image at a given layer (or multiple layers at a time). It's inspired from [this issue](https://github.com/tensorflow/lucid/issues/121)
