@@ -19,26 +19,24 @@ transform_and_rotate = transforms.Compose(
     ]
 )
 
+def unnormalize_image_tensor(img, mean, std):
+    img = img * std.view(1,3,1,1).cuda() + mean.view(1,3,1,1).cuda()
+    return img.clamp(0,1)
+
 
 class InverseTransform(nn.Module):
     def __init__(self, old_mean, old_std, new_transforms):
         super().__init__()
-        self.inverse_transform = transforms.Compose(
-            [
-                transforms.Normalize(
-                    mean=[0.0, 0.0, 0.0],
-                    std=[1 / old_std[0], 1 / old_std[1], 1 / old_std[2]],
-                ),
-                transforms.Normalize(
-                    mean=[-old_mean[0], -old_mean[1], -old_mean[2]], std=[1.0, 1.0, 1.0]
-                ),
-            ]
-        )
-
+        self.old_mean = old_mean
+        self.old_std = old_std
         self.new_transform = new_transforms
 
     def forward(self, x):
-        x = self.inverse_transform(x)
+        x = unnormalize_image_tensor(
+            img = x,
+            mean = self.old_mean,
+            std = self.old_std
+        )
         x = self.new_transform(x)
         return x
 
