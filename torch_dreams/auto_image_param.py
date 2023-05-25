@@ -100,7 +100,7 @@ class AutoImageParam(BaseImageParam):
         standard_deviation (float): Standard deviation of the image initiated in the frequency domain. ). 0.01 works well
     """
 
-    def __init__(self, height, width, device, standard_deviation):
+    def __init__(self, height, width, device, standard_deviation, batch_size: int = 1):
 
         super().__init__()
         self.height = height
@@ -126,6 +126,7 @@ class AutoImageParam(BaseImageParam):
 
         self.param.requires_grad_()
         self.optimizer = None
+        self.batch_size = batch_size
 
     def postprocess(self, device):
         img = fft_to_rgb(
@@ -142,4 +143,13 @@ class AutoImageParam(BaseImageParam):
         return normalize(x=x, device=device)
 
     def forward(self, device):
-        return self.normalize(self.postprocess(device=device), device=device)
+        if self.batch_size == 1:
+            return self.normalize(self.postprocess(device=device), device=device)
+        else:
+            return torch.cat(
+                [
+                    self.normalize(self.postprocess(device=device), device=device)
+                    for i in range(self.batch_size)
+                ],
+                dim=0,
+            )

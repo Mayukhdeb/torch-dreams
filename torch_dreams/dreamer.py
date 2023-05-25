@@ -234,13 +234,8 @@ class Dreamer:
             layer_outputs = []
 
             for hook in hooks:
-                ## if it's a BatchedImageParam, then include all batch items from hook output
-                if isinstance(image_parameter, BatchedImageParam):
-                    out = hook.output
-                else:
-                    ## else select only the first and only batch item
-                    out = hook.output[0]
-
+                ## shape: (batch_size, *)
+                out = hook.output
                 layer_outputs.append(out)
 
             if custom_func is not None:
