@@ -14,6 +14,10 @@ class BatchedObjective:
 
     def __call__(self, x: list):
 
+        '''
+        x (List[torch.tensor]): x is a list of torch tensors. Each of which has the same batch size.
+        The index in the list corresponds to the layers in layers_to_use
+        '''
         for y in x:
             assert torch.is_tensor(
                 y
@@ -29,7 +33,7 @@ class BatchedObjective:
 
         for batch_idx in range(batch_size):
             loss_sum += self.objectives[batch_idx](
-                x[0][batch_idx].unsqueeze(0)
+                [item[batch_idx].unsqueeze(0) for item in x]
             )  ## is unsqueeze this really necessary? idk
 
         return loss_sum  ## then call loss_sum.backward()
