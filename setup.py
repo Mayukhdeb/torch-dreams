@@ -6,9 +6,22 @@ with open("README.md", "r") as fh:
 with open("requirements.txt") as f:
     required = f.read().splitlines()
 
+"""
+release checklist:
+1. update version on `setup.py`
+2. update `__version__` on `torch_dreams/__init__.py`
+3. run tests with this command `pytest torch_dreams/tests/`
+4. commit changes (`setup.py`, `torch_dreams/__init__.py`) and push
+5. make release on PyPI. Run the following commands:
+    5.1 `python3 setup.py sdist bdist_wheel`
+    5.2 (optional) `python3 -m pip install --user --upgrade twine`
+    5.3 `python3 -m twine upload dist/*`
+6. make a new release on github with the latest version
+"""
+
 setuptools.setup(
     name="torch-dreams",
-    version="3.0.0",
+    version="4.0.0",
     author="Mayukh Deb",
     author_email="mayukhmainak2000@gmail.com",
     description="Making neural networks more interpretable, for research and art",

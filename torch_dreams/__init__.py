@@ -5,7 +5,7 @@ from .tests import *
 from .auto_image_param import AutoImageParam
 from .custom_image_param import CustomImageParam
 
-__version__ = "3.0.0"
+__version__ = "4.0.0"
 
 __all__ = [
     "dreamer",
