@@ -14,6 +14,7 @@ from .auto_image_param import AutoImageParam
 from .dreamer_utils import Hook, default_func_mean
 from .masked_image_param import MaskedImageParam
 from .batched_image_param import BatchedImageParam
+from .utils import check_pytorch_version
 
 
 class Dreamer:
@@ -45,6 +46,7 @@ class Dreamer:
         self.transforms = None
         self.quiet = quiet
         self.__custom_normalization_transform__ = None
+        check_pytorch_version()
 
     def get_default_transforms(
         self, rotate, scale_max, scale_min, translate_x, translate_y

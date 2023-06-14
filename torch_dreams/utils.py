@@ -7,6 +7,25 @@ from .image_transforms import resize_4d_tensor_by_size
 from .error_handlers import PytorchVersionError
 from .constants import Constants
 
+def check_pytorch_version():
+    '''
+    does not raise error if torch >=1.8.x
+    else raises PytorchVersionError
+    '''
+
+    version = torch.__version__.split(".")
+    main_version = int(version[0])
+
+    if main_version < 1:
+        PytorchVersionError(version=torch.__version__)
+    elif main_version == 1:
+        sub_version = int(version[1])
+        if sub_version < 8:
+            PytorchVersionError(version=torch.__version__)
+        else:
+            pass
+    else:
+        pass
 
 def init_image_param(height, width, sd=0.01, device="cuda"):
     """Initializes an image parameter in the frequency domain
@@ -76,12 +95,7 @@ def fft_to_rgb(height, width, image_parameter, device="cuda"):
     main_version = int(version[0])
     sub_version = int(version[1])
 
-    if (
-        main_version >= 1 and sub_version >= 8
-    ):  ## if torch.__version__ is greater than 1.8
-        t = torch.fft.irfft2(t, s=(height, width), norm="ortho")
-    else:
-        raise PytorchVersionError(version=torch.__version__)
+    t = torch.fft.irfft2(t, s=(height, width), norm="ortho")
 
     return t
 
@@ -149,11 +163,6 @@ def fft_to_rgb_custom_img(height, width, image_parameter, device="cuda"):
     main_version = int(version[0])
     sub_version = int(version[1])
 
-    if (
-        main_version >= 1 and sub_version >= 8
-    ):  ## if torch.__version__ is greater than 1.8
-        t = torch.fft.irfft2(t, s=(height, width), norm="ortho")
-    else:
-        raise PytorchVersionError(version=torch.__version__)
-
+    t = torch.fft.irfft2(t, s=(height, width), norm="ortho")
+    
     return t
