@@ -84,7 +84,7 @@ layers_to_use = [model.Mixed_6b.branch1x1.conv]
 
 def make_custom_func(layer_number = 0, channel_number= 0): 
     def custom_func(layer_outputs):
-        loss = layer_outputs[layer_number][channel_number].mean()
+        loss = layer_outputs[layer_number][:, channel_number].mean()
         return -loss
     return custom_func
 
@@ -125,7 +125,7 @@ bap = BatchedAutoImageParam(
 ## objective generator for each neuron
 def make_custom_func(layer_number=0, channel_number=0):
     def custom_func(layer_outputs):
-        loss = layer_outputs[layer_number][channel_number].norm()
+        loss = layer_outputs[layer_number][:, channel_number].norm()
         return -loss
 
     return custom_func
@@ -195,7 +195,7 @@ Then define a `custom_func` which determines which exact activations of the mode
 
 ```python
 def custom_func(layer_outputs):
-    loss =   layer_outputs[0].mean()*2.0 + layer_outputs[1][89].mean() 
+    loss =   layer_outputs[0].mean()*2.0 + layer_outputs[1][:, 89].mean() 
     return -loss
 ```
 
