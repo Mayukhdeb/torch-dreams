@@ -20,7 +20,7 @@ transform_and_rotate = transforms.Compose(
 )
 
 def unnormalize_image_tensor(img, mean, std):
-    img = img * std.view(1,3,1,1).cuda() + mean.view(1,3,1,1).cuda()
+    img = img * std.view(1,3,1,1) + mean.view(1,3,1,1)
     return img.clamp(0,1)
 
 
