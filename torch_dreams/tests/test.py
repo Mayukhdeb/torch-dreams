@@ -19,7 +19,7 @@ import os
     
 def make_custom_func(layer_number = 0, channel_number= 0): 
     def custom_func(layer_outputs):
-        loss = layer_outputs[layer_number][channel_number].mean()
+        loss = layer_outputs[layer_number][:, channel_number].mean()
         return -loss
     return custom_func
 
@@ -27,7 +27,7 @@ class test(unittest.TestCase):
 
     def test_single_model(self):
 
-        model = models.inception_v3(pretrained=True)
+        model = models.inception_v3(weights='DEFAULT')
 
         dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
 
@@ -47,7 +47,7 @@ class test(unittest.TestCase):
 
     def test_custom_size(self):
 
-        model = models.inception_v3(pretrained=True)
+        model = models.inception_v3(weights='DEFAULT')
 
         dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
 
@@ -68,7 +68,7 @@ class test(unittest.TestCase):
         os.remove('test_custom_size.jpg')
 
     def  test_single_model_custom_func(self):
-        model = models.inception_v3(pretrained=True)
+        model = models.inception_v3(weights='DEFAULT')
 
         dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
 
@@ -89,7 +89,7 @@ class test(unittest.TestCase):
 
     def test_multiple_models_custom_func(self):
 
-        model1  = models.inception_v3(pretrained=True).eval()
+        model1  = models.inception_v3(weights='DEFAULT').eval()
         model2  = models.resnet18(pretrained= True).eval() 
 
         bunch = ModelBunch(
@@ -128,7 +128,7 @@ class test(unittest.TestCase):
 
     def test_custom_image_param(self):
 
-        model = models.inception_v3(pretrained=True)
+        model = models.inception_v3(weights='DEFAULT')
 
         dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
         param = CustomImageParam(image = 'images/sample_small.jpg', device= 'cpu')
@@ -156,7 +156,7 @@ class test(unittest.TestCase):
         checks if custom_image_param.set_param correctly 
         loads the image without discrepancies with an absolute tolerance of 1e-5 element-wise
         """
-        model = models.inception_v3(pretrained=True)
+        model = models.inception_v3(weights='DEFAULT')
 
         dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
         param = CustomImageParam(image = 'images/sample_small.jpg', device= 'cpu')
@@ -179,7 +179,7 @@ class test(unittest.TestCase):
 
     def test_MaskedImageParam(self):
 
-        model = models.inception_v3(pretrained=True)
+        model = models.inception_v3(weights='DEFAULT')
 
         dreamy_boi = Dreamer(model = model, device= 'cpu', quiet= False)
 
@@ -212,7 +212,7 @@ class test(unittest.TestCase):
 
     def test_caricature(self):
 
-        model = models.resnet18(pretrained=True)
+        model = models.resnet18(weights='DEFAULT')
 
         dreamy_boi = Dreamer(model, device = 'cpu')
         param = CustomImageParam(image = 'images/sample_small.jpg', device= 'cpu')
@@ -230,7 +230,7 @@ class test(unittest.TestCase):
 
     def test_static_caricature(self):
 
-        model = models.resnet18(pretrained=True)
+        model = models.resnet18(weights='DEFAULT')
 
         dreamy_boi = Dreamer(model, device = 'cpu')
         param = CustomImageParam(image = 'images/sample_small.jpg', device= 'cpu')
@@ -249,7 +249,7 @@ class test(unittest.TestCase):
 
     def test_custom_normalization(self):
 
-        model = models.resnet18(pretrained=True)
+        model = models.resnet18(weights='DEFAULT')
 
         dreamy_boi = Dreamer(model, device = 'cpu')
 

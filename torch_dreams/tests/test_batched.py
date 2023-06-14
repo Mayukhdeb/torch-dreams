@@ -13,7 +13,7 @@ import pytest
 
 def make_custom_func(layer_number=0, channel_number=0):
     def custom_func(layer_outputs):
-        loss = layer_outputs[layer_number][channel_number].mean()
+        loss = layer_outputs[layer_number][:, channel_number].mean()
         return -loss
 
     return custom_func
@@ -23,7 +23,7 @@ def make_custom_func(layer_number=0, channel_number=0):
 @pytest.mark.parametrize("batch_size", [1, 2, 5])
 def test_batched_auto_image_param(iters, batch_size):
 
-    model = models.inception_v3(pretrained=True)
+    model = models.inception_v3(weights='DEFAULT')
     dreamy_boi = Dreamer(model=model, device="cpu", quiet=False)
 
     image_param = BatchedAutoImageParam(batch_size=batch_size, device="cpu")
@@ -55,7 +55,7 @@ def test_batched_auto_image_param(iters, batch_size):
 @pytest.mark.parametrize("batch_size", [1, 2, 5])
 def test_batched_auto_image_param_with_custom_func(iters, batch_size):
 
-    model = models.inception_v3(pretrained=True)
+    model = models.inception_v3(weights='DEFAULT')
     dreamy_boi = Dreamer(model=model, device="cpu", quiet=False)
 
     image_param = BatchedAutoImageParam(batch_size=batch_size, device="cpu")
