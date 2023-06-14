@@ -107,7 +107,7 @@ class test(unittest.TestCase):
         dreamy_boi = Dreamer(model = bunch, quiet= False, device= 'cpu')
 
         def custom_func(layer_outputs):
-            loss =  layer_outputs[1][89].mean() + layer_outputs[0].mean()**2
+            loss =  layer_outputs[1][:, 89].mean() + layer_outputs[0].mean()**2
             return -loss
 
         image_param = dreamy_boi.render(
