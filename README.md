@@ -169,7 +169,7 @@ image_param = dreamy_boi.caricature(
 plt.imshow(image_param)
 plt.show()
 ```
-## Visualize features from multiple models simultaneously
+## Visualize features from multiple models on a single image parameter
 
 First, let's pick 2 models and specify which layers we'd want to work with
 
