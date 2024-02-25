@@ -53,29 +53,25 @@ class MagnitudeConstrainedImageParam(BaseImageParam):
         
     def reconstruct_image_param(self, amplitude, phase):
         reconstructed_image_param = amplitude * torch.exp(1j * phase)
-        return reconstructed_image_param
+        return reconstructed_image_param.real
     
     def check_whether_we_get_image_param(self, amplitude, phase, image_param):
         reconstructed_image_param = self.reconstruct_image_param(
             amplitude=amplitude,
             phase=phase
         )
-        
+
         assert torch.allclose(
             image_param,
-            reconstructed_image_param.real
+            reconstructed_image_param
         ), f"Could not reconstruct image param. Very sad."
-
-    def get_image_param_from_phase_and_amplitude_spectrum(self):
-        pass
-
 
 
     def postprocess(self, device):
         img = fft_to_rgb(
             height=self.height,
             width=self.width,
-            image_parameter=self.get_image_param_from_phase_and_amplitude_spectrum(),
+            image_parameter=self.reconstruct_image_param(amplitude = self.amplitude_spectrum, phase=self.param),
             device=device,
         )
         img = lucid_colorspace_to_rgb(t=img, device=device)
