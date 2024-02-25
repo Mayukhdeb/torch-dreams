@@ -13,3 +13,4 @@ test_snippet.py
 myenv/
 .coverage/
 results/
+imagenet_sample_images/
