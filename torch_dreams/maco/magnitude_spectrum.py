@@ -4,7 +4,7 @@ from PIL import Image
 from typing import List
 from tqdm import tqdm
 
-def obtain_power_spectrum(image: Image, take_log = False):
+def get_magnitude_spectrum(image: Image, take_log = False):
     #Convert the image to grayscale
     image_gray = image.convert("L")
     
@@ -36,7 +36,7 @@ def obtain_power_spectrum(image: Image, take_log = False):
     
     return power_spectrum_centered
 
-def obtain_mean_power_spectrum(
+def get_mean_magnitude_spectrum(
     images: List["Image"],
     take_log = False,
     progress = False
@@ -45,7 +45,7 @@ def obtain_mean_power_spectrum(
     for image in tqdm(images, disable = not(progress)):
         ## chatgpt assert image shape ==  images[0] shape
         assert image.size == images[0].size, f"Please make sure that all of the images have the same height and width. I found a mismatch: {image.size} != {images[0].size}"
-        power_spectrum = obtain_power_spectrum(
+        power_spectrum = get_magnitude_spectrum(
             image=image,
             take_log=take_log
         )
