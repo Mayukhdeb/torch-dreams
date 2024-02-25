@@ -58,3 +58,35 @@ def get_mean_magnitude_spectrum(
     ).mean(0)
     
     return mean_power_spectrum
+
+class MagnitudeSpectrum:
+    def __init__(self, spectrum: torch.tensor, device: str = "cpu") -> None:
+        assert spectrum.ndim == 2
+        self.data = spectrum.to(device)
+    
+    @classmethod
+    def from_images(cls, images: List["Image"], device = "cpu", progress = False, take_log = False):
+
+        spectrum = get_mean_magnitude_spectrum(
+            images=images,
+            take_log=take_log,
+            progress=progress
+        )
+        return cls(
+            spectrum=spectrum,
+            device=device
+        )
+
+    def save(self, filename: str):
+        torch.save(
+            self.data,
+            filename
+        )
+
+    @classmethod
+    def from_file(cls, filename: str, device = "cpu"):
+        spectrum = torch.load(filename, map_location = device)
+        return cls(
+            spectrum=spectrum,
+            device=device
+        )
