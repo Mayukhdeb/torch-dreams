@@ -28,7 +28,7 @@ class MagnitudeConstrainedImageParam(BaseImageParam):
         amplitude, phase = torch.abs(param), torch.angle(param)
 
         # 3. Set the phase spectrum to be trainable
-        self.phase_spectrum = phase.requires_grad_()
+        self.param = phase.requires_grad_()
 
         # 4. Hardcode the amplitude values to be magnitude_spectrum.data
         self.amplitude_spectrum = magnitude_spectrum.data
@@ -37,16 +37,16 @@ class MagnitudeConstrainedImageParam(BaseImageParam):
         self.width = width
         self.device = device
         self.batch_size = batch_size
-        # Assuming an optimizer is set up later with self.phase_spectrum as the parameter to optimize
+        # Assuming an optimizer is set up later with self.param as the parameter to optimize
 
-    def get_param(self):
+    def get_image_parameter(self):
         """
-        Compute image param from the self.phase_spectrum and self.amplitude_spectrum.
+        Compute image param from the self.param and self.amplitude_spectrum.
         Here we recombine the amplitude and phase into a complex tensor,
         then perform an inverse FFT to get the spatial domain representation.
         """
         # Convert amplitude and phase back to a complex tensor
-        complex_spectrum = self.amplitude_spectrum * torch.exp(1j * self.phase_spectrum)
+        complex_spectrum = self.amplitude_spectrum * torch.exp(1j * self.param)
 
         # Inverse FFT to go from frequency to spatial domain
         img_spatial = torch.fft.ifft2(complex_spectrum).real  # Taking the real part if necessary
@@ -58,7 +58,7 @@ class MagnitudeConstrainedImageParam(BaseImageParam):
         img = fft_to_rgb(
             height=self.height,
             width=self.width,
-            image_parameter=self.get_param(),
+            image_parameter=self.get_image_parameter(),
             device=device,
         )
         img = lucid_colorspace_to_rgb(t=img, device=device)
