@@ -44,6 +44,23 @@ def init_image_param(height, width, sd=0.01, device="cuda"):
     return spectrum_t
 
 
+def init_series_param(channels, length, sd=0.01, device="cuda"):
+    """Initializes a series parameter in the frequency domain
+
+    Args:
+        channels (int): number of channels of series
+        length (int): length of series
+        sd (float, optional): Standard deviation of step values. Defaults to 0.01.
+        device (str): 'cpu' or 'cuda'
+
+    Returns:
+        torch.tensor: series param to backpropagate on
+    """
+    buffer = np.random.normal(size=(1, channels, length), scale=sd).astype(np.float32)
+    spectrum_t = tensor(buffer).float().to(device)
+    return spectrum_t
+
+
 def get_fft_scale(h, w, decay_power=0.75, device="cuda"):
     d = 0.5**0.5  # set center frequency scale to 1
     fy = np.fft.fftfreq(h, d=d)[:, None]
@@ -56,6 +73,22 @@ def get_fft_scale(h, w, decay_power=0.75, device="cuda"):
 
     freqs = (fx * fx + fy * fy) ** decay_power
     scale = 1.0 / np.maximum(freqs, 1.0 / (max(w, h) * d))
+    scale = tensor(scale).float().to(device)
+
+    return scale
+
+
+def get_fft_series_scale(l, decay_power=0.75, device="cuda"):
+    d = 0.5**0.5  # set center frequency scale to 1
+
+    if l % 2 == 1:
+        fx = np.fft.rfftfreq(l, d=d)[: (l + 1) // 2]
+    else:
+        fx = np.fft.rfftfreq(l, d=d)[: l // 2]
+
+    freqs = (fx * fx) ** decay_power
+
+    scale = 1.0 / np.maximum(freqs, 1.0 / (l * d))
     scale = tensor(scale).float().to(device)
 
     return scale
@@ -96,6 +129,40 @@ def fft_to_rgb(height, width, image_parameter, device="cuda"):
     sub_version = int(version[1])
 
     t = torch.fft.irfft2(t, s=(height, width), norm="ortho")
+
+    return t
+
+
+def fft_to_series(channels, length, series_parameter, device="cuda"):
+    """convert series param to NCL
+
+    WARNING: torch v1.7.0 works differently from torch v1.8.0 on fft.
+    torch-dreams supports ONLY 1.8.x
+
+    Latest docs: https://pytorch.org/docs/stable/fft.html
+
+    Also refer:
+        https://github.com/pytorch/pytorch/issues/49637
+
+    Args:
+        channels (int): number of channels of series
+        length (int): length of series
+        series_parameter (auto_series_param): auto_series_param.param
+
+    Returns:
+        torch.tensor: NCHW tensor
+
+    """
+    scale = get_fft_series_scale(length, device=device).to(series_parameter.device)
+
+    if length % 2 == 1:
+        series_parameter = series_parameter.reshape(1, channels, (length + 1) // 2, 2)
+    else:
+        series_parameter = series_parameter.reshape(1, channels, length // 2, 2)
+
+    series_parameter = torch.complex(series_parameter[..., 0], series_parameter[..., 1])
+    t = scale * series_parameter
+    t = torch.fft.irfft(t, n=length, norm="ortho")
 
     return t
 
