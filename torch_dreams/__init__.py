@@ -15,6 +15,7 @@ __all__ = [
     "auto_image_param",
     "auto_series_param",
     "custom_image_param",
+    "custom_series_param",
     "masked_image_param",
     "image_transforms",
     "transforms"
