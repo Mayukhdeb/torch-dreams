@@ -62,7 +62,7 @@ class BaseSeriesParam(torch.nn.Module):
         Returns:
             torch.Tensor
         """
-        t = self.postprocess(device=device)[0].detach()
+        t = self.forward(device=device)[0].detach()
         return t
 
     def to_lc_tensor(self, device="cpu"):
@@ -74,7 +74,7 @@ class BaseSeriesParam(torch.nn.Module):
         Returns:
             torch.Tensor
         """
-        t = self.postprocess(device=device)[0].permute(1, 0).detach()
+        t = self.forward(device=device)[0].permute(1, 0).detach()
         return t
 
     def __array__(self):
@@ -115,6 +115,8 @@ class AutoSeriesParam(BaseSeriesParam):
     """
 
     def __init__(self, length, channels, device, standard_deviation, batch_size: int = 1):
+        super().__init__()
+
         self.length = length
         self.channels = channels
         self.standard_deviation = standard_deviation
@@ -153,28 +155,20 @@ class AutoSeriesParam(BaseSeriesParam):
         series = torch.sigmoid(series)
         return series
 
+    def normalize(self,x, device):
+        # TODO: implement normalization
+        #return normalize(x = x, device= device)
+        return x
+
     def forward(self, device):
         # TODO: add normalization
         if self.batch_size == 1:
-            return self.postprocess(device=device)
+            return self.normalize(self.postprocess(device=device), device=device)
         else:
             return torch.cat(
                 [
-                    self.postprocess(device=device)
+                    self.normalize(self.postprocess(device=device), device=device)
                     for i in range(self.batch_size)
                 ],
                 dim=0,
             )
-
-    def fetch_optimizer(self, params_list, optimizer=None, lr=1e-3, weight_decay=0.0):
-        if optimizer is not None:
-            optimizer = optimizer(params_list, lr=lr, weight_decay=weight_decay)
-        else:
-            optimizer = torch.optim.AdamW(params_list, lr=lr, weight_decay=weight_decay)
-        return optimizer
-
-    def get_optimizer(self, lr, weight_decay):
-
-        self.optimizer = self.fetch_optimizer(
-            params_list=[self.param], lr=lr, weight_decay=weight_decay
-        )
