@@ -233,3 +233,16 @@ def fft_to_rgb_custom_img(height, width, image_parameter, device="cuda"):
     t = torch.fft.irfft2(t, s=(height, width), norm="ortho")
     
     return t
+
+
+def cl_series_to_fft_param(x, device):
+    length = x.shape[-1]
+    series_tensor = torch.tensor(x).unsqueeze(0).float()
+
+    # TODO: x = rgb_to_lucid_colorspace(denormalize(im_tensor), device=device)
+
+    x = torch.fft.rfft(x, n=length, norm="ortho")
+
+    return x
+
+

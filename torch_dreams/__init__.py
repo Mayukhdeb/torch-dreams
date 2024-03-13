@@ -13,7 +13,7 @@ __all__ = [
     "utils",
     "model_bunch",
     "auto_image_param",
-    "auto_series_param.py",
+    "auto_series_param",
     "custom_image_param",
     "masked_image_param",
     "image_transforms",
