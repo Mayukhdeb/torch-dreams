@@ -58,9 +58,9 @@ class RandomSeriesScale(torch.nn.Module):
     ):
         super().__init__()
 
-        if not isinstance(min_scale, numbers.Number):
+        if not isinstance(min_scale, Number):
             raise TypeError(f"min_scale should be a number but is {type(min_scale)}.")
-        if not isinstance(max_scale, numbers.Number):
+        if not isinstance(max_scale, Number):
             raise TypeError(f"max_scale should be a number but is {type(max_scale)}.")
 
         self.min_scale = min_scale
