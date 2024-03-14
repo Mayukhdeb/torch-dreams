@@ -9,9 +9,9 @@ from .custom_image_param import CustomImageParam
 from .custom_series_param import CustomSeriesParam
 from .masked_image_param import MaskedImageParam
 
-import torch_dreams.image_transforms as image_transforms 
-import torch_dreams.series_transforms as series_transforms 
-import torch_dreams.transforms as transforms 
+import torch_dreams.image_transforms as image_transforms
+import torch_dreams.series_transforms as series_transforms
+import torch_dreams.transforms as transforms
 
 __version__ = "4.0.0"
 
