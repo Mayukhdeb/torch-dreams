@@ -1,4 +1,4 @@
-import cv2
+import imageio
 import torch
 from .custom_image_param import CustomImageParam
 from .transforms import imagenet_transform
@@ -48,8 +48,8 @@ class MaskedImageParam(CustomImageParam):
         self.mask = mask_tensor.to(self.device)
 
         if isinstance(image, str):
-            image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_BGR2RGB) / 255.0
-            image = torch.tensor(image).permute(-1, 0, 1).unsqueeze(0)
+            image = imageio.imread(image) / 255.0
+            image = torch.tensor(image).permute(2, 0, 1).unsqueeze(0)
 
         self.original_nchw_image_tensor = image.to(device)
 
