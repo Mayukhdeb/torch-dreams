@@ -14,3 +14,5 @@ myenv/
 .coverage/
 results/
 imagenet_sample_images/
+
+.Ds_Store
