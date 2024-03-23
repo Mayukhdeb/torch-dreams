@@ -123,7 +123,8 @@ def fft_2d_freq(width: int, height: int) -> np.ndarray:
     return np.sqrt(freq_x**2 + freq_y**2)
 
 
-def get_fft_scale(width: int, height: int, decay_power: float = 1.0) -> tf.Tensor:
+
+def get_fft_scale(width: int, height: int, decay_power: float = 1.0) -> torch.Tensor:
     """
     Generate 'scaler' to normalize spectrum energy. Also scale the energy by the
     dimensions to use similar learning rate regardless of image size.
@@ -149,8 +150,7 @@ def get_fft_scale(width: int, height: int, decay_power: float = 1.0) -> tf.Tenso
     fft_scale = 1.0 / np.maximum(frequencies, 1.0 / max(width, height)) ** decay_power
     fft_scale = fft_scale * np.sqrt(width * height)
 
-    return tf.convert_to_tensor(fft_scale, dtype=tf.complex64)
-
+    return torch.tensor(fft_scale, dtype=torch.complex64)
 
 
 
