@@ -5,6 +5,8 @@ from ..types import Optional, Union, Callable, Tuple
 from .preconditioning import maco_image_parametrization, init_maco_buffer
 from .objectives import Objective
 
+import torchvision.transforms.functional as TF
+
 
 
 
@@ -121,129 +123,53 @@ def maco(objective: Objective,
 
 
 
-# @tf.function
-# def maco_optimisation_step(model, objective_function, magnitude, phase,
-#                            box_average_size, noise_std, nb_crops, values_range):
-#     """ Optimisation step for MaCo method.
-
-#     Parameters
-#     ----------
-#     model
-#         Model to optimize on.
-#     objective_function
-#         Objective function (e.g neurons, channel).
-#     magnitude
-#         Fixed magnitude used to generate the image (the magnitude is fixed and not optimized).
-#     phase
-#         Phase of the image of the current image in fourier domain.
-#     box_average_size
-#         Average size of the crops.
-#     noise_std
-#         Standard deviation of the noise added at each step.
-#     nb_crops
-#         Number of crops to use for each step.
-#     values_range
-#         Range of values of the inputs that will be provided to the model, e.g (0, 1) or (-1, 1).
-
-#     Returns
-#     -------
-#     grads
-#         Gradients of the phase with respect to the objective.
-#     grads_img
-#         Gradients of the image with respect to the objective.
-#     """
-#     with tf.GradientTape() as tape:
-#         tape.watch(phase)
-
-#         image = maco_image_parametrization(magnitude, phase, values_range)
-
-#         # sample random crops in the buffer
-#         center_x = 0.5 + tf.random.normal((nb_crops,), stddev=0.15)
-#         center_y = 0.5 + tf.random.normal((nb_crops,), stddev=0.15)
-#         delta_x = tf.random.normal((nb_crops,), stddev=0.05, mean=box_average_size)
-#         delta_x = tf.clip_by_value(delta_x, 0.05, 1.0)
-#         delta_y = delta_x  # square boxes
-
-#         box_indices = tf.zeros(shape=(nb_crops,), dtype=tf.int32)
-#         boxes = tf.stack([center_x - delta_x * 0.5,
-#                           center_y - delta_y * 0.5,
-#                           center_x + delta_x * 0.5,
-#                           center_y + delta_y * 0.5], -1)
-
-#         crops = tf.image.crop_and_resize(image[None, :, :, :], boxes, box_indices,
-#                                          model.input_shape[1:3])
-
-#         # add random noise as feature viz robustness
-#         # see (https://distill.pub/2017/feature-visualization)
-#         crops += tf.random.normal(crops.shape, stddev=noise_std, mean=0.0)
-#         crops += tf.random.uniform(crops.shape, minval=-noise_std/2.0,
-#                                                 maxval=noise_std/2.0)
-
-#         # maco is always is a single objective
-#         model_outputs = model(crops)
-#         loss = tf.reduce_mean(objective_function([model_outputs]))
-
-#     # also get the gradient to the image for transparency
-#     grads = tape.gradient(loss, [phase, image])
-#     grads_phase, grads_image = grads
-
-#     return grads_phase, grads_image
 
 
-
-#implement above function torch
 
 def maco_optimisation_step(model, objective_function, magnitude, phase,
                            box_average_size, noise_std, nb_crops, values_range):
-    """ Optimisation step for MaCo method.
-
-    Parameters
-    ----------
-    model
-        Model to optimize on.
-    objective_function
-        Objective function (e.g neurons, channel).
-    magnitude
-        Fixed magnitude used to generate the image (the magnitude is fixed and not optimized).
-    phase
-        Phase of the image of the current image in fourier domain.
-    box_average_size
-        Average size of the crops.
-    noise_std
-        Standard deviation of the noise added at each step.
-    nb_crops
-        Number of crops to use for each step.
-    values_range
-        Range of values of the inputs that will be provided to the model, e.g (0, 1) or (-1, 1).
-
-    Returns
-    -------
-    grads
-        Gradients of the phase with respect to the objective.
-    grads_img
-        Gradients of the image with respect to the objective.
+    """Optimisation step for MaCo method in PyTorch.
+    
+    Parameters are the same as the TensorFlow version, adjusted for PyTorch usage.
     """
-    with torch.enable_grad():
-        phase.requires_grad = True
+    # Ensure that `phase` requires gradient
+    phase.requires_grad_(True)
 
-        image = maco_image_parametrization(magnitude, phase, values_range)
+    # Generate image from magnitude and phase
+    image = maco_image_parametrization(magnitude, phase, values_range)
 
-        # sample random crops in the buffer
-        center_x = 0.5 + torch.randn((nb_crops,)) * 0.15
-        center_y = 0.5 + torch.randn((nb_crops,)) * 0.15
-        delta_x = torch.randn((nb_crops,)) * 0.05 + box_average_size
-        delta_x = torch.clamp(delta_x, 0.05, 1.0)
-        delta_y = delta_x  # square boxes
+    # Initialize random crop parameters
+    center_x = 0.5 + torch.randn((nb_crops,)) * 0.15
+    center_y = 0.5 + torch.randn((nb_crops,)) * 0.15
+    delta_x = torch.randn((nb_crops,)) * 0.05 + box_average_size
+    delta_x = torch.clamp(delta_x, 0.05, 1.0)
+    delta_y = delta_x  # Assume square boxes
 
-        box_indices = torch.zeros((nb_crops,), dtype=torch.int32)
-        boxes = torch.stack([center_x - delta_x * 0.5,
-                            center_y - delta_y * 0.5,
-                            center_x + delta_x * 0.5,
-                            center_y + delta_y * 0.5], -1)
+    # Sample random crops from the image
+    crops = []
+    for i in range(nb_crops):
+        crop = TF.resized_crop(image, int(center_y[i] - delta_y[i] * 0.5), int(center_x[i] - delta_x[i] * 0.5), 
+                               int(delta_y[i]), int(delta_x[i]), model.input_shape[2:])
+        crops.append(crop)
+    crops = torch.stack(crops)
 
-        crops = torch.nn.functional.interpolate(image[None, :, :, :], size=model.input_shape[1:3])
+    # Add random noise for robustness
+    crops += torch.randn_like(crops) * noise_std
+    crops += (torch.rand_like(crops) * noise_std) - (noise_std / 2.0)
 
-        
+    # Forward pass through the model
+    model_outputs = model(crops)
+    loss = objective_function(model_outputs).mean()
+
+    # Compute gradients
+    loss.backward()
+    grads_phase = phase.grad
+    # In PyTorch, to get the gradient with respect to the image,
+    # you must ensure the image was created with `requires_grad=True`
+    grads_image = image.grad if image.requires_grad else None
+
+    return grads_phase, grads_image
+
 
         
 
