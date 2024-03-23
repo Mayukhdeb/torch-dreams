@@ -75,7 +75,7 @@ def optimize(objective: Objective,
     model, objective_function, objective_names, input_shape = objective.compile()
 
     if optimizer is None:
-        optimizer = torch.optim.Adam([torch.randn(input_shape)], lr=0.05)
+        optimizer = torch.optim.Adam(0.05)
 
 
     img_shape = input_shape
@@ -130,69 +130,7 @@ def optimize(objective: Objective,
 
 
 
-# def _get_optimisation_step(
-#         objective_function: Callable,
-#         nb_outputs: int,
-#         image_param: Callable,
-#         input_shape: Tuple,
-#         transformations: Optional[Callable] = None,
-#         regularizers: Optional[List[Callable]] = None) -> Callable:
-#     """
-#     Generate a function that optimize the objective function for a single step.
 
-#     Parameters
-#     ----------
-#     objective_function
-#         Function that compute the loss for the objectives given the model
-#         outputs.
-#     nb_outputs
-#         Number of outputs of the model.
-#     image_param
-#         Function that map image to a valid rgb.
-#     input_shape
-#         Shape of the inputs to optimize.
-#     transformations
-#         Transformations applied to the image during optimisation.
-#     regularizers
-#         List of regularizers that are applied on the image and added to the loss.
-
-#     Returns
-#     -------
-#     step_function
-#         Function (model, inputs) to call to optimize the input for one step.
-#     """
-
-#     @tf.function
-#     def step(model, inputs):
-
-#         with tf.GradientTape() as tape:
-#             tape.watch(inputs)
-
-#             imgs = image_param(inputs)
-#             if transformations:
-#                 imgs = transformations(imgs)
-#             imgs = tf.image.resize(imgs, (input_shape[1], input_shape[2]))
-
-#             model_outputs = model(imgs)
-
-#             if nb_outputs == 1:
-#                 model_outputs = tf.expand_dims(model_outputs, 0)
-
-#             loss = objective_function(model_outputs)
-
-#             if regularizers:
-#                 for reg_function in regularizers:
-#                     loss -= reg_function(imgs)
-
-#         grads = tape.gradient(loss, inputs)
-
-#         return grads
-
-#     return step
-
-                    
-
-# implement in torch _get_optimisation_step
 
 def _get_optimisation_step(
         objective_function: Callable,
@@ -225,7 +163,7 @@ def _get_optimisation_step(
     step_function
         Function (model, inputs) to call to optimize the input for one step.
     """
-
+    
     def step(model, inputs):
 
         inputs.requires_grad = True
@@ -251,10 +189,4 @@ def _get_optimisation_step(
         return grads
 
     return step
-
-
-    
-
-
-
 

@@ -22,7 +22,7 @@ def cosine_similarity(tensor_a: torch.Tensor, tensor_b: torch.Tensor) -> torch.T
 
 
 
-#implement the dot_cossim function
+
 
 def dot_cossim(tensor_a: torch.Tensor, tensor_b: torch.Tensor,cossim_pow: float = 2.0) -> torch.Tensor:
     """
