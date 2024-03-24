@@ -1,12 +1,15 @@
-
 import torch
 from torchvision.transforms import RandomCrop,Resize,RandomHorizontalFlip,RandomVerticalFlip,Pad,Compose
 from ..types import Tuple,Callable,List
 
 
 
+
+
+
 def random_blur(sigma_range: Tuple[float, float] = (1.0, 2.0),
                 kernel_size: int = 10) -> Callable:
+    
     """
     Generate a function that apply a random gaussian blur to the batch.
 
@@ -21,27 +24,39 @@ def random_blur(sigma_range: Tuple[float, float] = (1.0, 2.0),
     -------
     blur
         Transformation function applying random blur.
+    
     """
-    uniform = torch.linspace(-(kernel_size - 1) / 2., (kernel_size - 1) / 2.,
-                             kernel_size)
-    uniform_xx, uniform_yy = torch.meshgrid(uniform, uniform)
+    uniform = torch.linspace(-(kernel_size - 1) / 2., (kernel_size - 1) / 2., kernel_size)
+    uniform_xx, uniform_yy = torch.meshgrid(uniform, uniform, indexing="ij")
 
-    kernel_size = kernel_size.float()
-    sigma_min = max(sigma_range[0], 0.1).float()
-    sigma_max = max(sigma_range[1], 0.1).float()
-
+    sigma_min = max(sigma_range[0], 0.1)
+    sigma_max = max(sigma_range[1], 0.1)
 
     def blur(batch: torch.Tensor) -> torch.Tensor:
+        # Dynamically determine the output size from the input batch
+        output_size = (batch.size(2), batch.size(3))
+
         sigma = torch.rand(1) * (sigma_max - sigma_min) + sigma_min
         kernel = torch.exp(-0.5 * (uniform_xx ** 2 + uniform_yy ** 2) / sigma ** 2)
-        kernel = kernel / kernel.sum()
-        kernel = kernel.view(1, 1, kernel_size, kernel_size)
-        return torch.nn.functional.conv2d(batch, kernel, padding=kernel_size // 2)
-    
+        kernel /= kernel.sum()
+        kernel = kernel.repeat(batch.shape[1], 1, 1, 1)
+
+        if batch.dim() == 3:
+            batch = batch.unsqueeze(0)
+
+        padding = (kernel_size - 1) // 2
+        pad = torch.nn.ReflectionPad2d(padding)
+        batch = pad(batch)
+
+        blurred = torch.nn.functional.conv2d(batch, kernel, groups=batch.shape[1])
+        blurred = torch.nn.functional.interpolate(blurred, size=output_size)
+
+        return blurred
+
     return blur
 
 
-#implement random_jitter
+
 
 def random_jitter(delta: int=6) -> Callable:
     """
@@ -59,38 +74,40 @@ def random_jitter(delta: int=6) -> Callable:
     """
 
     def jitter(images:torch.Tensor) -> torch.Tensor:
-        crop = RandomCrop((images.shape[-1], - delta, images.shape[-2], - delta))
+        crop = RandomCrop((images.shape[-1] - delta, images.shape[-2] - delta))
         return crop(images)
     
     return jitter
 
 
-def random_scale(scale_range: Tuple[float, float] = (0.95,1.05)) -> Callable:
+
+
+def random_scale(scale_range: Tuple[float, float] = (0.95, 1.05)) -> Callable:
     """
-    Generate a function that apply a random scale to the batch .Preserves the aspect ratio.
-    
+    Generate a function that applies a random scale to a batch of images, preserving the aspect ratio.
+
     Parameters
     ----------
-    scale_range
-        Min and max scale factor
+    scale_range : Tuple[float, float]
+        Min and max scale factor.
 
     Returns
     -------
-    scale
-        Transformation function applying random scale.
-
+    Callable
+        A transformation function applying random scale.
     """
-    min_scale = scale_range[0]
-    max_scale = scale_range[1]
 
+    min_scale, max_scale = scale_range
 
-    def scale(images:torch.Tensor) -> torch.Tensor:
-        _,_,h,w = images.shape
-        scale_factor = torch.empty(1).uniform_(min_scale,max_scale)
-        new_size = (int(h*scale_factor),int(w*scale_factor))
-        resize = Resize(new_size)
-        return resize(images)
-    
+    def scale(images: torch.Tensor) -> torch.Tensor:
+        _, _, h, w = images.shape
+        scale_factor = torch.empty(1).uniform_(min_scale, max_scale).item()
+        new_h, new_w = int(h * scale_factor), int(w * scale_factor)
+
+        # Resize the images using interpolate
+        scaled_images = torch.nn.functional.interpolate(images, size=(new_h, new_w), mode='bilinear', align_corners=False)
+        return scaled_images
+
     return scale
 
 
