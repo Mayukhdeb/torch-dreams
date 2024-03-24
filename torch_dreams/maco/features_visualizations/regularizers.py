@@ -46,7 +46,10 @@ def l2_reg(factor: float = 1.0) -> Callable:
 
 
 
-def l_inf_reg(factor: float = 1.0) -> Callable:
+
+
+
+def l_inf_reg(factor: float = 1.0): 
     """
     Mean L-inf regularization.
 
@@ -61,36 +64,35 @@ def l_inf_reg(factor: float = 1.0) -> Callable:
         Max of the images.
     """
     def l_inf(images: torch.Tensor) -> torch.Tensor:
-        return factor * torch.max(torch.abs(images), dim=(1, 2, 3)).values
+        max_abs_values = torch.max(torch.abs(images).flatten(start_dim=1), dim=1).values
+        return factor * max_abs_values
     return l_inf
 
 
 
-def total_variation_reg(factor: float = 1.0) -> Callable:
+
+def total_variation_reg(factor: float = 1.0): 
+
     """
     Total variation regularization.
 
     Parameters
     ----------
-    factor
+    factor : float
         Weight that controls the importance of the regularization term.
 
     Returns
     -------
-    tv_reg
-        Total variation of the images.
+    Callable
+        Function that computes the total variation of the images.
     """
     def tv_reg(images: torch.Tensor) -> torch.Tensor:
-        if len(images.shape) == 4:
-            pixel_diff1 = images[..., :-1, :] - images[..., 1:, :]
-            pixel_diff2 = images[..., :, :-1] - images[..., :, 1:]
-        elif len(images.shape) == 3:
-            pixel_diff1 = images[..., :-1] - images[..., 1:]
-            pixel_diff2 = images[..., :-1] - images[..., 1:]
-        else:
-            raise ValueError("Unsupported number of dimensions in input tensor.")
-        total_var = torch.sum(torch.abs(pixel_diff1)) + torch.sum(torch.abs(pixel_diff2))
-        return factor * total_var
+        # Compute the total variation by summing absolute differences without normalizing
+        pixel_dif1 = torch.sum(torch.abs(images[:, :, 1:, :] - images[:, :, :-1, :]), dim=[1,2,3])
+        pixel_dif2 = torch.sum(torch.abs(images[:, :, :, 1:] - images[:, :, :, :-1]), dim=[1,2,3])
+        return factor * (pixel_dif1 + pixel_dif2)
+
     return tv_reg
+
 
 
