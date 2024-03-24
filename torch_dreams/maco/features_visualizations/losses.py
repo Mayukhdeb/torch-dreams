@@ -2,6 +2,7 @@ import torch
 
 
 # implement the cosine_similarity function
+# getting correct output
 def cosine_similarity(tensor_a: torch.Tensor, tensor_b: torch.Tensor) -> torch.Tensor:
     """
     Calculate the cosine similarity between two tensors.
@@ -48,7 +49,7 @@ def dot_cossim(tensor_a: torch.Tensor, tensor_b: torch.Tensor,cossim_pow: float 
 
     """
 
-    cosim = torch.pow(torch.clamp_min(cosine_similarity(tensor_a, tensor_b), 1e-1), cossim_pow)
+    cosim = torch.pow(torch.clamp(cosine_similarity(tensor_a, tensor_b), 1e-1), cossim_pow)
     dot = torch.sum(tensor_a * tensor_b)
 
     return cosim * dot
