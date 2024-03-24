@@ -59,7 +59,7 @@ def recorrelate_colors(images: torch.Tensor) -> torch.Tensor:
 
 
 
-def to_valid_rgb_fixed(images: torch.Tensor, normalizer: str = 'sigmoid', values_range: tuple = (0, 1)) -> torch.Tensor:
+def to_valid_rgb(images: torch.Tensor, normalizer: str = 'sigmoid', values_range: tuple = (0, 1)) -> torch.Tensor:
     """
 
     Apply transformations to map tensors to valid rgb images.
