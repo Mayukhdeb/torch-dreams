@@ -1,7 +1,8 @@
 from .auto_image_param import BaseImageParam
 
-import cv2 
+
 import torch
+import imageio
 
 from .utils import (
     lucid_colorspace_to_rgb, 
@@ -42,9 +43,10 @@ class CustomImageParam(BaseImageParam):
         
         super().__init__()
         self.device = device
+        #use imageio to read the image
         if isinstance(image, str):
-            image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_BGR2RGB)/255.
-            image = torch.tensor(image).permute(-1,0,1).unsqueeze(0)
+            image = imageio.imread(image) / 255.0
+            image = torch.tensor(image).permute(2, 0, 1).unsqueeze(0)
         self.set_param(image)
 
     def normalize(self,x, device):
