@@ -193,6 +193,7 @@ def fft_to_rgb(shape: tuple, buffer: torch.Tensor, fft_scale: torch.Tensor) -> t
 
 
 
+
 def fft_image(shape: tuple, std: float = 0.01) -> torch.Tensor:
     """
     Generate the preconditioned image buffer
@@ -238,24 +239,38 @@ def get_file(filename, url, cache_subdir="spectrums"):
     return str(file_path)
 
 
+
+
+
 def init_maco_buffer(image_shape, std=1.0):
+    '''
+    Initialize the buffer for the MACO algorithm.
+
+    Parameters
+    ----------
+    image_shape
+        Shape of the images with N number of samples, W & H the sample
+        dimensions, and C the number of channels.
+    std
+       Standard deviation of the normal for the buffer initialization
+
+   Returns
+   -------
+  magnitude
+      Magnitude of the spectrum
+  phase
+    Phase of the spectrum
+    '''
     spectrum_shape = (image_shape[0], image_shape[1]//2+1)
-
     phase = np.random.normal(size=(3, *spectrum_shape), scale=std).astype(np.float32)
-
     magnitude_path = get_file("spectrum_decorrelated.npy", IMAGENET_SPECTRUM_URL, cache_subdir="spectrums")
     magnitude = np.load(magnitude_path)
-    magnitude = np.moveaxis(magnitude, 0, -1)  # Moving axis to fit PyTorch's expected layout
-    magnitude = torch.from_numpy(magnitude).float()  # Convert to torch tensor
+    magnitude = np.moveaxis(magnitude, 0, -1)
+    magnitude = Resize(spectrum_shape)(torch.tensor(magnitude).permute(2, 0, 1)).numpy()
+    magnitude = np.moveaxis(magnitude, -1, 0)
+    return torch.tensor(magnitude, dtype=torch.float32), torch.tensor(phase, dtype=torch.float32)
+
     
-    magnitude = magnitude.squeeze(0).numpy()  # Convert back to numpy array if necessary
-    magnitude = np.moveaxis(magnitude, -1, 0)  # Move axis back to original layout
-
-    # Convert final numpy arrays back to tensors
-    magnitude = torch.tensor(magnitude, dtype=torch.float32)
-    phase = torch.from_numpy(phase)  # Convert phase to tensor
-
-    return magnitude, phase
 
 
 
