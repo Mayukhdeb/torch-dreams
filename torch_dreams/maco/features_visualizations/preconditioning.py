@@ -52,7 +52,8 @@ def recorrelate_colors(images: torch.Tensor) -> torch.Tensor:
     )
     images_flat = images.reshape(-1, 3)
     images_flat = torch.matmul(images_flat, imagenet_color_correlation)
-    return images_flat.view_as(images)
+    return  torch.reshape(images_flat, images.shape)
+
 
 
 
@@ -182,7 +183,7 @@ def fft_to_rgb(shape: tuple, buffer: torch.Tensor, fft_scale: torch.Tensor) -> t
         Images in the 'pixels' basis.
     """
     batch, width, height, channels = shape
-    spectrum = torch.view_as_complex(buffer) * fft_scale
+    spectrum = torch.complex(buffer[0],buffer[1]) * fft_scale
 
     image = torch.fft.irfft2(spectrum)
     image = image.permute(0, 2, 3, 1)
@@ -281,7 +282,7 @@ def maco_image_parametrization(magnitude, phase ,values_range):
     phase = phase - torch.mean(phase)
     phase = phase / (torch.std(phase) + 1e-5)
 
-    buffer = torch.view_as_complex(torch.cos(phase) * magnitude, torch.sin(phase) * magnitude)
+    buffer = torch.complex(torch.cos(phase) * magnitude, torch.sin(phase) * magnitude)
     img = torch.fft.irfft2(buffer)
     img = img.permute(1, 2, 0)
 
