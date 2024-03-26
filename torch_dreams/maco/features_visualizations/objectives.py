@@ -1,7 +1,7 @@
 import itertools
 import torch
 import numpy as np
-from ..commons import find_layer
+from ..commons import get_module_by_name
 from ..types import Union, List, Callable, Tuple, Optional
 from .losses import dot_cossim
 
@@ -163,7 +163,7 @@ class Objective:
         objective
             An objective ready to be compiled
         """
-        layer = find_layer(model, layer)
+        layer = get_module_by_name(model, layer)
         layer_shape = layer.shape
         mask = np.ones((1, *layer_shape[1:]))
 
@@ -212,7 +212,7 @@ class Objective:
         objective
             An objective ready to be compiled
         """
-        layer = find_layer(model, layer)
+        layer = get_module_by_name(model, layer)
         masks = vectors if isinstance(vectors, list) else [vectors]
 
         if names is None:
@@ -253,7 +253,7 @@ class Objective:
         objective
             An objective containing a sub-objective for each channels.
         """
-        layer = find_layer(model, layer)
+        layer = get_module_by_name(model, layer)
         layer_shape = layer.shape
         channel_ids = channel_ids if isinstance(channel_ids, list) else [channel_ids]
 
@@ -302,7 +302,7 @@ class Objective:
         objective
             An objective containing a sub-objective for each neurons.
         """
-        layer = find_layer(model, layer)
+        layer = get_module_by_name(model, layer)
 
         neurons_ids = neurons_ids if isinstance(neurons_ids, list) else [neurons_ids]
         nb_objectives = len(neurons_ids)

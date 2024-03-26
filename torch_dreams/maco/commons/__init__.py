@@ -1,2 +1,1 @@
-from .model_overide import guided_relu_policy, deconv_relu_policy, override_relu_gradient, \
-                            find_layer, open_relu_policy
+from .model_overide import  get_module_by_name, open_relu_policy
