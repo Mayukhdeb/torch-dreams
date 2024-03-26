@@ -64,55 +64,55 @@ def is_relu(layer: nn.Module) -> bool:
 
 
 
-# def has_relu_activation(layer: nn.Module) -> bool:
-#     """
-#     Check if a layer has a ReLU activation.
+def has_relu_activation(layer: nn.Module) -> bool:
+    """
+    Check if a layer has a ReLU activation.
 
-#     Parameters
-#     ----------
-#     layer
-#         Layer to check.
+    Parameters
+    ----------
+    layer
+        Layer to check.
 
-#     Returns
-#     -------
-#     has_relu
-#         True if the layer has a relu activation.
-#     """
-#     if not hasattr(layer, 'activation'):
-#         return False
-#     return layer.activation in [torch.nn.functional.relu, torch.nn.ReLU]
-
-
+    Returns
+    -------
+    has_relu
+        True if the layer has a relu activation.
+    """
+    if not hasattr(layer, 'activation'):
+        return False
+    return layer.activation in [torch.nn.functional.relu, torch.nn.ReLU]
 
 
-# def override_relu_gradient(model: nn.Module, relu_policy: Callable) -> nn.Module:
-#     """
-#     Given a model, commute all original ReLU by a new given ReLU policy.
 
-#     Parameters
-#     ----------
-#     model
-#         Model to commute.
-#     relu_policy
-#         Function wrapped with custom_gradient, defining the ReLU backprop behaviour.
 
-#     Returns
-#     -------
-#     model_commuted
-#     """
-#     cloned_model = model
-#     cloned_model.load_state_dict(model.state_dict())
+def override_relu_gradient(model: nn.Module, relu_policy: Callable) -> nn.Module:
+    """
+    Given a model, commute all original ReLU by a new given ReLU policy.
 
-#     for layer_id in range(len(cloned_model.layers)): # pylint: disable=C0200
-#         layer = cloned_model.layers[layer_id]
-#         if has_relu_activation(layer):
-#             layer.activation = relu_policy()
-#         elif is_relu(layer):
-#             max_value = layer.max_value if hasattr(layer, 'max_value') else None
-#             threshold = layer.threshold if hasattr(layer, 'threshold') else None
-#             cloned_model.layers[layer_id].call = relu_policy(max_value, threshold)
+    Parameters
+    ----------
+    model
+        Model to commute.
+    relu_policy
+        Function wrapped with custom_gradient, defining the ReLU backprop behaviour.
 
-#     return cloned_model
+    Returns
+    -------
+    model_commuted
+    """
+    cloned_model = model
+    cloned_model.load_state_dict(model.state_dict())
+
+    for layer_id in range(len(cloned_model.layers)): # pylint: disable=C0200
+        layer = cloned_model.layers[layer_id]
+        if has_relu_activation(layer):
+            layer.activation = relu_policy()
+        elif is_relu(layer):
+            max_value = layer.max_value if hasattr(layer, 'max_value') else None
+            threshold = layer.threshold if hasattr(layer, 'threshold') else None
+            cloned_model.layers[layer_id].call = relu_policy(max_value, threshold)
+
+    return cloned_model
 
 
 
