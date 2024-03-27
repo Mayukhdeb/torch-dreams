@@ -63,6 +63,7 @@ def maco(objective: Objective,
 
 
     model, objective_function, _, input_shape = objective.compile()
+    print(input_shape)
 
     assert input_shape[0] == 1, "You can only optimize one objective at a time with MaCo."
 
