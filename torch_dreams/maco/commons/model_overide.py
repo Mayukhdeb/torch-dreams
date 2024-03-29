@@ -117,24 +117,14 @@ def override_relu_gradient(model: nn.Module, relu_policy: Callable) -> nn.Module
 
 
 
-def get_module_by_name(model: nn.Module, name: str):
-    """Retrieve a module nested in another by its access string.
-
-    Works even when there is a Sequential in the module.
-
-    Args:
-        module (Union[TensorType, nn.Module]): module whose submodule you want to access
-        name (str): the string representation of the submodule. Like ⁠ "module.something.this_thing" ⁠
-
-    Returns:
-        object: module that you wanted to extract
-    """
-    if name != "":
-        names = name.split(sep=".")
-    else:
-        return model
-    return reduce(getattr, names, model)
-
+def find_layer(model, layer_path):
+    layer = model
+    for attr in layer_path.split('.'):
+        if attr.isdigit():
+            layer = layer[int(attr)]
+        else:
+            layer = getattr(layer, attr)
+    return layer
 
 
 
