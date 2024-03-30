@@ -10,23 +10,17 @@ import torch.nn as nn
 
 from .losses import dot_cossim
 import numpy as np
-from torchvision.models.feature_extraction import create_feature_extractor
+from torchvision.models.feature_extraction import create_feature_extractor,get_graph_node_names
 
 from ..commons import find_layer
 
 
+def get_layer_name(layer_path: str) -> str:
+    return layer_path.split('.')[-1]
+
+
 def extract_features(model, layer_path, image_size=512):
-    """
-    Extracts features from a specific layer of a PyTorch model using a randomly generated input tensor.
-
-    Parameters:
-    - model (torch.nn.Module): The PyTorch model from which to extract features.
-    - layer_path (str): The path to the layer from which to extract features.
-    - image_size (int, optional): The size of the image for the automatically generated input tensor. Defaults to 512.
-
-    Returns:
-    - The output from the specified layer.
-    """
+    
     # Generate a random input tensor
     input_tensor = torch.rand(1, 3, image_size, image_size)
 
@@ -46,18 +40,7 @@ def extract_features(model, layer_path, image_size=512):
 
 
 def get_layer_output_shape(model, layer, image_size=512, for_input=False):
-    """
-    Computes the output shape of the specified layer using a dummy input.
-
-    Parameters:
-        model (torch.nn.Module): The PyTorch model.
-        layer (torch.nn.Module): The layer to compute the output shape for.
-        image_size (int, optional): The size of the image to create the dummy input. Defaults to 512.
-        for_input (bool, optional): If True, returns the input shape to the layer, otherwise the output shape.
-
-    Returns:
-        torch.Size: The shape of the output (or input) tensor of the layer.
-    """
+    
     t_dims = None
 
     def _local_hook(_, _input, _output):
@@ -73,39 +56,9 @@ def get_layer_output_shape(model, layer, image_size=512, for_input=False):
 
 
 
+
+
 class Objective:
-    """
-    Use to combine several sub-objectives into one.
-
-    Each sub-objective act on a layer, possibly on a neuron or a channel (in
-    that case we apply a mask on the layer values), or even multiple neurons (in
-    that case we have multiples masks). When two sub-objectives are added, we
-    optimize all their combinations.
-
-    e.g Objective 1 target the neurons 1 to 10 of the logits l1,...,l10
-        Objective 2 target a direction on the first layer d1
-        Objective 3 target each of the 5 channels on another layer c1,...,c5
-
-        The resulting Objective will have 10*5*1 combinations. The first input
-        will optimize l1+d1+c1 and the last one l10+d1+c5.
-
-    Parameters
-    ----------
-    model
-        Model used for optimization.
-    layers
-        A list of the layers output for each sub-objectives.
-    masks
-        A list of masks that will be applied on the targeted layer for each
-        sub-objectives.
-    funcs
-        A list of loss functions for each sub-objectives.
-    multipliers
-        A list of multiplication factor for each sub-objectives
-    names
-        A list of name for each sub-objectives
-    """
-
     def __init__(self,
                  model: nn.Module,
                  layers: List[nn.Module],
@@ -146,13 +99,19 @@ class Objective:
 
     def __rmul__(self, factor: float):
         return self * factor
+  
+
+   
+    
+
+
 
     
 
 
     @staticmethod
     def layer(model: nn.Module,
-              layer: Union[str, int],
+              layer: str,
               reducer: str = "magnitude",
               multiplier: float = 1.0,
               name: Optional[str] = None):
@@ -178,8 +137,10 @@ class Objective:
         objective
             An objective ready to be compiled
         """
-        layer = find_layer(model, layer)
-        layer_shape = get_layer_output_shape(model, layer)
+        layer_structure = find_layer(model, layer)
+        layer_shape = get_layer_output_shape(model, layer_structure)
+
+        get_layer_name(layer)
 
         mask = np.ones((1, *layer_shape[1:]))
 
@@ -191,6 +152,9 @@ class Objective:
 
         def optim_func(model_output, mask):
             return torch.mean((model_output * mask) ** power)
+        
+
+       
         
 
         return Objective(model, [layer], [mask], [optim_func], [multiplier], [name])
