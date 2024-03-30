@@ -147,53 +147,6 @@ class Objective:
     def __rmul__(self, factor: float):
         return self * factor
 
-    def compile(self) -> Tuple[nn.Module, Callable, List[str], Tuple]:
-        """
-        Compile all the sub-objectives into one and return the objects
-        for the optimisation process.
-
-        Returns
-        -------
-        model_reconfigured
-            Model with the outputs needed for the optimization.
-        objective_function
-            Function to call that compute the loss for the objectives.
-        names
-            Names of each objectives.
-        input_shape
-            Shape of the input, one sample for each optimization.
-        """
-        # the number of inputs will be the number of combinations possible
-        # of the objectives, the mask are used to take into account
-        # these combinations
-        nb_sub_objectives = len(self.multipliers)
-
-        # re-arrange to match the different objectives with the model outputs
-        masks = [torch.stack([m for m in itertools.product(*self.masks)], dim=0)[:, i] for i in
-                 range(nb_sub_objectives)]
-
-        # the name of each combination is the concatenation of each objectives
-        names = [' & '.join(names) for names in
-                 itertools.product(*self.names)]
-        # one multiplier by sub-objective
-        multipliers = torch.tensor(self.multipliers)
-
-        def objective_function(model_outputs):
-            loss = 0.0
-            for output_index in range(0, nb_sub_objectives):
-                outputs = model_outputs[output_index]
-                loss += self.funcs[output_index](
-                    outputs, masks[output_index].to(outputs.device))
-                loss *= multipliers[output_index]
-            return loss
-
-        # the model outputs will be composed of the layers needed
-        model_reconfigured = nn.Sequential(*self.layers)
-
-        nb_combinations = masks[0].shape[0]
-        input_shape = (nb_combinations, *self.model.input_shape)
-
-        return model_reconfigured, objective_function, names, input_shape
     
 
 
@@ -240,52 +193,10 @@ class Objective:
             return torch.mean((model_output * mask) ** power)
         
 
-         return Objective(model, [layer], [mask], [optim_func], [multiplier], [name])
+        return Objective(model, [layer], [mask], [optim_func], [multiplier], [name])
     
 
-    def direction(model: tf.keras.Model,
-                  layer: Union[str],
-                  vectors: Union[torch.Tensor, List[torch.Tensor]],
-                  multiplier: float = 1.0,
-                  cossim_pow: float = 2.0,
-                  names: Optional[Union[str, List[str]]] = None):
-        """
-        Util to build an objective to maximise a direction of a layer.
-
-        Parameters
-        ----------
-        model
-            Model used for optimization.
-        layer
-            Index or name of the targeted layer.
-        vectors
-            Direction(s) to optimize.
-        multiplier
-            Multiplication factor of the objective.
-        cossim_pow
-            Power of the cosine similarity, higher value encourage the objective to care more about
-            the angle of the activations.
-        names
-            A name for each objectives.
-
-        Returns
-        -------
-        objective
-            An objective ready to be compiled
-        """
-        layer = find_layer(model, layer)
-        layer_output =  extract_features(model, layer)
-        masks = vectors if isinstance(vectors, list) else [vectors]
-
-        if names is None:
-            names = [f"Direction#{layer}_{i}" for i in range(len(masks))]
-            
-
-        def optim_func(model_output, mask):
-            return dot_cossim(model_output, mask, cossim_pow)
-        
-
-        return Objective(model, [layer_output], [masks], [optim_func], [multiplier], [names])
+    
 
 
 
