@@ -33,7 +33,7 @@ classes = [
 
 for logit_id, class_name in classes:
   # create the objective, '-1' is the last layer, and the c_id's are the ids of the classes
-  obj_logits = Objective.layer(resnet50, "conv1", logit_id)
+  obj_logits = Objective.layer(resnet50, "layer1.0.conv1", logit_id)
 
   img, alpha = maco(obj_logits, nb_steps=128, values_range = (-1, 1))
 
