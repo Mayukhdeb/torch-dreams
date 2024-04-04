@@ -103,52 +103,7 @@ class Objective:
 
    
     
-    def compile(self) -> Tuple[nn.Module, Callable, List[str], Tuple]:
-        """
-        Compile all the sub-objectives into one and return the objects
-        for the optimization process.
-
-        Returns
-        -------
-        model_reconfigured
-            Model with the outputs needed for the optimization.
-        objective_function
-            Function to call that compute the loss for the objectives.
-        names
-            Names of each objectives.
-        input_shape
-            Shape of the input, one sample for each optimization.
-        """
-        # the number of inputs will be the number of combinations possible
-        # of the objectives, the mask are used to take into account
-        # these combinations
-        nb_sub_objectives = len(self.multipliers)
-
-        # re-arrange to match the different objectives with the model outputs
-        masks = np.array([np.array(m, dtype=object) for m in itertools.product(*self.masks)])
-        masks = [torch.tensor(masks[:, i], dtype=torch.float32) for i in range(nb_sub_objectives)]
-
-        # the name of each combination is the concatenation of each objectives
-        names = np.array([' & '.join(names) for names in itertools.product(*self.names)])
-        # one multiplier by sub-objective
-        multipliers = torch.tensor(self.multipliers)
-
-        def objective_function(model_outputs):
-            loss = 0.0
-            for output_index in range(0, nb_sub_objectives):
-                outputs = model_outputs[output_index]
-                loss += self.funcs[output_index](
-                    outputs, masks[output_index].to(outputs.device))
-                loss *= multipliers[output_index]
-            return loss
-
-        # the model outputs will be composed of the layers needed
-        model_reconfigured = nn.Sequential(*self.layers)
-
-        nb_combinations = masks[0].shape[0]
-        input_shape = (nb_combinations, *model_reconfigured.input_shape[1:])
-
-        return model_reconfigured, objective_function, names, input_shape
+    
 
     
 
@@ -195,9 +150,11 @@ class Objective:
 
         power = 2.0 if reducer == "magnitude" else 1.0
 
-        def optim_func(model_output, mask):
-            return torch.mean((model_output * mask) ** power)
+        def optim_func(model_output, mask, power):
+            result = (model_output * mask) ** power
+            return torch.mean(result)
         
+ 
         return Objective(model, [layer_output], [mask], [optim_func], [multiplier], [name])
     
 
@@ -274,25 +231,26 @@ class Objective:
     @staticmethod
     def channel(model: nn.Module,
                 layer: str,
-                vectors:Union[torch.tensor,List[torch.tensor]],
+                channel_ids: Union[int, List[int]],
                 multiplier: float = 1.0,
-                cossim_pow: float = 2.0,
                 names: Optional[Union[str, List[str]]] = None):
         """
-        Util to build an objective to maximise a channel in a layer.
+        util to build an objective to maximise a channel in a layer.
 
         Parameters
         ----------
         model
             Model used for optimization.
+
         layer
             Index or name of the targeted layer.
-        vectors
-            List of vectors to optimize.
+
+        channel_ids
+            List of channels to optimize.
+
         multiplier
             Multiplication factor of the objective.
-        cos_sim_pow
-            Power of the cosine similarity.    
+
         names
             A name for the objective.
 
@@ -302,47 +260,56 @@ class Objective:
             An objective ready to be compiled
         """
 
-        layer_output = extract_features(model, layer)
         layer_shape = get_layer_output_shape(model, layer)
-
+        layer_output = extract_features(model, layer)
         channel_ids = channel_ids if isinstance(channel_ids, list) else [channel_ids]
 
         masks = np.zeros((len(channel_ids), *layer_shape[1:]))
 
-        for i, channel_id in enumerate(channel_ids):
-            masks[i, ..., channel_id] = 1.0
+        for i,c_id in enumerate(channel_ids):
+            masks[i, ..., c_id] = 1.0
+
+        layer_name = get_layer_name(layer)
 
         if names is None:
-            names = [f"Channel#{layer}_{i}" for i in channel_ids]
-
+            name = [f"Channel#{layer_name}_{c_id}" for c_id in channel_ids]
 
         axis_to_reduce = list(range(1, len(layer_shape)))
 
-        def optim_func(output, target):
-            return torch.mean(output * target, axis=axis_to_reduce)
-        
+        def optim_func(output,target,axis_to_reduce = None):
+            product = output * target
+            if axis_to_reduce is not None:
+                return torch.mean(product, dim=axis_to_reduce)
+            else:
+                return torch.mean(product)
+            
         return Objective(model, [layer_output], [masks], [optim_func], [multiplier], [names])
-    
-
+            
+        
     @staticmethod
-    def neuron(model:nn.Module,
-               layer:str,
-               neuron_ids:Union[int,List[int]],
-               multiplier:float=1.0,
-               names:Optional[Union[str,List[str]]]=None):
+    def neuron(model: nn.Module,
+               layer: str,
+               neuron_ids: Union[int, List[int]],
+               multiplier: float = 1.0,
+               names: Optional[Union[str, List[str]]] = None):
         """
         Util to build an objective to maximise a neuron in a layer.
 
         Parameters
         ----------
+
         model
             Model used for optimization.
+        
         layer
             Index or name of the targeted layer.
+
         neuron_ids
-            List of neuron ids to optimize.
+            List of neurons to optimize.
+
         multiplier
-            Multiplication factor of the objective.
+            Multiplication factor of the objectives.
+
         names
             A name for the objective.
 
@@ -353,65 +320,40 @@ class Objective:
         """
 
         layer_output = extract_features(model, layer)
+        neurons_ids = neurons_ids if isinstance(neurons_ids, list) else [neurons_ids]
+        nb_objectives = len(neurons_ids)
         layer_shape = get_layer_output_shape(model, layer)
 
-        neuron_ids = neuron_ids if isinstance(neuron_ids, list) else [neuron_ids]
-
-        nb_objectives = len(neuron_ids)
-        
-        
-        layer_shape = get_layer_output_shape(model, layer)
         layer_shape = layer_shape[1:]
 
-
         masks = np.zeros((nb_objectives, *layer_shape))
-
         masks = masks.reshape((nb_objectives, -1))
-        for i, neuron_id in enumerate(neuron_ids):
+
+        for i, neuron_id in enumerate(neurons_ids):
             masks[i, neuron_id] = 1.0
         masks = masks.reshape((nb_objectives, *layer_shape))
 
+        layer_name = get_layer_name(layer)
 
         if names is None:
-            names = [f"Neuron#{layer}_{i}" for i in neuron_ids]
+            names = [f"Neuron#{layer_name}_{neuron_id}" for neuron_id in neurons_ids]
 
         axis_to_reduce = list(range(1, len(layer_shape)+1))
 
-        def optim_func(output, target):
-            return torch.mean(output * target, axis=axis_to_reduce)
-        
+
+        def optim_func(output,target):
+            product = output * target
+            return torch.mean(product, dim=axis_to_reduce)
+            
+            
+
         return Objective(model, [layer_output], [masks], [optim_func], [multiplier], [names])
-    
-
-
-
 
         
 
 
 
-
-
-
-
-
-
-
-
-
-
         
-
-
-
-
-
-    
-
-    
-
-
-
+            
         
-
-
+        
