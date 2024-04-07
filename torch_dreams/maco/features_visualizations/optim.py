@@ -19,7 +19,7 @@ def optimize(objective: Objective,
              regularizers: Optional[List[Callable]] = None,
              image_normalizer: str = 'sigmoid',
              values_range: Tuple[float, float] = (0, 1),
-             transformations: Optional[Union[List[Callable], str]] = 'standard',
+             transformations: Optional[Union[List[Callable], str]] = None,
              warmup_steps: int = False,
              custom_shape: Optional[Tuple] = (512, 512),
              save_every: Optional[int] = None) -> Tuple[List[torch.Tensor], List[str]]:
@@ -68,125 +68,141 @@ def optimize(objective: Objective,
         Optimized images for each objectives.
     objective_names
         Name of each objectives.
-
     """
+
 
     values_range = (min(values_range), max(values_range))
     model, objective_function, objective_names, input_shape = objective.compile()
 
     if optimizer is None:
-        optimizer = torch.optim.Adam(0.05)
-
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
 
     img_shape = input_shape
     if custom_shape:
         img_shape = (img_shape[0], *custom_shape, img_shape[-1])
 
-
     if transformations == 'standard':
         transformations = generate_standard_transformations(img_shape[1])
 
-
     if use_fft:
-        inputs = torch.nn.Parameter(fft_image(img_shape, std))
+        inputs = torch.tensor(fft_image(img_shape, std), requires_grad=True)
         fft_scale = get_fft_scale(img_shape[1], img_shape[2], decay_power=fft_decay)
         image_param = lambda inputs: to_valid_rgb(fft_to_rgb(img_shape, inputs, fft_scale),
                                                   image_normalizer, values_range)
     else:
-        inputs = torch.nn.Parameter(torch.randn(img_shape))
+        inputs = torch.randn(*img_shape, std=std, requires_grad=True)
         image_param = lambda inputs: to_valid_rgb(inputs, image_normalizer, values_range)
 
+    
+
+    def get_model_output_length(model):
+        """
+        This function returns the length of the outputs of a given model.
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            The model whose output length is to be determined.
+
+        Returns
+        -------
+        int
+            The length of the model's outputs.
+        """
+        # Assuming the model's forward method returns its outputs
+        dummy_input = torch.randn(1, *input_shape)  # replace input_shape with the shape of your model's input
+        output = model(dummy_input)
+        return len(output)
+    
+    len_model_output = get_model_output_length(model)
 
     optimisation_step = _get_optimisation_step(objective_function,
-                                                len(model.outputs),
-                                                image_param,
-                                                input_shape,
-                                                transformations,
-                                                regularizers)
+                                               len_model_output,
+                                               image_param,
+                                               input_shape,
+                                               transformations,
+                                               regularizers)
     
+
     if warmup_steps:
-        model_warmup = override_relu_gradient(model, open_relu_policy)
-        for _ in range(warmup_steps):
-            grads = optimisation_step(model_warmup, inputs)
-            optimizer.zero_grad()
-            grads.backward()
-            optimizer.step()
+         model_warmup = override_relu_gradient(model, open_relu_policy)
+         for _ in range(warmup_steps):
+             grads = optimisation_step(model_warmup, inputs)
+             optimizer.zero_grad()
+             grads.backward()
+             optimizer.step()
 
 
+    
     images_optimized = []
     for step_i in range(nb_steps):
-        grads = optimisation_step(model, inputs)
-        optimizer.zero_grad()
-        grads.backward()
-        optimizer.step()
+         grads = optimisation_step(model, inputs)
+         optimizer.zero_grad()
+         grads.backward()
+         optimizer.step()
 
-        last_iteration = step_i == nb_steps - 1
-        should_save = save_every and (step_i + 1) % save_every == 0
-        if should_save or last_iteration:
-            imgs = image_param(inputs)
-            images_optimized.append(imgs)
+         last_iteration = step_i == nb_steps - 1
+         should_save = save_every and (step_i + 1) % save_every == 0
+         if should_save or last_iteration:
+             imgs = image_param(inputs)
+             images_optimized.append(imgs)
 
     return images_optimized, objective_names
 
 
 
-
-
 def _get_optimisation_step(
-        objective_function: Callable,
-        nb_outputs: int,
-        image_param: Callable,
-        input_shape: Tuple,
-        transformations: Optional[Callable] = None,
-        regularizers: Optional[List[Callable]] = None) -> Callable:
-    """
-    Generate a function that optimize the objective function for a single step.
+         objective_function: Callable,
+         nb_outputs: int,
+         image_param: Callable,
+         input_shape: Tuple,
+         transformations: Optional[Callable] = None,
+         regularizers: Optional[List[Callable]] = None) -> Callable:
+     """
+     Generate a function that optimize the objective function for a single step.
+     Parameters
+     ----------
+     objective_function
+         Function that compute the loss for the objectives given the model
+         outputs.
+     nb_outputs
+         Number of outputs of the model.
+     image_param
+         Function that map image to a valid rgb.
+     input_shape
+         Shape of the inputs to optimize.
+     transformations
+         Transformations applied to the image during optimisation.
+     regularizers
+         List of regularizers that are applied on the image and added to the loss.
+     Returns
+     -------
+     step_function
+         Function (model, inputs) to call to optimize the input for one step.
+     """
 
-    Parameters
-    ----------
-    objective_function
-        Function that compute the loss for the objectives given the model
-        outputs.
-    nb_outputs
-        Number of outputs of the model.
-    image_param
-        Function that map image to a valid rgb.
-    input_shape
-        Shape of the inputs to optimize.
-    transformations
-        Transformations applied to the image during optimisation.
-    regularizers
-        List of regularizers that are applied on the image and added to the loss.
+     def step(model, inputs):
 
-    Returns
-    -------
-    step_function
-        Function (model, inputs) to call to optimize the input for one step.
-    """
-    
-    def step(model, inputs):
+         inputs.requires_grad = True
 
-        inputs.requires_grad = True
+         imgs = image_param(inputs)
+         if transformations:
+             imgs = transformations(imgs)
+         imgs = torch.nn.functional.interpolate(imgs, (input_shape[1], input_shape[2]))
 
-        imgs = image_param(inputs)
-        if transformations:
-            imgs = transformations(imgs)
-        imgs = torch.nn.functional.interpolate(imgs, (input_shape[1], input_shape[2]))
+         model_outputs = model(imgs)
 
-        model_outputs = model(imgs)
+         if nb_outputs == 1:
+             model_outputs = torch.unsqueeze(model_outputs, 0)
 
-        if nb_outputs == 1:
-            model_outputs = torch.unsqueeze(model_outputs, 0)
+         loss = objective_function(model_outputs)
 
-        loss = objective_function(model_outputs)
+         if regularizers:
+             for reg_function in regularizers:
+                 loss -= reg_function(imgs)
 
-        if regularizers:
-            for reg_function in regularizers:
-                loss -= reg_function(imgs)
+         grads = torch.autograd.grad(loss, inputs)[0]
 
-        grads = torch.autograd.grad(loss, inputs)[0]
+         return grads
 
-        return grads
-
-    return step
-
+     return step

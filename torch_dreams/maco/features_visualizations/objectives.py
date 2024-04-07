@@ -39,7 +39,8 @@ def extract_features(model, layer_path, image_size=512):
 
 
 
-def get_layer_output_shape(model, layer, image_size=512, for_input=False):
+def get_layer_output_shape(model, layer_name, image_size=512, for_input=False):
+    layer = dict(model.named_modules())[layer_name]
     
     t_dims = None
 
@@ -102,48 +103,45 @@ class Objective:
   
 
 
-
-    def compile(self) -> Tuple[nn.Module, Callable, List[str], Tuple[int]]: 
-        """
-        Compile the objective to be used in the optimization process.
-
-        Returns
-        -------
-        model_reconfigured
-            Model with the layers needed to compute the objectives.
-        objective_function
-            Function that compute the loss for the objectives given the model
-            outputs.
-        names
-            Names of the objectives.
-        input_shape
-            Shape of the inputs to optimize.
-        """
+    def compile(self):
         nb_sub_objectives = len(self.multipliers)
-        masks = torch.tensor(list(itertools.product(*self.masks)), dtype=torch.float32)
-        names = [' & '.join(names) for names in itertools.product(*self.names)]
+
+        masks = list(itertools.product(*self.masks))
+        masks = [torch.tensor(m, dtype=torch.float32) for m in masks]
+
+        names = [' & '.join(name) for name in itertools.product(*self.names)]
 
         multipliers = torch.tensor(self.multipliers, dtype=torch.float32)
 
         def objective_function(model_outputs):
             loss = 0.0
-            for output_index in range(nb_sub_objectives):
+            for output_index in range(0, nb_sub_objectives):
                 outputs = model_outputs[output_index]
                 loss += self.funcs[output_index](
-                    outputs, masks[output_index].to(outputs.device))
+                    outputs, masks[output_index].to(outputs.dtype))
                 loss *= multipliers[output_index]
             return loss
+
+        # Convert tensors to nn.ModuleList
+        layers = torch.nn.ModuleList([torch.nn.Identity() for _ in range(len(self.layers))])
+
+        model_reconfigured = torch.nn.Sequential(*layers)
+
+        # Inferring input shape by passing a sample input through the model
+        with torch.no_grad():
+            sample_input = torch.randn(1, *tuple(self.model.parameters())[0].shape[1:])
+            model_output_shape = model_reconfigured(sample_input).shape
+
+        nb_combinations = masks[0].shape[0]
+        input_shape = (nb_combinations, *model_output_shape[1:])
+
         
 
-        model_reconfigured = torch.nn.Sequential(*self.layers)
-
-        input_shape = tuple(model_reconfigured(torch.zeros(1, *input_shape)).shape[1:])
-
-        nb_combinations = masks.size(0)
-
-        input_shape = (nb_combinations, *input_shape)
-
         return model_reconfigured, objective_function, names, input_shape
+    
+    
+        
+    
  
 
 
@@ -178,13 +176,14 @@ class Objective:
         
         layer_shape = get_layer_output_shape(model, layer)
         layer_output = extract_features(model, layer)
-        layer = get_layer_name(layer)
+        layer_name = get_layer_name(layer)
+        layer = find_layer(model, layer)
         
 
         mask = np.ones((1, *layer_shape[1:]))
 
         if name is None:
-            name = f"Layer# {layer}"
+            name = f"Layer# {layer_name}"
 
 
         power = 2.0 if reducer == "magnitude" else 1.0
@@ -198,7 +197,7 @@ class Objective:
     
 
 
-
+     
     
     
 
@@ -290,6 +289,7 @@ class Objective:
             masks[i, ..., c_id] = 1.0
 
         layer_name = get_layer_name(layer)
+        layer = find_layer(model, layer)
 
         if names is None:
             names = [f"Channel#{layer_name}_{c_id}" for c_id in channel_ids]
@@ -309,7 +309,7 @@ class Objective:
     @staticmethod
     def neuron(model: nn.Module,
                layer: str,
-               neuron_ids: Union[int, List[int]],
+               neurons_ids: Union[int, List[int]],
                multiplier: float = 1.0,
                names: Optional[Union[str, List[str]]] = None):
         """
@@ -343,6 +343,8 @@ class Objective:
         neurons_ids = neurons_ids if isinstance(neurons_ids, list) else [neurons_ids]
         nb_objectives = len(neurons_ids)
         layer_shape = get_layer_output_shape(model, layer)
+        layer_name = get_layer_name(layer)
+        layer = find_layer(model, layer)
 
         layer_shape = layer_shape[1:]
 
@@ -353,7 +355,7 @@ class Objective:
             masks[i, neuron_id] = 1.0
         masks = masks.reshape((nb_objectives, *layer_shape))
 
-        layer_name = get_layer_name(layer)
+        
 
         if names is None:
             names = [f"Neuron#{layer_name}_{neuron_id}" for neuron_id in neurons_ids]
@@ -364,9 +366,10 @@ class Objective:
         def optim_func(output,target):
             product = output * target
             return torch.mean(product, dim=axis_to_reduce)
-            
-            
 
+        
+        
+    
         return Objective(model, [layer_output], [masks], [optim_func], [multiplier], [names])
 
         
