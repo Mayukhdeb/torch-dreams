@@ -101,11 +101,50 @@ class Objective:
         return self * factor
   
 
-   
-    
-    
 
-    
+
+    def compile(self) -> Tuple[nn.Module, Callable, List[str], Tuple[int]]: 
+        """
+        Compile the objective to be used in the optimization process.
+
+        Returns
+        -------
+        model_reconfigured
+            Model with the layers needed to compute the objectives.
+        objective_function
+            Function that compute the loss for the objectives given the model
+            outputs.
+        names
+            Names of the objectives.
+        input_shape
+            Shape of the inputs to optimize.
+        """
+        nb_sub_objectives = len(self.multipliers)
+        masks = torch.tensor(list(itertools.product(*self.masks)), dtype=torch.float32)
+        names = [' & '.join(names) for names in itertools.product(*self.names)]
+
+        multipliers = torch.tensor(self.multipliers, dtype=torch.float32)
+
+        def objective_function(model_outputs):
+            loss = 0.0
+            for output_index in range(nb_sub_objectives):
+                outputs = model_outputs[output_index]
+                loss += self.funcs[output_index](
+                    outputs, masks[output_index].to(outputs.device))
+                loss *= multipliers[output_index]
+            return loss
+        
+
+        model_reconfigured = torch.nn.Sequential(*self.layers)
+
+        input_shape = tuple(model_reconfigured(torch.zeros(1, *input_shape)).shape[1:])
+
+        nb_combinations = masks.size(0)
+
+        input_shape = (nb_combinations, *input_shape)
+
+        return model_reconfigured, objective_function, names, input_shape
+ 
 
 
     @staticmethod
@@ -150,7 +189,7 @@ class Objective:
 
         power = 2.0 if reducer == "magnitude" else 1.0
 
-        def optim_func(model_output, mask, power):
+        def optim_func(model_output, mask):
             result = (model_output * mask) ** power
             return torch.mean(result)
         
@@ -160,26 +199,7 @@ class Objective:
 
 
 
-    @staticmethod
-    def channel(model: nn.Module,
-                layer: str,
-                vectors:Union[torch.tensor,List[torch.tensor]],
-                multiplier: float = 1.0,
-                cossim_pow: float = 2.0,
-                names: Optional[Union[str, List[str]]] = None):
-        layer_output = extract_features(model, layer)
-        masks = vectors if isinstance(vectors, list) else [vectors]
-        
-        layer = get_layer_name(layer)
-
-        if names is None:
-            names = [f"Direction#{layer}_{i}" for i in range(len(masks))]
-
-        def optim_func(model_output, mask):
-            return dot_cossim(model_output, mask, cossim_pow)
-        
-
-        return Objective(model, [layer_output], [masks], [optim_func], [multiplier], [names])
+    
     
 
     @staticmethod
@@ -272,11 +292,11 @@ class Objective:
         layer_name = get_layer_name(layer)
 
         if names is None:
-            name = [f"Channel#{layer_name}_{c_id}" for c_id in channel_ids]
+            names = [f"Channel#{layer_name}_{c_id}" for c_id in channel_ids]
 
         axis_to_reduce = list(range(1, len(layer_shape)))
 
-        def optim_func(output,target,axis_to_reduce = None):
+        def optim_func(output,target):
             product = output * target
             if axis_to_reduce is not None:
                 return torch.mean(product, dim=axis_to_reduce)
