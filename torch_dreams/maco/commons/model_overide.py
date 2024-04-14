@@ -120,23 +120,56 @@ def override_relu_gradient(model: nn.Module, relu_policy: Callable) -> nn.Module
 from functools import reduce
 
 
-def find_layer(model: nn.Module, name: str):
-    """Retrieve a module nested in another by its access string.
 
-    Works even when there is a Sequential in the module.
-
-    Args:
-        module (Union[TensorType, nn.Module]): module whose submodule you want to access
-        name (str): the string representation of the submodule. Like ⁠ "module.something.this_thing" ⁠
-
-    Returns:
-        object: module that you wanted to extract
+def find_layer(model: nn.Module, identifier: Union[str, int]) -> nn.Module:
     """
-    if name != "":
-        names = name.split(sep=".")
+    Find a layer in a PyTorch model either by its name using dot notation for nested layers or by its index.
+
+    Parameters
+    ----------
+    model : nn.Module
+        Model from which to search for the layer.
+    identifier : str or int
+        Layer name using dot notation for nested layers or layer index to find in the model.
+
+    Returns
+    -------
+    nn.Module
+        The layer found, or None if no such layer exists.
+
+    Raises
+    ------
+    ValueError
+        If the identifier is neither a string nor an integer.
+    """
+    if isinstance(identifier, int):
+        # Flatten the model to access by index
+        layers = []
+        def flatten_model(module):
+            for child in module.children():
+                if len(list(child.children())) == 0:
+                    layers.append(child)
+                else:
+                    flatten_model(child)
+        flatten_model(model)
+        if 0 <= identifier < len(layers):
+            return layers[identifier]
+        return None  # Return None if index is out of range
+
+    elif isinstance(identifier, str):
+        # Access by dot-notated name
+        parts = identifier.split('.')
+        current_module = model
+        try:
+            for part in parts:
+                current_module = getattr(current_module, part)
+            return current_module
+        except AttributeError:
+            return None  # Return None if path is invalid
     else:
-        return model
-    return reduce(getattr, names, model)
+        raise ValueError(f"Identifier must be either an integer or a string, got {type(identifier)}.")
+
+
 
 
 
