@@ -12,48 +12,92 @@ from .losses import dot_cossim
 import numpy as np
 from torchvision.models.feature_extraction import create_feature_extractor,get_graph_node_names
 
-from ..commons import find_layer
 
 
-def get_layer_name(layer_path: str) -> str:
-    return layer_path.split('.')[-1]
 
+def find_layer(model: nn.Module, identifier: Union[str, int]) -> nn.Module:
+    """
+    Find a layer in a PyTorch model either by its name using dot notation for nested layers or by its index.
+    """
+    if isinstance(identifier, int):
+        layers = []
+        def flatten_model(module):
+            for child in module.children():
+                if len(list(child.children())) == 0:
+                    layers.append(child)
+                else:
+                    flatten_model(child)
+        flatten_model(model)
+        if 0 <= identifier < len(layers):
+            return layers[identifier]
+        return None
 
-def extract_features(model, layer_path, image_size=512):
-    
-    # Generate a random input tensor
+    elif isinstance(identifier, str):
+        parts = identifier.split('.')
+        current_module = model
+        try:
+            for part in parts:
+                current_module = getattr(current_module, part)
+            return current_module
+        except AttributeError:
+            return None
+    else:
+        raise ValueError("Identifier must be either an integer or a string.")
+
+def get_layer_output(model, identifier, image_size=224):
+    """
+    Extract the output from a specified layer in a PyTorch model.
+    """
     input_tensor = torch.rand(1, 3, image_size, image_size)
+    layer = find_layer(model, identifier)
+    if layer is None:
+        raise ValueError("No layer found with the provided identifier.")
 
-    # Specify the layer whose output you want to extract
-    return_nodes = {layer_path: "output"}
+    output = None  # Ensure output is defined in the outer scope
+    def hook(module, input, output_hook):
+        nonlocal output
+        output = output_hook.detach()  # Detach output for further processing if needed
 
-    # Create a feature extractor model
-    feature_extractor = create_feature_extractor(model, return_nodes=return_nodes)
+    handle = layer.register_forward_hook(hook)
+    with torch.no_grad():
+        model(input_tensor)  # Forward pass through the entire model
+    handle.remove()
 
-    # Get the intermediate output
-    intermediate_outputs = feature_extractor(input_tensor)
+    return output
 
-    # Return the output tensor, accessing it by the key assigned in `return_nodes`
-    return intermediate_outputs['output']
+def get_layer_output_shape(model, identifier, image_size=224):
+    """
+    Get the output shape of a specified layer in a PyTorch model.
+    """
+    input_tensor = torch.rand(1, 3, image_size, image_size)
+    layer = find_layer(model, identifier)
+    if layer is None:
+        raise ValueError("No layer found with the provided identifier.")
 
+    output_shape = None
+    def hook(module, input, output):
+        nonlocal output_shape
+        output_shape = output.shape
 
+    handle = layer.register_forward_hook(hook)
+    with torch.no_grad():
+        model(input_tensor)  # Forward pass through the entire model
+    handle.remove()
 
+    return output_shape
 
-def get_layer_output_shape(model, layer_name, image_size=512, for_input=False):
-    layer = dict(model.named_modules())[layer_name]
+def get_layer_name(model: nn.Module, identifier: Union[str, int]) -> str:
+    """
+    Get the name of a layer from a PyTorch model using either its path or index.
+    """
+    layer = find_layer(model, identifier)
+    if layer is None:
+        raise ValueError("No layer found with the provided identifier.")
     
-    t_dims = None
-
-    def _local_hook(_, _input, _output):
-        nonlocal t_dims
-        t_dims = _input[0].size() if for_input else _output.size()
-
-    hook = layer.register_forward_hook(_local_hook)
-    dummy_var = torch.zeros(1, 3, image_size, image_size)
-    model(dummy_var)
-    hook.remove()
-
-    return t_dims
+    if isinstance(identifier, str):
+        return identifier.split('.')[-1]
+    elif isinstance(identifier, int):
+        return layer.__class__.__name__
 
 
 
@@ -175,7 +219,7 @@ class Objective:
         """
         
         layer_shape = get_layer_output_shape(model, layer)
-        layer_output = extract_features(model, layer)
+        layer_output = get_layer_output(model, layer)
         layer_name = get_layer_name(layer)
         layer = find_layer(model, layer)
         
@@ -233,7 +277,7 @@ class Objective:
         """
 
 
-        layer_output = extract_features(model, layer)
+        layer_output = get_layer_output(model, layer)
         masks = vectors if isinstance(vectors, list) else [vectors]
 
         layer = get_layer_name(layer)
@@ -280,7 +324,7 @@ class Objective:
         """
 
         layer_shape = get_layer_output_shape(model, layer)
-        layer_output = extract_features(model, layer)
+        layer_output = get_layer_output(model, layer)
         channel_ids = channel_ids if isinstance(channel_ids, list) else [channel_ids]
 
         masks = np.zeros((len(channel_ids), *layer_shape[1:]))
@@ -339,7 +383,7 @@ class Objective:
             An objective ready to be compiled
         """
 
-        layer_output = extract_features(model, layer)
+        layer_output = get_layer_output(model, layer)
         neurons_ids = neurons_ids if isinstance(neurons_ids, list) else [neurons_ids]
         nb_objectives = len(neurons_ids)
         layer_shape = get_layer_output_shape(model, layer)
