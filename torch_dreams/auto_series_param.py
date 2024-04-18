@@ -83,7 +83,7 @@ class BaseSeriesParam(torch.nn.Module):
         Returns:
             numpy.ndarray
         """
-        return self.to_cl_tensor().numpy()
+        return self.to_cl_tensor().cpu().numpy()
 
     def save(self, filename):
         """Save an image_param as an image. Uses PIL to save the image
@@ -114,10 +114,11 @@ class AutoSeriesParam(BaseSeriesParam):
          no batch dimension is expected.
     """
 
-    def __init__(self, length, channels, device, standard_deviation, batch_size: int = 1):
+    def __init__(self, length, channels, *, device, standard_deviation, seed, batch_size: int = 1):
         self.length = length
         self.channels = channels
         self.standard_deviation = standard_deviation
+        self.seed = seed
         self.batch_size = batch_size
         self.device = device
 
@@ -131,6 +132,7 @@ class AutoSeriesParam(BaseSeriesParam):
                 channels=self.channels,
                 length=self.length + 1,
                 sd=standard_deviation,
+                seed=seed,
                 device=device,
             )
         else:
@@ -138,6 +140,7 @@ class AutoSeriesParam(BaseSeriesParam):
                 channels=self.channels,
                 length=self.length,
                 sd=standard_deviation,
+                seed=seed,
                 device=device,
             )
         self.param.requires_grad_()
@@ -152,15 +155,17 @@ class AutoSeriesParam(BaseSeriesParam):
         #TODO: img = lucid_colorspace_to_rgb(t=img, device=device)
         series = torch.sigmoid(series)
         return series
+    
+    def normalize(self, series, device):
+        return series - 0.5
 
     def forward(self, device):
-        # TODO: add normalization
         if self.batch_size == 1:
-            return self.postprocess(device=device)
+            return self.normalize(postprocess(device=device), device=device)
         else:
             return torch.cat(
                 [
-                    self.postprocess(device=device)
+                    self.normalize(self.postprocess(device=device), device=device)
                     for i in range(self.batch_size)
                 ],
                 dim=0,

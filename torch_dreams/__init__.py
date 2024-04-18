@@ -6,6 +6,9 @@ from .auto_image_param import AutoImageParam
 from .custom_image_param import CustomImageParam
 from .auto_series_param import AutoSeriesParam
 
+from . import series_transforms
+
+
 __version__ = "4.0.0"
 
 __all__ = [
@@ -17,5 +20,6 @@ __all__ = [
     "custom_image_param",
     "masked_image_param",
     "image_transforms",
+    "series_transforms",
     "transforms"
 ]

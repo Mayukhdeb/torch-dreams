@@ -10,6 +10,7 @@ class RandomSeriesTranslate(torch.nn.Module):
         self,
         translate: float,
         fill=0,
+        seed=42,
     ):
         super().__init__()
 
@@ -25,13 +26,18 @@ class RandomSeriesTranslate(torch.nn.Module):
             raise TypeError("Fill should be either a sequence or a number.")
 
         self.fill = fill
+        
+        self.seed = seed
+        self.generator = torch.Generator()
+        self.generator.manual_seed(seed)
+        
 
     def forward(self, series):
         fill = self.fill
         channels, length = _get_series_dimensions(series)
 
         max_shift = float(self.translate * length)
-        shift = int(round(torch.empty(1).uniform_(-max_shift, max_shift).item()))
+        shift = int(round(torch.empty(1).uniform_(-max_shift, max_shift, generator=self.generator).item()))
 
         out = torch.roll(series, shift, dims=-1)
 
@@ -53,6 +59,7 @@ class RandomSeriesScale(torch.nn.Module):
         self,
         min_scale: float,
         max_scale: float,
+        seed=42,
     ):
         super().__init__()
 
@@ -64,8 +71,12 @@ class RandomSeriesScale(torch.nn.Module):
         self.min_scale = min_scale
         self.max_scale = max_scale
 
+        self.seed = seed
+        self.generator = torch.Generator()
+        self.generator.manual_seed(seed)
+
     def forward(self, series):
-        scale = torch.empty(1).uniform_(self.min_scale, self.max_scale)
+        scale = torch.empty(1).uniform_(self.min_scale, self.max_scale, generator=self.generator).to(series.device)
         out = series * scale
         return out
 

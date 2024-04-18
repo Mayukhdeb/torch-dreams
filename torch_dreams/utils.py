@@ -44,7 +44,7 @@ def init_image_param(height, width, sd=0.01, device="cuda"):
     return spectrum_t
 
 
-def init_series_param(channels, length, sd=0.01, device="cuda"):
+def init_series_param(channels, length, sd=0.01, seed=42, device="cuda"):
     """Initializes a series parameter in the frequency domain
 
     Args:
@@ -56,6 +56,7 @@ def init_series_param(channels, length, sd=0.01, device="cuda"):
     Returns:
         torch.tensor: series param to backpropagate on
     """
+    np.random.seed(seed=seed)
     buffer = np.random.normal(size=(1, channels, length), scale=sd).astype(np.float32)
     spectrum_t = tensor(buffer).float().to(device)
     return spectrum_t
