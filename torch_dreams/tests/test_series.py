@@ -7,6 +7,7 @@ import torchvision.transforms as transforms
 
 from torch_dreams import Dreamer
 from torch_dreams.auto_series_param import AutoSeriesParam
+from torch_dreams.custom_series_param import CustomSeriesParam
 from torch_dreams.series_transforms import RandomSeriesScale
 from torch_dreams.series_transforms import RandomSeriesTranslate
 from torch_dreams.transforms import random_resize
@@ -94,9 +95,78 @@ def test_auto_series_save(iters=2, sequence_length=40, channels=2, batch_size=1)
         standard_deviation=0.01,
     )
 
-    translate = 0.1
-    scale_max = 1.2
-    scale_min = 0.5
+    series_transforms = transforms.Compose(
+        [
+            RandomSeriesTranslate(0.1),
+            RandomSeriesScale(0.5, 1.2),
+        ]
+    )
+
+    dreamy_boi = Dreamer(model=model, device='cpu', quiet=False)
+    dreamy_boi.set_custom_transforms(series_transforms)
+
+    result = dreamy_boi.render(
+        layers=[model.conv1],
+        iters=iters,
+        image_parameter=series_param,
+    )
+
+    filename = f"test_ts_single_model.jpg"
+    result.save(filename=filename)
+    assert os.path.exists(filename)
+    os.remove(filename)
+
+
+@pytest.mark.parametrize("iters", [1, 2, 10, 20])
+@pytest.mark.parametrize("sequence_length", [11, 20, 40, 99, 1000])
+@pytest.mark.parametrize("channels", [1, 2, 10, 59])
+@pytest.mark.parametrize("batch_size", [1])
+def test_custom_series_param(iters, sequence_length, channels, batch_size):
+    model = CNN1d(in_channels=channels, out_features=10)
+
+    # Prepare lazy modules.
+    x = torch.zeros((batch_size, channels, sequence_length))
+    y = model(x)
+
+    series_param = CustomSeriesParam(
+        series=x,
+        device="cpu",
+    )
+
+    series_transforms = transforms.Compose(
+        [
+            RandomSeriesTranslate(0.1),
+            RandomSeriesScale(0.5, 1.2),
+        ]
+    )
+
+    dreamy_boi = Dreamer(model=model, device='cpu', quiet=False)
+    dreamy_boi.set_custom_transforms(series_transforms)
+
+    result = dreamy_boi.render(
+        layers=[model.conv1],
+        iters=iters,
+        image_parameter=series_param,
+    )
+
+    assert isinstance(result, AutoSeriesParam), "should be an instance of auto_series_param"
+    assert isinstance(result.__array__(), np.ndarray)
+    assert isinstance(result.to_cl_tensor(), torch.Tensor), "should be a torch.Tensor"
+    assert isinstance(result.to_lc_tensor(), torch.Tensor), "should be a torch.Tensor"
+    assert result.to_cl_tensor().shape == x[0].shape
+
+
+def test_custom_series_save(iters=2, sequence_length=40, channels=2, batch_size=1):
+    model = CNN1d(in_channels=channels, out_features=10)
+
+    # Prepare lazy modules.
+    x = torch.zeros((batch_size, channels, sequence_length))
+    y = model(x)
+
+    series_param = CustomSeriesParam(
+        series=x,
+        device="cpu",
+    )
 
     series_transforms = transforms.Compose(
         [
