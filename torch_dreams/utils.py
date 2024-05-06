@@ -64,9 +64,6 @@ def get_fft_scale(h, w, decay_power=0.75, device="cuda"):
 def fft_to_rgb(height, width, image_parameter, device="cuda"):
     """convert image param to NCHW
 
-    WARNING: torch v1.7.0 works differently from torch v1.8.0 on fft.
-    torch-dreams supports ONLY 1.8.x
-
     Latest docs: https://pytorch.org/docs/stable/fft.html
 
     Also refer:
